@@ -1,0 +1,24 @@
+[Unit]
+Description=sync-lite Brave Sync server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sync-lite
+Group=sync-lite
+WorkingDirectory=/var/lib/sync-lite
+EnvironmentFile=/etc/sync-lite/sync-lite.env
+ExecStart=/usr/local/bin/sync-lite
+Restart=on-failure
+RestartSec=3s
+
+# Optional hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/sync-lite
+
+[Install]
+WantedBy=multi-user.target

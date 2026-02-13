@@ -1,0 +1,10 @@
+# Local runtime/config artifacts
+.env
+
+# Local build artifacts
+sync-lite
+
+# Local SQLite files
+*.db
+*.db-shm
+*.db-wal
