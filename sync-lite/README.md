@@ -276,3 +276,28 @@ Current test coverage includes integration tests for:
 - Gzip request body handling
 - Multi-client isolation (no cross-chain data leakage)
 - Multi-client same-ID commit behavior (no cross-client conflict)
+
+## Validation Results (Real Device Testing)
+Additional real-world validation was performed with two Brave clients using the same sync-server override URL:
+- Debian Linux Brave (Flatpak)
+- Android Brave Nightly (APK)
+
+Two-way sync was tested in both directions between these devices with sync categories enabled.
+
+Confirmed working in testing:
+- Passwords (including 1000+ imported entries and manual inserts)
+- Bookmarks and bookmark folders
+- Autofill address profiles
+- General autofill form data
+- Sessions
+- Open tabs
+- Tab groups
+- History
+- Preferences (partial; more same-platform testing may improve coverage confidence)
+
+Also validated:
+- SQLite-stored sync payloads are encrypted
+- `brave://sync-internals/` shows Nigori keys
+- `brave://sync-internals/` data is consistent across both tested devices
+
+Based on these tests and practical use, sync-lite is functioning correctly in this setup.
