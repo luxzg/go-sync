@@ -1,5 +1,26 @@
 # Maintenance Record
 
+## 2026-10-19: Bookmark And Group Transfers Confirmed
+
+The operator subsequently confirmed the phone's bookmark rename reached desktop
+and fresh test tab groups appeared in both directions on `0.3.1`. Together with
+the earlier desktop-to-phone bookmark delivery, this confirms those transfers
+work despite the recurring `update/missing_entity data_type=50119` diagnostic.
+Arrival delays were not measured; initial absence was not a confirmed permanent
+failure. Do not attribute successful transfer to a repair in `0.3.1`, which only
+added diagnostics, or claim the recurring conflict is harmless/resolved.
+
+Reported phone client: Brave Nightly 1.100.5, Chromium 156.0.8078.39, official
+64-bit APK on Android 16; APK versionCode 430000504, target SDK 37. Exact desktop
+browser version was not supplied. No personal device identifiers or Android
+build fingerprint are needed for this record.
+
+The conflict may have predated the update, but no prior diagnostic baseline
+establishes its start. It is not yet attributed to Nightly or the server update.
+Next narrow user check: independently verify newly opened tabs in each client's
+other-device tabs view, keeping the source tabs open. Retain the conflict as an
+open Sessions investigation without speculative database/client repair.
+
 ## 2026-10-19: Operator Diagnostic Result
 
 The operator confirmed `0.3.1` with modernc is running over HTTPS and both

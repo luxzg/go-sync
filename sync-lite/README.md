@@ -477,12 +477,12 @@ review, not available configuration today.
 For a hands-on browser check after installation or an upgrade, use
 [Verify Sync Between Two Brave Devices](MANUAL_TESTING.md). It covers unique
 bookmarks, remote edits, tabs/groups, diagnostic views, and safe troubleshooting.
-The `0.3` browser check found a persistent Android commit conflict despite a
-successful desktop-to-phone bookmark transfer. Investigation is ongoing;
-`0.3.1` diagnostics subsequently identified a missing Sessions record (`50119`).
-That does not yet explain the missing record or establish a bookmark/group
-failure mechanism. This patch adds diagnostics, not a confirmed fix. Do not
-reset the chain to test it.
+The October `0.3.1` check confirmed desktop-to-phone bookmark delivery, the
+phone's bookmark edit returning to desktop, and fresh tab groups arriving in
+both directions. A recurring missing Sessions record (`50119`) conflict remains
+under investigation; it did not prevent those observed transfers. Its start
+date is unknown. This patch adds diagnostics, not a confirmed fix. Do not reset
+the chain to test it.
 
 ### Automated Tests
 From the fork's root directory:
@@ -521,6 +521,22 @@ database or installed service. The [maintenance record](MAINTENANCE.md) describe
 the checked scope and remaining limits.
 
 ## Validation Results (Real Device Testing)
+### October 2026: Version 0.3.1
+
+On **2026-10-19**, the operator confirmed `0.3.1`/modernc over HTTPS between the
+Debian desktop and Android phone. A desktop-created bookmark reached the phone;
+an edit on the phone subsequently reached desktop. Fresh test tab groups from
+each device also reached the other. Exact delays were not measured.
+
+The phone was Brave Nightly **1.100.5**, Chromium **156.0.8078.39**, 64-bit,
+on Android **16**. The desktop's exact browser version was not recorded.
+The diagnostic `update/missing_entity data_type=50119` repeats, so Sessions
+recovery remains unresolved. These successful bookmark/group checks do not
+establish complete open-tab/session coverage or prove the conflict began with
+the server update. Other categories were not freshly retested in this report.
+
+### Earlier Coverage
+
 The user reported additional real-world validation with two Brave clients using the same sync-server override URL:
 - Debian Linux Brave (Flatpak)
 - Android Brave Nightly (APK)

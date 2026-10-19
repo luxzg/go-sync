@@ -7,18 +7,20 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 
 ## P1: Validation And Repeatability
 
-- Diagnose the 2026-10-19 Android commit CONFLICT on the updated home server:
-  desktop bookmark reached Android, reverse rename and fresh groups did not
-  appear during the observation window. Phone reported download success and
-  backoff. The operator now confirms `0.3.1` is running and diagnostics show
-  `update/missing_entity` for Sessions (`50119`). Determine why a session ID is
-  absent, whether this repeats after backoff, whether other types conflict,
-  and whether the bookmark rename/groups remain stalled. Record client versions.
+- Diagnose the recurring 2026-10-19 commit CONFLICT: `0.3.1` diagnostics show
+  `update/missing_entity` for Sessions (`50119`). The operator confirmed bookmark
+  delivery, the remote bookmark edit, and fresh groups in both directions;
+  those checks are no longer pending or presumed blocked. Phone: Nightly
+  1.100.5 / Chromium 156.0.8078.39 on Android 16. Determine why a session ID is
+  absent, identify the sending client without exposing IDs, and whether other
+  types conflict. The conflict's start date is unknown; do not assume it is a
+  regression or a Nightly bug. Record the desktop browser version if needed.
   Use the optional [reason/type diagnostics](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts)
   and distinguish this confirmed symptom from unproven legacy-state theories. Do not
   suppress conflicts, accept stale writes, reset clients, or repair live data
   speculatively. New synthetic remote-edit/group tests pass but do not reproduce
-  the installation's failure. Full browser validation remains incomplete.
+  the installation's recurring missing-session state. Sessions validation
+  remains incomplete.
 - Extend protocol tests for general batch parent-ID mapping, command-level
   quota/history-period boundaries, high-device-limit admission at 50/100 devices,
   AI Chat roundtrip, and larger 499/500/501-entry pagination workloads.
@@ -32,11 +34,11 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   handling, damaged/missing TLS files, and failed startup cleanup. `0.3` already
   covers normal SIGINT/SIGTERM, restart, WAL recovery/busy reporting, real HTTPS,
   and incomplete TLS settings.
-- Complete actual two-way Brave validation on the upgraded home server using
-  the [two-device checklist](MANUAL_TESTING.md); `0.3.1` startup/reachability are
-  operator-confirmed, but the Sessions conflict remains unresolved.
-  Record client versions, both directions, remote edits, category-specific
-  results, and whether manual GetUpdates was needed. Synthetic upgrade tests passed;
+- Extend `0.3.1` field validation beyond the confirmed bookmark/edit/group
+  transfers, using the [two-device checklist](MANUAL_TESTING.md). Next check new
+  open tabs from each device in the other-device tabs view to exercise Sessions
+  separately from saved groups. Other categories and automatic timing/retry
+  behavior remain unverified in this pass. Synthetic upgrade tests passed;
   no production server was accessed or updated by the agent.
 - Ask the MIPS reporter to build the optional backend and report actual sync,
   router model/CPU, OS/firmware versions, Go/Zig versions, exact command, and

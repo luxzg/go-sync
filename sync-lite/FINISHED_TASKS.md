@@ -5,6 +5,13 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-10-19, the operator confirmed the desktop bookmark reached Android,
+  its phone-side rename returned to desktop, and fresh test groups arrived in
+  both directions on `0.3.1`. Phone: Brave Nightly 1.100.5 / Chromium
+  156.0.8078.39, 64-bit APK on Android 16. Exact delays and desktop version were
+  not recorded. The recurring missing Sessions record (`50119`) conflict is
+  still open; these transfers do not establish a complete Sessions pass or
+  when the conflict began. Earlier apparently stalled test items did arrive.
 - On 2026-10-19 the operator confirmed `0.3.1`/modernc running with HTTPS and
   both clients reaching it. Diagnostics identified an update of a missing
   Sessions record (`50119`), narrowing the reported conflict without resolving

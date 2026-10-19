@@ -5,6 +5,18 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-10-19 19:08 CEST (Europe/Zagreb)
+
+- Recorded successful `0.3.1` field transfers: desktop bookmark to phone,
+  phone-side rename back to desktop, and fresh groups in both directions.
+  Earlier apparently stalled items arrived; exact delays were not measured.
+  Recorded the reported Nightly/Chromium/Android versions separately from
+  historical coverage, without personal device information.
+- Kept the recurring missing Sessions (`50119`) conflict open, with unknown
+  origin/start date. Updated TODO to remove completed transfer checks and focus
+  on Sessions/open-tab validation. No reset, repair, runtime change, or build;
+  service version remains `0.3.1`.
+
 ## docs - 2026-10-19 19:01 CEST (Europe/Zagreb)
 
 - Recorded operator confirmation that `0.3.1`/modernc is running over HTTPS and

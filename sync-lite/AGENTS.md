@@ -149,8 +149,11 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   Automated `0.3` validation on 2026-10-19 is separate from those `0.2` browser
   field results. Do not claim MIPS build/runtime success without user evidence.
 - The 2026-10-19 `0.3` operator check found desktop-to-phone bookmark delivery,
-  but not the reverse rename or fresh groups, with Android backoff and a last
-  commit CONFLICT. The cause remains unconfirmed. `0.3.1` adds opt-in
+  with an initially absent reverse rename/groups and Android backoff/CONFLICT.
+  A later `0.3.1` report confirmed the reverse rename arrived, and fresh groups
+  arrived in both directions, while missing Sessions (`50119`) conflicts recur.
+  Its start date and cause remain unknown; do not call it a proven new regression, full sync
+  outage, or a resolved issue. `0.3.1` adds opt-in
   `SYNC_LOG_CONFLICTS=1` diagnostics only; do not claim it fixes the incident.
   Keep logs bounded and limited to fixed reasons and numeric data types; never
   add IDs, versions, names, URLs, keys, or payloads to these diagnostics.
