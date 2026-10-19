@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	_ "modernc.org/sqlite"
-
 	"github.com/brave/go-sync/datastore"
 )
 
@@ -28,8 +26,11 @@ type SQLiteStore struct {
 }
 
 func NewSQLiteStore(path string) (*SQLiteStore, error) {
-	dsn := fmt.Sprintf("file:%s?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)", path)
-	db, err := sql.Open("sqlite", dsn)
+	dsn, err := sqliteDSN(path)
+	if err != nil {
+		return nil, err
+	}
+	db, err := sql.Open(sqliteDriverName, dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +51,14 @@ func (s *SQLiteStore) Close() error {
 }
 
 func (s *SQLiteStore) CheckpointTruncate(ctx context.Context) error {
-	_, err := s.db.ExecContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE);`)
-	return err
+	var busy, logFrames, checkpointedFrames int
+	if err := s.db.QueryRowContext(ctx, `PRAGMA wal_checkpoint(TRUNCATE);`).Scan(&busy, &logFrames, &checkpointedFrames); err != nil {
+		return err
+	}
+	if busy != 0 {
+		return fmt.Errorf("sqlite checkpoint busy: %d of %d WAL frames checkpointed", checkpointedFrames, logFrames)
+	}
+	return nil
 }
 
 func (s *SQLiteStore) initSchema(ctx context.Context) error {
@@ -125,7 +132,7 @@ func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.Sy
 		)
 		if err != nil {
 			if isConstraintErr(err) {
-				return true, nil
+				return true, err
 			}
 			return false, err
 		}
@@ -133,7 +140,7 @@ func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.Sy
 
 	if err := insertSyncEntity(ctx, tx, entity); err != nil {
 		if isConstraintErr(err) {
-			return true, nil
+			return true, err
 		}
 		return false, err
 	}
@@ -253,7 +260,7 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 	return false, !oldDeleted && newDeleted, nil
 }
 
-func (s *SQLiteStore) GetUpdatesForType(ctx context.Context, dataType int, clientToken int64, fetchFolders bool, clientID string, maxSize int64) (bool, []datastore.SyncEntity, error) {
+func (s *SQLiteStore) GetUpdatesForType(ctx context.Context, dataType int, clientToken int64, fetchFolders bool, clientID string, maxSize int) (bool, []datastore.SyncEntity, error) {
 	limit := maxSize + 1
 	if limit < 1 {
 		limit = 1
@@ -297,7 +304,7 @@ func (s *SQLiteStore) GetUpdatesForType(ctx context.Context, dataType int, clien
 		return false, nil, err
 	}
 
-	hasChangesRemaining := int64(len(entities)) > maxSize
+	hasChangesRemaining := len(entities) > maxSize
 	if hasChangesRemaining {
 		entities = entities[:maxSize]
 	}

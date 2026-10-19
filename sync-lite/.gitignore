@@ -3,8 +3,11 @@
 
 # Local build artifacts
 sync-lite
+/dist/
+/.agent-tests/
 
 # Local SQLite files
 *.db
 *.db-shm
 *.db-wal
+*.db-journal

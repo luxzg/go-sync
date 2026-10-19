@@ -25,7 +25,13 @@ const (
 	bookmarkBarTag      string = "bookmark_bar"
 )
 
-func createServerDefinedUniqueEntity(name string, serverDefinedTag string, clientID string, parentID string, specifics *sync_pb.EntitySpecifics) (*datastore.SyncEntity, error) {
+func createServerDefinedUniqueEntity(
+	name string,
+	serverDefinedTag string,
+	clientID string,
+	parentID string,
+	specifics *sync_pb.EntitySpecifics,
+) (*datastore.SyncEntity, error) {
 	now := time.Now().UnixMilli()
 	deleted := false
 	folder := true
@@ -82,7 +88,7 @@ func InsertServerDefinedUniqueEntities(ctx context.Context, db datastore.Datasto
 		syncedBookmarksName: syncedBookmarksTag,
 		bookmarkBarName:     bookmarkBarTag}
 	for name, tag := range bookmarkSecondLevelFolders {
-		entity, err := createServerDefinedUniqueEntity(
+		entity, err = createServerDefinedUniqueEntity(
 			name, tag, clientID, bookmarkRootID, specifics)
 		if err != nil {
 			return fmt.Errorf("error creating entity with a server tag: %w", err)

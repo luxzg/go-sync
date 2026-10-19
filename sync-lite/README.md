@@ -8,7 +8,8 @@ updates may also be merged into the fork.
 
 Get the source from [luxzg/go-sync](https://github.com/luxzg/go-sync/tree/master/sync-lite).
 Supported server target: **Debian/Ubuntu Linux x86-64**. ARM and MIPS are currently
-unverified; see [deferred platform support](FINISHED_TASKS.md#deferred--out-of-scope-by-decision).
+unverified. An [experimental MIPS build option](#experimental-mips-build) is
+available for community testing.
 
 ## Documentation
 - [Agent guidance](AGENTS.md): scope, accepted decisions, safety, and workflow.
@@ -16,6 +17,7 @@ unverified; see [deferred platform support](FINISHED_TASKS.md#deferred--out-of-s
 - [Open work](TODO.md): prioritized follow-up work.
 - [Completed and deferred work](FINISHED_TASKS.md): status and evidence archive.
 - [Changelog](CHANGELOG.md): release and documentation history.
+- [Maintenance record](MAINTENANCE.md): checked versions, upstream revision, and validation results.
 
 ## Upstream Reference
 - Original project: https://github.com/brave/go-sync
@@ -25,11 +27,77 @@ Upstream repository changes are reviewed separately from release tags. See the
 [upstream-sync policy](AGENTS.md#syncing-the-fork-with-upstream).
 
 ## Version
-- Current `sync-lite` version: `0.2` (2026-02-13)
+- Current `sync-lite` version: `0.3` (2026-10-19)
 
-Documentation updates do not change the binary version. The next code release
-will be `0.3`; patch releases may use `0.3.1`. Minor versions count upward as
+Documentation updates do not change the binary version. Patch releases may use
+`0.3.1`; the next normal code release will be `0.4`. Minor versions count upward as
 integers, so `0.9` is followed by `0.10`.
+
+Print the binary version and selected backend without opening a database:
+
+```bash
+./sync-lite --version
+```
+
+Version `0.3` retains the existing configuration and database schema. Existing
+users should use the default build and follow [Upgrade from 0.2](#upgrade-from-02-to-03).
+
+## Choose A SQLite Build
+
+Build from `go-sync/sync-lite/` with **Go 1.26 or newer**; a maintained patch
+release is recommended. Go 1.26.9 was used for this release's checks.
+
+| Build | Selection | Validation |
+| --- | --- | --- |
+| **Preferred: modernc** | Default; no C compiler required | Tested on Linux x86-64, including automated sync, HTTP/HTTPS, restart, and upgrade checks |
+| Optional: mattn/go-sqlite3 | `-tags sqlite_cgo`, CGO and a C compiler required | Same checks passed on Linux x86-64; MIPS compilation and router operation remain untested here |
+
+For the preferred Linux x86-64 binary:
+
+```bash
+./scripts/check.sh
+./scripts/build.sh
+./dist/sync-lite-linux-amd64 --version
+```
+
+The build helper disables CGO for the default build, producing a static binary
+for Debian/Ubuntu deployment. The checks also exercise the optional backend and
+therefore require a C compiler and ShellCheck on the **development machine**;
+see [development prerequisites](DEVELOPMENT_SETUP.md#prerequisites). Building
+only the preferred binary needs Go, without those test tools. The build helper
+also writes SHA-256 and Go build-information files beside the binary.
+
+`go build -o sync-lite .` still selects modernc. Use the helper above when you
+want the documented static deployment artifact.
+
+### Experimental MIPS Build
+
+The optional backend addresses the [reported modernc MIPS limitation](https://github.com/brave/go-sync/issues/393#issuecomment-6260138531).
+It uses the same sync logic and SQLite schema. Driver selection happens when
+compiling; it is not an environment setting for an existing binary.
+
+For a native Linux x86-64 mattn build, use `./scripts/build.sh mattn`. For the
+reporter's MIPS little-endian, soft-float target, this is an **untested example**
+requiring an appropriate Zig installation:
+
+```bash
+CC="zig cc --target=mipsel-linux-musleabi -static" \
+GOOS=linux GOARCH=mipsle GOMIPS=softfloat \
+./scripts/build.sh mattn
+```
+
+Expected output: `dist/sync-lite-linux-mipsle-cgo`. The helper enables CGO and
+adds `-tags sqlite_cgo`. A direct custom build must include both settings;
+`-tags sqlite_cgo` with CGO disabled intentionally fails at compile time.
+Static linking depends on the selected C toolchain and target; check the result
+before deployment. A compiler is needed on the build machine, not the router.
+
+Please report whether the build and actual sync work, along with the router
+manufacturer/model, CPU architecture, OS/distribution, firmware version, Go/Zig
+versions, and exact build command. Include sanitized errors and `--version`
+output. Keep sync codes, tokens, certificates, databases, and private hostnames
+out of public reports. MIPS/ARM remain community-test targets, not supported
+deployment claims.
 
 ## What it keeps
 - Brave sync protobuf API behavior via `ClientToServerMessage` and `ClientToServerResponse`
@@ -71,6 +139,8 @@ That client bug has been fixed upstream; both endpoints remain supported.
 - WAL checkpoint behavior:
   - Startup runs `PRAGMA wal_checkpoint(TRUNCATE)` once.
   - Graceful shutdown (`SIGINT`/`SIGTERM`, including `Ctrl+C`) runs `PRAGMA wal_checkpoint(TRUNCATE)` again before DB close.
+  - A busy checkpoint is reported as an error; journal files must never be deleted manually.
+- Both drivers use synchronous=FULL and a 5000 ms busy timeout on each connection.
 
 ## Brave Setup Notes
 ### 1) Custom sync URL support (closed/resolved)
@@ -161,8 +231,10 @@ local and do not expose it publicly. `:8295` listens on available interfaces, no
 only localhost; restrict access during the HTTP test.
 
 ### 2) Download or copy `sync-lite` binary
+When built with the preferred helper, copy its output under the installed name:
+
 ```bash
-scp sync-lite user@server:/tmp/
+scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite
 ssh user@server
 sudo mv /tmp/sync-lite /usr/local/bin/sync-lite
 sudo chmod +x /usr/local/bin/sync-lite
@@ -313,8 +385,71 @@ migration, but that does not make later SQLite upgrades safe without checks.
    database restore; restoration must be an explicit operator decision, never
    automatic update or test cleanup.
 
-Repeatable backup/update helpers and automated upgrade checks are tracked in
-[TODO.md](TODO.md); they are not implemented yet.
+Automated synthetic upgrade checks are available in `scripts/test-upgrade.sh`.
+Automation of live backup/update operations remains tracked in [TODO.md](TODO.md).
+
+### Upgrade From 0.2 To 0.3
+
+**Keep your existing sync chain, SQLite database, env file, certificate paths,
+and systemd unit. No schema migration, database export/import, or client reset
+is needed for this update.** Use the preferred modernc build for existing servers.
+
+The automated upgrade checks used the actual `0.2` code to create synthetic
+databases, exercised both `0.3` drivers, and reopened them with `0.2`. They
+checked schema, records, BLOB bytes, counts, integrity, and recovery of committed
+WAL data. Back up your own installation before applying the update.
+
+1. Build `0.3` on the development machine and transfer it to the server:
+
+```bash
+./scripts/build.sh
+scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.3
+```
+
+2. On the server, check the candidate before stopping the service:
+
+```bash
+chmod +x /tmp/sync-lite-0.3
+/tmp/sync-lite-0.3 --version
+```
+
+Expected: `sync-lite 0.3`, backend `modernc`, target `linux/amd64`.
+
+3. Stop the service and make a private backup of the working installation:
+
+```bash
+sudo systemctl stop sync-lite
+sudo install -d -m 0700 /var/backups/sync-lite
+backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.3.XXXXXXXX)"
+sudo cp -a /var/lib/sync-lite "$backup_dir/state"
+sudo cp -a /etc/sync-lite "$backup_dir/config"
+sudo cp -a /usr/local/bin/sync-lite "$backup_dir/sync-lite-0.2"
+```
+
+Confirm the backup completed successfully before continuing. Keep any `.db-wal`
+and `.db-shm` files with the stopped database. The state/config backup may contain
+private keys; keep it private. Never run both versions against the database at
+the same time.
+
+4. Replace only the binary and start the existing unit:
+
+```bash
+sudo install -m 0755 /tmp/sync-lite-0.3 /usr/local/bin/sync-lite
+/usr/local/bin/sync-lite --version
+sudo systemctl start sync-lite
+sudo systemctl status sync-lite
+journalctl -u sync-lite -n 50 --no-pager
+```
+
+5. Confirm the startup log reports `0.3` and verify that your existing Brave
+   clients resume synchronization. Their server URL stays the same.
+
+If an update fails, stop the service before further action. The test matrix
+verified reopening these synthetic databases with `0.2`, so binary-only rollback
+is available for that tested scope. Keep the backup and ask for help if your
+database or configuration differs; do not restore or replace user data
+automatically. This procedure is for the documented systemd layout; adjust paths
+only if your installation deliberately uses another layout.
 
 ## Public Hosting
 The current server does not provide an operator-configured chain admission
@@ -342,6 +477,22 @@ The user reported the integration suite passing. Its documented cases cover:
 - Gzip request body handling
 - Multi-client isolation (no cross-chain data leakage)
 - Same client-side entity ID in different chains (no cross-chain conflict)
+
+For `0.3`, the repeatable checks are:
+
+```bash
+./scripts/check.sh
+./scripts/test-upgrade.sh
+./scripts/smoke-test.sh
+./scripts/security-check.sh
+```
+
+Run from `sync-lite/`; prerequisites and tool overrides are documented in
+[development setup](DEVELOPMENT_SETUP.md#validation-commands). The upgrade helper
+needs the full fork history, including the `0.2` baseline commit. All runtime
+fixtures and server processes are isolated; these checks never use your live
+database or installed service. The [maintenance record](MAINTENANCE.md) describes
+the checked scope and remaining limits.
 
 ## Validation Results (Real Device Testing)
 The user reported additional real-world validation with two Brave clients using the same sync-server override URL:

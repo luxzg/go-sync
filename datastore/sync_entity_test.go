@@ -1,16 +1,19 @@
 package datastore_test
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
+	"fmt"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/brave/go-sync/datastore"
 	"github.com/brave/go-sync/datastore/datastoretest"
@@ -24,7 +27,7 @@ type SyncEntityTestSuite struct {
 }
 
 func (suite *SyncEntityTestSuite) SetupSuite() {
-	datastore.Table = "client-entity-test-datastore"
+	datastore.Table = "client-entity-test-datastore" //nolint:reassign // acceptable for tests
 	var err error
 	suite.dynamo, err = datastore.NewDynamo()
 	suite.Require().NoError(err, "Failed to get dynamoDB session")
@@ -554,51 +557,107 @@ func (suite *SyncEntityTestSuite) TestGetUpdatesForType() {
 	suite.Require().NoError(err, "InsertSyncEntity should succeed")
 
 	// Get all updates for type 123 and client1 using token = 0.
-	hasChangesRemaining, syncItems, err := suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, true, "client1", 100)
+	hasChangesRemaining, syncItems, err := suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		true,
+		"client1",
+		100,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity1, entity2}, syncItems)
 	suite.False(hasChangesRemaining)
 
 	// Get all updates for type 124 and client1 using token = 0.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 124, 0, true, "client1", 100)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		124,
+		0,
+		true,
+		"client1",
+		100,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity3}, syncItems)
 	suite.False(hasChangesRemaining)
 
 	// Get all updates for type 123 and client2 using token = 0.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, true, "client2", 100)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		true,
+		"client2",
+		100,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity4}, syncItems)
 	suite.False(hasChangesRemaining)
 
 	// Get all updates for type 124 and client2 using token = 0.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 124, 0, true, "client2", 100)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		124,
+		0,
+		true,
+		"client2",
+		100,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Empty(syncItems)
 	suite.False(hasChangesRemaining)
 
 	// Test maxSize will limit the return entries size, and hasChangesRemaining
 	// should be true when there are more updates available in the DB.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, true, "client1", 1)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		true,
+		"client1",
+		1,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity1}, syncItems)
 	suite.True(hasChangesRemaining)
 
 	// Test when num of query items equal to the limit, hasChangesRemaining should
 	// be true.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, true, "client1", 2)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		true,
+		"client1",
+		2,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity1, entity2}, syncItems)
 	suite.True(hasChangesRemaining)
 
 	// Test fetchFolders will remove folder items if false
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, false, "client1", 100)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		false,
+		"client1",
+		100,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity2}, syncItems)
 	suite.False(hasChangesRemaining)
 
 	// Get all updates for a type for a client using mtime of one item as token.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 12345678, true, "client1", 100)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		12345678,
+		true,
+		"client1",
+		100,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal([]datastore.SyncEntity{entity2}, syncItems)
 	suite.False(hasChangesRemaining)
@@ -620,18 +679,25 @@ func (suite *SyncEntityTestSuite) TestGetUpdatesForType() {
 
 	mtime := time.Now().UnixMilli()
 	for i := 1; i <= 250; i++ {
-		mtime = mtime + 1
+		mtime++
 		entity := entity1
 		entity.ID = "id" + strconv.Itoa(i)
 		entity.Mtime = aws.Int64(mtime)
 		entity.DataTypeMtime = aws.String("123#" + strconv.FormatInt(*entity.Mtime, 10))
-		_, err := suite.dynamo.InsertSyncEntity(context.Background(), &entity)
-		suite.Require().NoError(err, "InsertSyncEntity should succeed")
+		_, insertErr := suite.dynamo.InsertSyncEntity(context.Background(), &entity)
+		suite.Require().NoError(insertErr, "InsertSyncEntity should succeed")
 		expectedSyncItems = append(expectedSyncItems, entity)
 	}
 
 	// All items should be returned and sorted by Mtime.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, true, "client1", 300)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		true,
+		"client1",
+		300,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	sort.Sort(datastore.SyncEntityByMtime(expectedSyncItems))
 	suite.Equal(expectedSyncItems, syncItems)
@@ -639,7 +705,14 @@ func (suite *SyncEntityTestSuite) TestGetUpdatesForType() {
 
 	// Test that when maxGUBatchSize is smaller than total updates, the first n
 	// items ordered by Mtime should be returned.
-	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(context.Background(), 123, 0, true, "client1", 200)
+	hasChangesRemaining, syncItems, err = suite.dynamo.GetUpdatesForType(
+		context.Background(),
+		123,
+		0,
+		true,
+		"client1",
+		200,
+	)
 	suite.Require().NoError(err, "GetUpdatesForType should succeed")
 	suite.Equal(syncItems, expectedSyncItems[0:200])
 	suite.True(hasChangesRemaining)
@@ -827,12 +900,7 @@ func (suite *SyncEntityTestSuite) TestCreatePBSyncEntity() {
 	pbEntity, err := datastore.CreatePBSyncEntity(&dbEntity)
 	suite.Require().NoError(err, "CreatePBSyncEntity should succeed")
 
-	// Marshal to json to ignore protobuf internal fields when checking equality.
-	s1, err := json.Marshal(pbEntity)
-	suite.Require().NoError(err, "json.Marshal should succeed")
-	s2, err := json.Marshal(&expectedPBEntity)
-	suite.Require().NoError(err, "json.Marshal should succeed")
-	suite.Equal(s1, s2)
+	suite.Empty(cmp.Diff(&expectedPBEntity, pbEntity, protocmp.Transform()))
 
 	// Nil UniquePosition should be unmarshalled as nil without error.
 	dbEntity.UniquePosition = nil
@@ -941,6 +1009,95 @@ func (suite *SyncEntityTestSuite) TestClearServerData() {
 	t, err = datastoretest.ScanTagItems(suite.dynamo)
 	suite.Require().NoError(err, "ScanTagItems should succeed")
 	suite.Empty(t, "No items should be written if fail")
+}
+
+// Inserts enough large items that the underlying Query response exceeds the
+// 1MB per-page limit, forcing pagination. Verifies ClearServerData walks every
+// page and deletes every item for the target chain, and that items belonging
+// to other chains are not touched.
+//
+// 30 items × ~350KB Specifics ≈ 10MB of raw item data, which guarantees many
+// Query pages on both dynamodb-local and the real service (both enforce the
+// 1MB Query response limit per the AWS docs). 350KB also stays just under the
+// 400KB DynamoDB per-item size cap, exercising near-worst-case page packing.
+func (suite *SyncEntityTestSuite) TestClearServerDataPagination() {
+	const itemCount = 30
+	const otherClientItemCount = 5
+	const specificsSize = 350 * 1024
+
+	// Deterministic, repeatable, no extra deps — only the size counts toward
+	// the 1MB query budget, not the content.
+	blob := bytes.Repeat([]byte("x"), specificsSize)
+	clientID := "client-pagination"
+	otherClientID := "client-other"
+
+	insert := func(cid string, count int, specifics []byte) {
+		for i := range count {
+			entity := datastore.SyncEntity{
+				ClientID:      cid,
+				ID:            fmt.Sprintf("id-%04d", i),
+				Version:       aws.Int64(1),
+				Ctime:         aws.Int64(12345678),
+				Mtime:         aws.Int64(int64(12345678 + i)),
+				DataType:      aws.Int(123),
+				Folder:        aws.Bool(false),
+				Deleted:       aws.Bool(false),
+				DataTypeMtime: aws.String("123#12345678"),
+				Specifics:     specifics,
+			}
+			_, err := suite.dynamo.InsertSyncEntity(context.Background(), &entity)
+			suite.Require().NoError(err, "InsertSyncEntity should succeed")
+		}
+	}
+
+	insert(clientID, itemCount, blob)
+	// Keep other-chain items small — ScanSyncEntities doesn't paginate, so a
+	// large blob here could push the post-clear scan past the 1MB page cap
+	// and cause flaky Len assertions.
+	insert(otherClientID, otherClientItemCount, nil)
+
+	cleared, err := suite.dynamo.ClearServerData(context.Background(), clientID)
+	suite.Require().NoError(err, "ClearServerData should succeed")
+	// If pagination is broken (e.g. single Query call), only the first ~1MB
+	// page of items would be fetched and deleted, leaving the rest behind.
+	suite.Len(cleared, itemCount, "pagination must fetch every item, not stop after the first 1MB page")
+	for _, item := range cleared {
+		suite.Equal(clientID, item.ClientID, "ClearServerData must only return items for the target chain")
+	}
+
+	remaining, err := datastoretest.ScanSyncEntities(suite.dynamo)
+	suite.Require().NoError(err, "ScanSyncEntities should succeed")
+	suite.Lenf(remaining, otherClientItemCount,
+		"items belonging to other chains must not be deleted: expected %d remaining, got %d",
+		otherClientItemCount, len(remaining))
+	for _, item := range remaining {
+		suite.Equal(otherClientID, item.ClientID, "only the other chain's items should remain")
+	}
+}
+
+// Some entries have a nil Mtime; ClearServerData must handle them without panicking.
+func (suite *SyncEntityTestSuite) TestClearServerDataLegacyMissingMtime() {
+	entity := datastore.SyncEntity{
+		ClientID:      "client1",
+		ID:            "id1",
+		Version:       aws.Int64(1),
+		Ctime:         aws.Int64(12345678),
+		Mtime:         nil,
+		DataType:      aws.Int(123),
+		Folder:        aws.Bool(false),
+		Deleted:       aws.Bool(false),
+		DataTypeMtime: aws.String("123#12345678"),
+	}
+	_, err := suite.dynamo.InsertSyncEntity(context.Background(), &entity)
+	suite.Require().NoError(err, "InsertSyncEntity should succeed")
+
+	e, err := suite.dynamo.ClearServerData(context.Background(), entity.ClientID)
+	suite.Require().NoError(err, "ClearServerData should not panic on missing Mtime")
+	suite.Len(e, 1)
+
+	remaining, err := datastoretest.ScanSyncEntities(suite.dynamo)
+	suite.Require().NoError(err, "ScanSyncEntities should succeed")
+	suite.Empty(remaining, "row should be deleted even without Mtime")
 }
 
 func TestSyncEntityTestSuite(t *testing.T) {

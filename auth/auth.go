@@ -19,7 +19,7 @@ const (
 	// TokenMaxDuration specifies the lifetime for each access token.
 	TokenMaxDuration int64  = 86400 * 1e3 // Milliseconds
 	bearerPrefix     string = "Bearer "
-	tokenRE          string = `^(?P<TimestampHex>[a-fA-F0-9]+)\|(?P<SignedTimestampHex>[a-fA-F0-9]+)\|(?P<PublicKeyHex>[a-fA-F0-9]+)$`
+	tokenRE          string = `^(?P<TimestampHex>[a-fA-F0-9]+)\|(?P<SignedTimestampHex>[a-fA-F0-9]+)\|(?P<PublicKeyHex>[a-fA-F0-9]+)$` //nolint:gosec // G101 false positive: regex pattern, not a credential
 )
 
 // Token represents the values we have in access tokens.
@@ -80,8 +80,8 @@ func authenticate(tkn string) (string, error) {
 		return "", errors.New("token is expired")
 	}
 
-	blockedIDs := strings.Split(os.Getenv("BLOCKED_CLIENT_IDS"), ",")
-	if slices.Contains(blockedIDs, token.PublicKeyHex) {
+	blockedIDs := strings.Split(strings.ToLower(os.Getenv("BLOCKED_CLIENT_IDS")), ",")
+	if slices.Contains(blockedIDs, strings.ToLower(token.PublicKeyHex)) {
 		return "", errors.New("this client ID is blocked")
 	}
 

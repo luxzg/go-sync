@@ -9,7 +9,8 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   change files outside it through an explicitly authorized upstream sync; do not
   independently patch those files. See the upstream policy below.
 - Read this file, [README.md](README.md), [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md),
-  [TODO.md](TODO.md), [FINISHED_TASKS.md](FINISHED_TASKS.md), and the latest
+  [TODO.md](TODO.md), [FINISHED_TASKS.md](FINISHED_TASKS.md),
+  [MAINTENANCE.md](MAINTENANCE.md), and the latest
   [CHANGELOG.md](CHANGELOG.md) entries before substantial work. Read critical
   project docs in full; preserve the established documentation filenames.
 - Follow the installed skill's full `references/AGENT_RULES.md` and applicable
@@ -27,8 +28,15 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 
 - Maintain a simple Go service for a few devices on Debian/Ubuntu Linux x86-64,
   with SQLite, no Docker requirement, and no DynamoDB or Redis service requirement.
-  Linux x86-64 is the supported server target. ARM/MIPS are unverified and
-  deferred pending access to suitable testing hardware, not promised targets.
+  Linux x86-64 is the supported server target. Modernc stays the preferred
+  default. Version `0.3` adds an optional mattn build selected with `sqlite_cgo`;
+  CGO and a suitable C compiler are required. Both backends have automated
+  Linux x86-64 coverage. MIPS/ARM remain experimental and hardware-unverified.
+- Driver choice belongs in the small build-tagged driver files. Share datastore
+  queries/schema and sync behavior; do not import both drivers into production
+  or change the default merely because CGO happens to be enabled. Preserve
+  per-connection WAL, synchronous=FULL, and 5000 ms busy-timeout settings using each driver's DSN
+  options. `sqlite_cgo` with CGO disabled must fail during compilation.
 - Preserve Brave sync API logic, authentication, protobuf fields, and chain
   semantics. The deliberate URL change is `POST /command/`, with
   `POST /v2/command/` retained as an alias.
@@ -91,30 +99,41 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   or `your-server`, never provider-specific examples or personal paths. Public
   repository attribution, including the `luxzg` fork URL, is acceptable.
 - For authorized code work, the documented commands run from `sync-lite/`:
-  `GOWORK=off go test ./...` and `go build -o sync-lite .`.
+  `./scripts/check.sh`, `./scripts/test-upgrade.sh`, `./scripts/smoke-test.sh`,
+  `./scripts/security-check.sh`, and `./scripts/build.sh`.
+  `GOWORK=off go test ./...` and `go build -o sync-lite .` remain valid.
+  The preferred deployment artifact is `dist/sync-lite-linux-amd64`, built with
+  CGO disabled. Verify it with `--version`; do not deploy a stale earlier build.
   Format touched Go files with `gofmt`; use `git diff --check` on intended changes.
   Inspect relevant code/helpers before relying on commands in a new code task.
-- `scripts/run-with-env.sh` is documented as a development launcher, not a test,
-  backup, or production deployment helper. Additional helpers are proposals in
-  TODO, not existing capabilities.
+- `scripts/run-with-env.sh` remains a development launcher. Check/upgrade/smoke
+  helpers own their temporary synthetic state and processes. The upgrade helper
+  archives an explicit source allowlist from `0.2` baseline `1c0d957`; it never
+  reads or restores a live database. No helper automates production backup or
+  installation. See DEVELOPMENT_SETUP for prerequisites and GO/tool overrides.
 - Run relevant safe checks during authorized implementation. Report agent-run
   automation, user-run local tests, remote device tests, and field use separately.
   Past passing tests and user reports do not prove complete protocol/security coverage.
 - Ask the user to install missing tools with exact commands and a short reason;
   do not silently install packages or update the shared skill.
-- Before the next code pass, check the actual installed Go version, module
-  requirements, dependency/SQLite versions, and compatibility. The user updated
-  Go in September; this does not update the deployed binary. Plan govulncheck
-  and ShellCheck alongside regression tests; their integration remains in TODO.
-- No standing commit/push authorization is established here. Obtain it for the
-  relevant work; never infer it from historical publication discussions.
+- The October 2026 maintenance baseline is recorded in MAINTENANCE. Go 1.26+
+  is required; checks used Go 1.26.9, govulncheck, and ShellCheck. Check actual
+  toolchain/dependency versions again at the next maintenance pass. Keep modernc's
+  libc dependency pinned to its upstream-required version, not an arbitrary
+  independent upgrade. Compiler/library updates require rebuilt artifacts.
+- The user granted standing commit/push authorization on 2026-10-19: after a
+  coherent authorized pass or part of a larger task, validate and review the
+  intended changes, commit, and push without asking again. Honor explicit holds
+  on committing or pushing. If push fails, report the failure and ask the user
+  to push; do not force-push or leave completed work unpublished without reason.
+  This does not authorize new work, upstream merges, deployments, or data changes.
 
 ## Versioning And Records
 
-- The documented tested release is `0.2`, dated 2026-02-13. Documentation-only
+- The current release is `0.3`, dated 2026-10-19. Documentation-only
   updates do not bump the service version or imply a new deployed binary.
-- Code changes require a version change. The next code release is `0.3`, then
-  `0.4`, and so on; minor patches may use `0.3.1`. Components are integers:
+- Code changes require a version change. The next normal code release is `0.4`;
+  minor patches may use `0.3.1`. Components are integers:
   `0.9` is followed by `0.10`, not automatically `1.0`.
 - Prepend CHANGELOG entries, newest first, including documentation-only changes.
   Use `## docs - YYYY-MM-DD HH:MM TZ (timezone)` or the version in place of
@@ -127,3 +146,5 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   The latest field report is 2026-09-13: updated Debian Flatpak and Android Nightly
   APK clients resume sync after downtime, service restarts, and server reboots.
   README records the tested categories and limits; do not call this agent testing.
+  Automated `0.3` validation on 2026-10-19 is separate from those `0.2` browser
+  field results. Do not claim MIPS build/runtime success without user evidence.

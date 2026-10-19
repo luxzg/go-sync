@@ -14,9 +14,24 @@ git --version
 go version
 ```
 
-Use a supported Go version compatible with the module requirements. Exact local
-toolchain and dependency versions must be checked before the next code pass;
-the development laptop's Go installation was updated in September 2026.
+Version `0.3` requires Go **1.26 or newer**. Use a maintained patch release;
+Go 1.26.9 was used for the October 19 checks. The default shell previously selected
+an older patch, so check `go version` rather than assuming which installation is
+active. See [MAINTENANCE.md](MAINTENANCE.md) for the dated dependency/toolchain record.
+
+For all validation helpers and the optional CGO build, install these development
+prerequisites on Debian/Ubuntu if missing:
+
+```bash
+sudo apt update
+sudo apt install -y git ca-certificates build-essential shellcheck python3 openssl
+go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+```
+
+Ensure the chosen Go installation and Go's binary directory are on `PATH`.
+Building only the default modernc binary does not require GCC, Zig, Python,
+ShellCheck, OpenSSL, or govulncheck. Zig is needed only for the documented
+experimental cross-compiler example and is installed separately by its user.
 
 A compatible compiled binary needs no Go installation on the server. VS Code,
 Codex, Go generators, and development linters are not runtime requirements.
@@ -57,17 +72,50 @@ Run the module's tests and build the binary:
 
 ```bash
 GOWORK=off go test ./...
-go build -o sync-lite .
+./scripts/build.sh
+./dist/sync-lite-linux-amd64 --version
 ```
 
 `GOWORK=off` disables workspace mode; the current directory selects the sync-lite
-module. Tests do not require a separately running server. The build produces
-`./sync-lite` for the selected Go target; a native Linux x86-64 build is the
-supported deployment path. Cross-compilation alone does not prove runtime support.
+module. Tests do not require a separately running server. The build helper
+produces `dist/sync-lite-linux-amd64`, its SHA-256 checksum, and Go build metadata.
+It defaults to Linux x86-64 with CGO disabled. The earlier
+`go build -o sync-lite .` command also remains valid; the helper is preferred for
+a static deployment binary. Cross-compilation alone does not prove runtime support.
 
 Continue with [Deploy on Debian/Ubuntu](README.md#deploy-on-debianubuntu-start-to-end)
 to install that binary and configure systemd. Building on the server is also
 possible with Go installed, but the production unit runs the binary, not `go run`.
+
+## Validation Commands
+
+From `sync-lite/`:
+
+| Command | Scope and effects |
+| --- | --- |
+| `./scripts/check.sh` | gofmt check, ShellCheck, vet, default no-CGO tests, race-enabled tests for both drivers, and the invalid-CGO build guard; synthetic temporary databases |
+| `./scripts/test-upgrade.sh` | Archives an explicit source allowlist from `0.2` commit `1c0d957`, compiles old/new test executables, tests both drivers and old-version reopen on clean/WAL fixtures, then removes its own temporary files |
+| `./scripts/smoke-test.sh` | Builds both drivers in a temporary directory; creates disposable TLS certificates and databases; tests actual loopback HTTP/HTTPS startup, aliases, SIGINT/SIGTERM, persistence, and invalid TLS settings |
+| `./scripts/security-check.sh` | Runs govulncheck against both driver configurations; needs network access to the vulnerability database and may download module metadata |
+| `./scripts/build.sh` | Builds the preferred static Linux x86-64 binary and metadata in ignored `dist/` |
+| `./scripts/build.sh mattn` | Builds the optional CGO binary in `dist/`; requires a suitable C compiler |
+
+The helpers do not install packages, deploy, restart installed services, or read
+live SQLite/config/certificate files. Tests use synthetic fixtures. The upgrade
+helper requires fork history containing its fixed `0.2` baseline; a shallow
+clone may need its history fetched first. The smoke helper additionally needs
+Python 3 and OpenSSL, only on the development machine.
+
+Use `GO=/path/to/go ./scripts/check.sh` (and the same override for build, upgrade,
+or smoke helpers) to select a specific installed compiler. For govulncheck,
+select the compiler through `PATH`; set `GOVULNCHECK=/path/to/govulncheck` if it
+is not already found there. No helper silently installs a compiler or scanner.
+
+An optional custom mattn build uses `CGO_ENABLED=1 go build -tags sqlite_cgo .`.
+See the [experimental MIPS example](README.md#experimental-mips-build) for target
+settings. The `sqlite_cgo` tag intentionally fails when CGO is disabled. Both
+drivers must pass the suite after future storage changes. Keep modernc's libc
+pin aligned with the exact version required by the selected modernc release.
 
 ## Optional VS Code Setup
 
@@ -91,16 +139,17 @@ Sanitized `.env.example` templates remain tracked.
   including the SQLite driver and embedded engine. Review official release notes
   and advisories before proposing compatible upgrades. Updating Go locally does
   not update an existing deployed binary.
-- Add govulncheck for Go vulnerability checks and ShellCheck for shell scripts in
-  the later tooling pass. Helpers and exact invocations will be documented after
-  implementation and validation; neither tool is assumed installed today.
+- Use the validation helpers above, including govulncheck and ShellCheck. The
+  October baseline is in MAINTENANCE; refresh it monthly and after advisories.
 - Require the [data-safety checks](README.md#upgrading-safely) before binary or
   SQLite updates. Use synthetic prior-version fixtures, establish migration and
   rollback compatibility, and back up consistent real state before deployment.
-- The current release is `0.2`; the next code release is `0.3`, with optional
+- The current release is `0.3`; the next normal code release is `0.4`, with optional
   patch versions such as `0.3.1`. Documentation-only changes keep the version.
   Prepend dated changelog entries with time and timezone. Review intended changes
-  with `git diff --check` and `git status --short`; commit and push need approval.
+  with `git diff --check` and `git status --short`. Standing user authorization
+  covers committing and pushing completed authorized passes unless explicitly
+  held. If push fails, ask the user to push; never force-push to work around it.
 
 Prioritized helpers, regression tests, maintenance, and optional features are in
 [TODO.md](TODO.md). MIPS/ARM validation is deferred in

@@ -52,9 +52,14 @@ func (c *Cache) GetInterimCount(ctx context.Context, clientID string, countType 
 	return count, nil
 }
 
-// IncrementInterimCount increments or decrements the amount of entities inserted in
+// AdjustInterimCount increments or decrements the amount of entities inserted in
 // the DB that were not yet added to the item count
-func (c *Cache) IncrementInterimCount(ctx context.Context, clientID string, countType string, subtract bool) (int, error) {
+func (c *Cache) AdjustInterimCount(
+	ctx context.Context,
+	clientID string,
+	countType string,
+	subtract bool,
+) (int, error) {
 	return c.Incr(ctx, GetInterimCountKey(clientID, countType), subtract)
 }
 

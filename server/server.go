@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	_ "net/http/pprof" // pprof magic
+	_ "net/http/pprof" //nolint:gosec // G108: pprof is served on a separate listener (:6061), gated by PPROF_ENABLED
 	"os"
 	"os/signal"
 	"strconv"
@@ -24,6 +24,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/brave/go-sync/cache"
+	"github.com/brave/go-sync/command"
 	"github.com/brave/go-sync/controller"
 	"github.com/brave/go-sync/datastore"
 	"github.com/brave/go-sync/middleware"
@@ -46,6 +47,8 @@ func setupLogger(ctx context.Context) (context.Context, *zerolog.Logger) {
 }
 
 func setupRouter(ctx context.Context, logger *zerolog.Logger) (context.Context, *chi.Mux) {
+	command.LoadHighDeviceLimitClientIDsFromEnv()
+
 	r := chi.NewRouter()
 
 	r.Use(chiware.RequestID)
@@ -128,9 +131,10 @@ func StartServer() {
 
 	port := ":8295"
 	srv := http.Server{
-		Addr:        port,
-		Handler:     r,
-		BaseContext: setupBaseCtx(serverCtx),
+		Addr:              port,
+		Handler:           r,
+		BaseContext:       setupBaseCtx(serverCtx),
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	sig := make(chan os.Signal, 1)
@@ -142,8 +146,9 @@ func StartServer() {
 		healthCheckActive = false // disable health check
 
 		time.Sleep(60 * time.Second)
-		//nolint:errcheck // Error during shutdown in signal handler is acceptable
-		srv.Shutdown(serverCtx)
+		if err := srv.Shutdown(serverCtx); err != nil {
+			log.Err(err).Msg("HTTP server graceful shutdown failed")
+		}
 	}()
 
 	// Add profiling flag to enable profiling routes.
@@ -151,6 +156,7 @@ func StartServer() {
 		// pprof attaches routes to default serve mux
 		// host:6061/debug/pprof/
 		go func() {
+			//nolint:gosec // G114: pprof diagnostic server
 			if err := http.ListenAndServe(":6061", http.DefaultServeMux); err != nil {
 				log.Err(err).Msg("pprof service returned error")
 			}

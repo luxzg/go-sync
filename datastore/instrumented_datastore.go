@@ -81,7 +81,7 @@ func (_d DatastoreWithPrometheus) GetClientItemCount(ctx context.Context, client
 }
 
 // GetUpdatesForType implements Datastore
-func (_d DatastoreWithPrometheus) GetUpdatesForType(ctx context.Context, dataType int, clientToken int64, fetchFolders bool, clientID string, maxSize int64) (b1 bool, sa1 []SyncEntity, err error) {
+func (_d DatastoreWithPrometheus) GetUpdatesForType(ctx context.Context, dataType int, clientToken int64, fetchFolders bool, clientID string, maxSize int) (b1 bool, sa1 []SyncEntity, err error) {
 	_since := time.Now()
 	defer func() {
 		result := "ok"
@@ -95,7 +95,7 @@ func (_d DatastoreWithPrometheus) GetUpdatesForType(ctx context.Context, dataTyp
 }
 
 // HasItem implements Datastore
-func (_d DatastoreWithPrometheus) HasItem(ctx context.Context, clientID string, ID string) (b1 bool, err error) {
+func (_d DatastoreWithPrometheus) HasItem(ctx context.Context, clientID string, id string) (b1 bool, err error) {
 	_since := time.Now()
 	defer func() {
 		result := "ok"
@@ -105,7 +105,7 @@ func (_d DatastoreWithPrometheus) HasItem(ctx context.Context, clientID string, 
 
 		datastoreDurationSummaryVec.WithLabelValues(_d.instanceName, "HasItem", result).Observe(time.Since(_since).Seconds())
 	}()
-	return _d.base.HasItem(ctx, clientID, ID)
+	return _d.base.HasItem(ctx, clientID, id)
 }
 
 // HasServerDefinedUniqueTag implements Datastore

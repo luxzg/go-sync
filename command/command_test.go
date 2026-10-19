@@ -3,7 +3,6 @@ package command_test
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strconv"
@@ -11,7 +10,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/brave/go-sync/cache"
 	"github.com/brave/go-sync/command"
@@ -49,7 +50,14 @@ func (a PBSyncAttrsByName) Len() int           { return len(a) }
 func (a PBSyncAttrsByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a PBSyncAttrsByName) Less(i, j int) bool { return *a[i].Name < *a[j].Name }
 
-func NewPBSyncAttrs(name *string, version *int64, deleted *bool, folder *bool, serverTag *string, specifics *sync_pb.EntitySpecifics) *PBSyncAttrs {
+func NewPBSyncAttrs(
+	name *string,
+	version *int64,
+	deleted *bool,
+	folder *bool,
+	serverTag *string,
+	specifics *sync_pb.EntitySpecifics,
+) *PBSyncAttrs {
 	return &PBSyncAttrs{
 		Name:                   name,
 		Version:                version,
@@ -61,7 +69,7 @@ func NewPBSyncAttrs(name *string, version *int64, deleted *bool, folder *bool, s
 }
 
 func (suite *CommandTestSuite) SetupSuite() {
-	datastore.Table = "client-entity-test-command"
+	datastore.Table = "client-entity-test-command" //nolint:reassign // acceptable for tests
 	var err error
 	suite.dynamo, err = datastore.NewDynamo()
 	suite.Require().NoError(err, "Failed to get dynamoDB session")
@@ -187,8 +195,8 @@ func assertCommonResponse(suite *CommandTestSuite, rsp *sync_pb.ClientToServerRe
 
 func assertGetUpdatesResponse(suite *CommandTestSuite, rsp *sync_pb.GetUpdatesResponse,
 	newMarker *[]*sync_pb.DataTypeProgressMarker, expectedPBSyncAttrs []*PBSyncAttrs,
-	expectedChangesRemaining int64) { //nolint:unparam
-	PBSyncAttrs := []*PBSyncAttrs{}
+	expectedChangesRemaining int64) { //nolint:unparam // kept for tests that expect a non-zero remaining count
+	pbSyncAttrs := []*PBSyncAttrs{}
 	for _, entity := range rsp.Entries {
 		// Update tokens in the expected NewProgressMarker
 		var tokenPtr *[]byte
@@ -203,20 +211,15 @@ func assertGetUpdatesResponse(suite *CommandTestSuite, rsp *sync_pb.GetUpdatesRe
 			binary.PutVarint(*tokenPtr, *entity.Mtime)
 		}
 
-		PBSyncAttrs = append(PBSyncAttrs,
+		pbSyncAttrs = append(pbSyncAttrs,
 			NewPBSyncAttrs(entity.Name, entity.Version, entity.Deleted,
 				entity.Folder, entity.ServerDefinedUniqueTag, entity.Specifics))
 	}
 
 	sort.Sort(PBSyncAttrsByName(expectedPBSyncAttrs))
-	sort.Sort(PBSyncAttrsByName(PBSyncAttrs))
+	sort.Sort(PBSyncAttrsByName(pbSyncAttrs))
 
-	// Marshal to json to ignore protobuf internal fields when checking equality.
-	s1, err := json.Marshal(expectedPBSyncAttrs)
-	suite.Require().NoError(err, "json.Marshal should succeed")
-	s2, err := json.Marshal(PBSyncAttrs)
-	suite.Require().NoError(err, "json.Marshal should succeed")
-	suite.Equal(s1, s2)
+	suite.Empty(cmp.Diff(expectedPBSyncAttrs, pbSyncAttrs, protocmp.Transform()))
 
 	suite.Equal(*newMarker, rsp.NewProgressMarker)
 	suite.Equal(expectedChangesRemaining, *rsp.ChangesRemaining)
@@ -421,7 +424,12 @@ func (suite *CommandTestSuite) TestHandleClientToServerMessage_DeviceLimitExceed
 			suite.Require().NoError(
 				command.HandleClientToServerMessage(context.Background(), suite.cache, commitMsg, commitRsp, suite.dynamo, testCase.clientID),
 				"Commit device info should succeed for device %d", i)
-			suite.Equal(sync_pb.SyncEnums_SUCCESS, *commitRsp.ErrorCode, "Commit device info should succeed for device %d", i)
+			suite.Equal(
+				sync_pb.SyncEnums_SUCCESS,
+				*commitRsp.ErrorCode,
+				"Commit device info should succeed for device %d",
+				i,
+			)
 		}
 
 		// should get THROTTLED error when device limit is exceeded
@@ -598,7 +606,12 @@ func (suite *CommandTestSuite) TestHandleClientToServerMessage_ReplaceParentIDTo
 	child3 := getCommitEntity("id_child3", 0, false, getBookmarkSpecifics())
 	child3.ParentIdString = aws.String("id_parent2")
 
-	updateChild0 := getCommitEntity(*rsp.Commit.Entryresponse[0].IdString, *rsp.Commit.Entryresponse[0].Version, false, getBookmarkSpecifics())
+	updateChild0 := getCommitEntity(
+		*rsp.Commit.Entryresponse[0].IdString,
+		*rsp.Commit.Entryresponse[0].Version,
+		false,
+		getBookmarkSpecifics(),
+	)
 	updateChild0.ParentIdString = aws.String("id_parent")
 
 	entries := []*sync_pb.SyncEntity{parent1, child1, parent2, child2, child3, updateChild0}
@@ -647,7 +660,8 @@ func assertTypeMtimeCacheValue(suite *CommandTestSuite, key string, mtime int64,
 }
 
 func insertSyncEntitiesWithoutUpdateCache(
-	suite *CommandTestSuite, entries []*sync_pb.SyncEntity, clientID string) (ret []*datastore.SyncEntity) {
+	suite *CommandTestSuite, entries []*sync_pb.SyncEntity, clientID string) []*datastore.SyncEntity {
+	var ret []*datastore.SyncEntity
 	for _, entry := range entries {
 		dbEntry, err := datastore.CreateDBSyncEntity(entry, nil, clientID)
 		suite.Require().NoError(err, "Create db entity from pb entity should succeed")
@@ -660,7 +674,7 @@ func insertSyncEntitiesWithoutUpdateCache(
 			"Cache should not be updated")
 		ret = append(ret, dbEntry)
 	}
-	return
+	return ret
 }
 
 func (suite *CommandTestSuite) TestHandleClientToServerMessage_TypeMtimeCache_Basic() {

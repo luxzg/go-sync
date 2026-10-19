@@ -18,7 +18,7 @@ type ItemCountTestSuite struct {
 }
 
 func (suite *ItemCountTestSuite) SetupSuite() {
-	datastore.Table = "client-entity-test-datastore"
+	datastore.Table = "client-entity-test-datastore" //nolint:reassign // acceptable for tests
 	var err error
 	suite.dynamo, err = datastore.NewDynamo()
 	suite.Require().NoError(err, "Failed to get dynamoDB session")
@@ -41,7 +41,11 @@ func (suite *ItemCountTestSuite) TestGetClientItemCount() {
 		{ClientID: "client2", ID: "client2", ItemCount: 10},
 	}
 	for _, item := range items {
-		existing := datastore.ClientItemCounts{ClientID: item.ClientID, ID: item.ID, Version: datastore.CurrentCountVersion}
+		existing := datastore.ClientItemCounts{
+			ClientID: item.ClientID,
+			ID:       item.ID,
+			Version:  datastore.CurrentCountVersion,
+		}
 		suite.Require().NoError(
 			suite.dynamo.UpdateClientItemCount(context.Background(), &existing, item.ItemCount, 0))
 	}

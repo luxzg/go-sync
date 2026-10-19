@@ -3,11 +3,14 @@ package main
 import (
 	"compress/gzip"
 	"context"
+	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -19,9 +22,20 @@ import (
 	"github.com/brave/go-sync/schema/protobuf/sync_pb"
 )
 
-const payloadLimit10MB = 10 * 1024 * 1024
+const (
+	payloadLimit10MB = 10 * 1024 * 1024
+	version          = "0.3"
+)
 
 func main() {
+	showVersion := flag.Bool("version", false, "print version and build information, then exit")
+	flag.Parse()
+	if *showVersion {
+		fmt.Printf("sync-lite %s (sqlite: %s; %s/%s; %s)\n", version, sqliteBackend, runtime.GOOS, runtime.GOARCH, runtime.Version())
+		return
+	}
+	log.Printf("sync-lite %s (sqlite backend: %s)", version, sqliteBackend)
+	command.LoadHighDeviceLimitClientIDsFromEnv()
 	listenAddr := getenvDefault("LISTEN_ADDR", ":8295")
 	sqlitePath := getenvDefault("SQLITE_PATH", "./sync-lite.db")
 	tlsCertFile := os.Getenv("TLS_CERT_FILE")

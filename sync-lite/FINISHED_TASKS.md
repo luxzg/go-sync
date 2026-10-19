@@ -5,6 +5,31 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- Version `0.3` work on 2026-10-19 added optional mattn selection through the
+  `sqlite_cgo` build tag while retaining modernc as the preferred default.
+  Both configurations passed automated Linux x86-64 tests. MIPS compilation and
+  router execution remain unverified; the issue reply requests community testing.
+- Incorporated reviewed official upstream revision
+  `71f27af460f4524a1d4dac4c35d8e7ef2a072c50` unchanged outside `sync-lite/`.
+  Adapted the datastore signature and explicit high-device-limit environment
+  loading inside lite. Updated direct SQLite/protobuf dependencies with the
+  required matching modernc libc pin; Go 1.26+ is now required for source builds.
+- Corrected the SQLite insert-conflict return contract so upstream emits
+  `CONFLICT` rather than acknowledging an unpersisted duplicate or increasing
+  its item count. Added focused storage and protocol regressions. Busy WAL
+  checkpoint results are now reported rather than ignored.
+- Added and ran check, upgrade, smoke, security, and build helpers. Tests cover
+  both drivers, same-chain devices, fresh schema, roots, conflicts/deletion,
+  persistence, legacy schema, WAL busy results, and escaped filenames.
+  Real-process checks cover version output and HTTP/HTTPS startup/shutdown.
+- The synthetic upgrade matrix passed from actual archived `0.2` code through
+  both `0.3` drivers and back to `0.2`, including committed WAL recovery. The
+  application schema is unchanged; no data migration or client reset is needed.
+  README documents a stopped-service private backup and binary-only update.
+- The October maintenance pass used Go 1.26.9 and found no vulnerabilities with
+  govulncheck in either driver configuration. Remaining embedded-engine and
+  inherited-dependency follow-up is in MAINTENANCE and TODO. No home-server
+  deployment or real browser/MIPS testing was performed in this pass.
 - Initial Go/SQLite implementation and first-run use were reported working in
   February 2026. Version `0.2` was designated the tested baseline on 2026-02-13.
 - The user reported six integration tests passing with
@@ -52,12 +77,13 @@ not claim fresh code verification or replace the changelog timeline.
   clients. This is not permission to discard today's SQLite data.
 - Automated ACME management in sync-lite is not required; the user chose an
   external certificate-copy-and-restart workaround.
-- Linux x86-64 remains the supported server target, agreed 2026-09-13. ARM and
-  MIPS support are deferred because testing hardware is unavailable. A reporter's
+- Linux x86-64 was confirmed as the supported server target on 2026-09-13. ARM and
+  MIPS hardware support were deferred because testing hardware was unavailable. A reporter's
   `GOARCH=mipsle GOMIPS=softfloat go build` failed with `modernc.org/sqlite`;
   they reported success after switching to `github.com/mattn/go-sqlite3` and using
   `zig cc -target mipsel-linux-musleabi -static`. Neither result was reproduced
   here. Pure-Go implementation does not establish support for every Go target.
-  Do not replace the working SQLite driver on this report alone; reopen when
-  target validation is possible. The separate write-amplification concern stays
-  active in TODO because it can be investigated on the supported target.
+  The October `0.3` pass later added mattn as an optional build without replacing
+  the working default. Native hardware validation remains outstanding in TODO.
+  The separate write-amplification concern also remains active because it can
+  be investigated on the supported target.

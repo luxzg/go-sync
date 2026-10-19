@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,26 @@ import (
 
 type AuthTestSuite struct {
 	suite.Suite
+}
+
+func (suite *AuthTestSuite) TestBlockedClientIDCaseInsensitive() {
+	// Generate a valid token and grab its hex public key.
+	_, tokenHex, publicKeyHex, err := authtest.GenerateToken(time.Now().UnixMilli())
+	suite.Require().NoError(err)
+
+	// Block the key using uppercase hex in the env var.
+	suite.T().Setenv("BLOCKED_CLIENT_IDS", strings.ToUpper(publicKeyHex))
+
+	// Re-encode the token with the public key hex uppercased so that a naive
+	// case-sensitive comparison would not match the lowercase blocked entry.
+	parts := strings.Split(tokenHex, "|")
+	suite.Require().Len(parts, 3)
+	parts[2] = strings.ToUpper(parts[2])
+	mixedToken := base64.URLEncoding.EncodeToString([]byte(strings.Join(parts, "|")))
+
+	id, err := auth.Authenticate(mixedToken)
+	suite.Require().Error(err, "blocked client should be rejected regardless of hex casing")
+	suite.Require().Empty(id)
 }
 
 func (suite *AuthTestSuite) TestAuthenticate() {
@@ -91,8 +112,8 @@ func (suite *AuthTestSuite) TestAuthorize() {
 	}
 	for testName, test := range tests {
 		req.Header.Set("Authorization", test.token)
-		clientID, err := auth.Authorize(req)
-		suite.Require().Equal(test.err, err,
+		clientID, authErr := auth.Authorize(req)
+		suite.Require().Equal(test.err, authErr,
 			"error mismatched for %s test case", testName)
 		suite.Require().Equal(test.clientID, clientID,
 			"clientID mismatched for %s test case", testName)
