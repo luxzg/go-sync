@@ -95,6 +95,10 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   is test-only; its helper accepts no database path and must never become an
   automatic upsert or bypass of authentication/version checks. Production repair
   requires a fresh, consistent backup, rechecked preconditions, and explicit scope.
+- Normal quota counters need not equal live-row counts: initial server roots
+  are inserted outside the counter increment path. Never infer lost data or
+  silently recount from a mismatch. Any known drift retained in a scoped repair
+  needs an explicit, freshly checked stored/live baseline and a tested count delta.
 - Do not recommend toggling a combined History and tabs setting to clear Sessions
   metadata. Disabling History can remove imported visits; server-side History
   expires after 14 days, so a lossless re-download cannot be assumed. See the

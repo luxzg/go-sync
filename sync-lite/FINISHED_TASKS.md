@@ -5,6 +5,12 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-10-19, investigation helper v0.2 added explicitly pinned stored/live
+  count baselines. Both backends preserve known synthetic count drift while
+  staging/retrying two Sessions identities; unexpected baselines still abort.
+  Real new-client initialization confirms roots can create a five-row offset.
+  Larger operator-reported drift remains unexplained and separate from the
+  missing-ID symptom. No production data or service behavior changed.
 - On 2026-10-19, investigation helper v0.1 reproduced the structural stale
   Sessions state using synthetic IDs, tombstones, reservations, and opaque
   payloads. Both SQLite backends passed exact-version staging/retry, download

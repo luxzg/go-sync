@@ -5,6 +5,23 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-10-19 20:52 CEST (Europe/Zagreb)
+
+- Recorded the count preflight: one accounting entry contains only server roots;
+  the populated entry has live/deleted Sessions and an unexplained quota-count
+  shortfall beyond the five roots. Root insertion bypasses normal count increments,
+  so equality is not a universal invariant. No data-loss or conflict cause is inferred.
+- Updated investigation helper to v0.2. Synthetic staging can preserve a known,
+  explicitly pinned stored/live baseline, adding exactly one normal count per
+  staged identity without recounting unrelated records. Unknown or changed
+  baselines still abort. Added root-offset/under-count/over-count tests and
+  tracked the larger accounting discrepancy separately from targeted recovery.
+
+Validation: both backend reconciliation suites, including mattn race coverage,
+and the standard check helper passed. Service source, dependencies, schema,
+version `0.3.1`, and binaries are unchanged. No production repair was performed;
+fresh backup and target/donor/version preflight remain required.
+
 ## docs - 2026-10-19 20:41 CEST (Europe/Zagreb)
 
 - Recorded later operator confirmation of fresh tabs/history in both directions

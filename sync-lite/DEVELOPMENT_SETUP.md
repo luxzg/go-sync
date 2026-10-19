@@ -99,7 +99,7 @@ From `sync-lite/`:
 | `./scripts/security-check.sh` | Runs govulncheck against both driver configurations; needs network access to the vulnerability database and may download module metadata |
 | `./scripts/build.sh` | Builds the preferred static Linux x86-64 binary and metadata in ignored `dist/` |
 | `./scripts/build.sh mattn` | Builds the optional CGO binary in `dist/`; requires a suitable C compiler |
-| `./scripts/test-session-reconciliation.sh` | Investigation helper v0.1; overlays synthetic-only Sessions reconciliation tests and runs both backends, with mattn race coverage; accepts no real database input |
+| `./scripts/test-session-reconciliation.sh` | Investigation helper v0.2; overlays synthetic-only Sessions reconciliation tests, including explicitly pinned count-drift preservation, and runs both backends with mattn race coverage; accepts no real database input |
 
 The helpers do not install packages, deploy, restart installed services, or read
 live SQLite/config/certificate files. Tests use synthetic fixtures. The upgrade

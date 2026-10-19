@@ -1,5 +1,32 @@
 # Maintenance Record
 
+## 2026-10-19: Reconciliation Count-Baseline Follow-Up
+
+Read-only operator aggregates show two accounting entries: one has only the five
+server roots and no Sessions, while the populated entry has both live and deleted
+Sessions and a normal-counter shortfall larger than those five roots. This does
+not establish unauthorized use, corruption, or lost records. Setup inserts five
+server-defined roots without going through the normal commit-count increment;
+therefore the earlier equality check was deliberately conservative, not a
+universal consistency invariant. The extra drift's origin remains unknown and
+does not itself explain an update rejected for a missing ID.
+
+Investigation helper v0.2 extends only the synthetic experiment. Unreviewed count
+differences still abort. An explicitly supplied stored/live baseline permits
+staging only when both values match exactly inside the same transaction; matching
+the difference alone is insufficient. It adds one stored count per staged live
+identity, preserving the existing difference rather than recounting unrelated
+data. History buckets and metadata, old tombstones, roots, and unrelated rows
+remain unchanged. The service and its version stay `0.3.1`.
+
+Both backend experiments passed with root-induced drift and synthetic under- and
+over-counts, including zero stored count. Changed baselines abort with no writes;
+normal authenticated retries succeed afterward while preserving the count gap.
+The standard check helper also passed. No production repair was performed.
+Before any real repair, take a fresh consistent backup and separately recheck
+target/donor metadata, current exact base versions, and the same-chain stored/live
+baseline. Do not delete old Sessions merely because their tombstone count is high.
+
 ## 2026-10-19: Synthetic Sessions Reconciliation Investigation
 
 The operator later confirmed fresh open tabs and history arrived in both

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Investigation helper v0.1: synthetic state only; never repairs an input DB.
+# Investigation helper v0.2: synthetic state only; never repairs an input DB.
 set -euo pipefail
 
 if (( $# != 0 )); then

@@ -23,8 +23,10 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   pre-0.3 backup, with only same-tag tombstones in backup and current data.
   The [synthetic reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
   now reproduces that structural state and lets exact-version authenticated
-  retries succeed without changing normal API behavior. Next check current
-  count consistency and donor metadata read-only, design the smallest guarded
+  retries succeed without changing normal API behavior. Count drift was confirmed
+  by operator aggregates; v0.2 tests preserve an explicitly pinned baseline without
+  a broad recount. Next verify target/donor metadata and current exact base versions
+  read-only, design the smallest guarded
   repair, and require fresh backup/explicit scope before any real-data write.
   Do not mistake fixture success for actual client recovery or an established
   cause. The combined History and tabs toggle is not a safe reset shortcut.
@@ -58,6 +60,11 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 
 ## P2: Maintenance And Operations
 
+- Investigate normal quota-count drift separately from missing Sessions IDs.
+  Initial server roots explain a five-record offset, but operator aggregates
+  also show a larger shortfall. Use synthetic lifecycle/concurrency/count-cache
+  tests to establish a cause before proposing a correction. Do not infer data
+  loss, silently recount, or broaden a two-record repair into chain cleanup.
 - Refresh the [maintenance baseline](MAINTENANCE.md) monthly and after advisories;
   next routine review is November 2026. Check Go, both SQLite drivers/embedded
   engines, inherited modules, govulncheck, ShellCheck, and build prerequisites.

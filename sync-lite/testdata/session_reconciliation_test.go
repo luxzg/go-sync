@@ -257,6 +257,68 @@ func TestSessionReconciliationExperimentInheritedTagRelease(t *testing.T) {
 	}
 }
 
+func TestSessionReconciliationExperimentKnownCountDrift(t *testing.T) {
+	for _, stored := range []int{0, 1, 9} {
+		t.Run(fmt.Sprintf("stored=%d", stored), func(t *testing.T) {
+			h, cleanup := newTestHandler(t)
+			defer cleanup()
+			token, chain := mustToken(t)
+			entries := reconciliationSeed(t, h, token, chain)
+			// Real new-client initialization adds five internal roots without
+			// incrementing the normal counter. All identities here are synthetic.
+			protocolGetUpdates(t, h, token, sync_pb.SyncEnums_NEW_CLIENT, testBookmarkTypeID, testNigoriTypeID)
+			if _, err := h.db.db.Exec(`UPDATE client_item_counts SET item_count = ? WHERE client_id = ?`, stored, chain); err != nil {
+				t.Fatal(err)
+			}
+			baseline := reconciliationExpectedCounts{Stored: stored, Live: 6}
+			originals := reconciliationOriginals(t, h.db)
+			metadata := reconciliationMetadata(t, h.db)
+			snapshot := upgradeSnapshot(t, context.Background(), h.db.db)
+			if err := reconciliationStage(context.Background(), h.db, chain, entries); err == nil {
+				t.Fatal("unknown count drift must still be refused")
+			}
+			for _, wrong := range []reconciliationExpectedCounts{
+				{Stored: stored + 1, Live: 6},
+				{Stored: stored, Live: 7},
+				{Stored: stored + 1, Live: 7},
+			} {
+				if err := reconciliationStageAtCounts(context.Background(), h.db, chain, entries, &wrong); err == nil {
+					t.Fatal("changed baseline must be refused, even if its difference is unchanged")
+				}
+			}
+			if !bytes.Equal(snapshot, upgradeSnapshot(t, context.Background(), h.db.db)) {
+				t.Fatal("baseline refusals changed stored data")
+			}
+			if err := reconciliationStageAtCounts(context.Background(), h.db, chain, entries, &baseline); err != nil {
+				t.Fatal(err)
+			}
+			assertDelta := func() {
+				t.Helper()
+				var counted, observed int
+				if err := h.db.db.QueryRow(`SELECT item_count FROM client_item_counts WHERE client_id = ?`, chain).Scan(&counted); err != nil {
+					t.Fatal(err)
+				}
+				if err := h.db.db.QueryRow(`SELECT COUNT(*) FROM sync_entities WHERE client_id = ? AND deleted = 0
+					AND data_type IS NOT NULL AND data_type NOT IN (?, ?)`, chain,
+					datastore.HistoryTypeID, datastore.HistoryDeleteDirectiveTypeID).Scan(&observed); err != nil {
+					t.Fatal(err)
+				}
+				if counted != stored+2 || observed != 8 || observed-counted != baseline.Live-baseline.Stored {
+					t.Fatalf("must preserve the existing difference, not recount: stored=%d live=%d", counted, observed)
+				}
+				if !bytes.Equal(originals, reconciliationOriginals(t, h.db)) || !bytes.Equal(metadata, reconciliationMetadata(t, h.db)) {
+					t.Fatal("Sessions staging/retry changed original rows or unrelated metadata")
+				}
+			}
+			assertDelta()
+			for _, response := range protocolCommit(t, h, token, "synthetic-phone", entries...) {
+				protocolRequireCommitSuccess(t, response)
+			}
+			assertDelta()
+		})
+	}
+}
+
 func TestSessionReconciliationExperimentRefusals(t *testing.T) {
 	for _, scenario := range []string{"existing-id", "live-tag", "wrong-type", "null-deleted", "no-tag", "no-reservation", "wrong-chain", "counts-differ", "disabled", "duplicate-plan", "second-invalid", "folder", "expiry", "bad-specifics", "unique-position"} {
 		t.Run(scenario, func(t *testing.T) {
@@ -373,6 +435,15 @@ func reconciliationSeed(t *testing.T, h *testHandler, token, chain string) []*sy
 // only on the test-owned store. MinInt64 is below or equal to every possible
 // progress token, so strict mtime > token cannot advertise staged contents.
 func reconciliationStage(ctx context.Context, store *SQLiteStore, chain string, entries []*sync_pb.SyncEntity) error {
+	return reconciliationStageAtCounts(ctx, store, chain, entries, nil)
+}
+
+type reconciliationExpectedCounts struct {
+	Stored int
+	Live   int
+}
+
+func reconciliationStageAtCounts(ctx context.Context, store *SQLiteStore, chain string, entries []*sync_pb.SyncEntity, expected *reconciliationExpectedCounts) error {
 	if len(entries) == 0 || len(entries) > 2 || chain == "" {
 		return errors.New("invalid experiment scope")
 	}
@@ -386,12 +457,18 @@ func reconciliationStage(ctx context.Context, store *SQLiteStore, chain string, 
 		return errors.New("disabled or unreadable chain")
 	}
 	var count, countVersion, live int
-	if err := tx.QueryRowContext(ctx, `SELECT item_count, version FROM client_item_counts WHERE client_id = ?`, chain).Scan(&count, &countVersion); err != nil || countVersion != sqliteCountVersion {
+	if err := tx.QueryRowContext(ctx, `SELECT item_count, version FROM client_item_counts WHERE client_id = ?`, chain).Scan(&count, &countVersion); err != nil || countVersion != sqliteCountVersion || count < 0 {
 		return errors.New("missing or unsupported counts")
 	}
 	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM sync_entities WHERE client_id = ? AND deleted = 0
-		AND data_type IS NOT NULL AND data_type NOT IN (?, ?)`, chain, datastore.HistoryTypeID, datastore.HistoryDeleteDirectiveTypeID).Scan(&live); err != nil || live != count {
-		return errors.New("pre-existing count mismatch needs separate investigation")
+		AND data_type IS NOT NULL AND data_type NOT IN (?, ?)`, chain, datastore.HistoryTypeID, datastore.HistoryDeleteDirectiveTypeID).Scan(&live); err != nil {
+		return err
+	}
+	if expected == nil && live != count {
+		return errors.New("unreviewed count mismatch needs separate investigation")
+	}
+	if expected != nil && (count != expected.Stored || live != expected.Live) {
+		return errors.New("reviewed count baseline changed")
 	}
 	seenID, seenTag := make(map[string]bool), make(map[string]bool)
 	for _, entry := range entries {
@@ -452,8 +529,12 @@ func reconciliationStage(ctx context.Context, store *SQLiteStore, chain string, 
 			return err
 		}
 	}
-	if _, err := tx.ExecContext(ctx, `UPDATE client_item_counts SET item_count = item_count + ? WHERE client_id = ?`, len(entries), chain); err != nil {
+	result, err := tx.ExecContext(ctx, `UPDATE client_item_counts SET item_count = item_count + ? WHERE client_id = ?`, len(entries), chain)
+	if err != nil {
 		return err
+	}
+	if affected, err := result.RowsAffected(); err != nil || affected != 1 {
+		return errors.New("expected exactly one count row")
 	}
 	return tx.Commit()
 }
