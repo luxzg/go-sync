@@ -5,6 +5,16 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-10-19 18:06 CEST (Europe/Zagreb)
+
+- Added MANUAL_TESTING with a two-device browser checklist: fresh uniquely
+  named items, bookmark edits in the reverse direction, tabs/groups and optional
+  categories, sync-internals views, delays, safe troubleshooting, and privacy.
+  Linked it from README setup/upgrade/testing and the pending operator task.
+  Diagnostic counters or Nigori keys alone are not treated as proof of arrival.
+- Version remains `0.3`; no code, builds, deployment, or real-device tests were
+  performed. Browser field validation remains pending operator results.
+
 ## docs - 2026-10-19 17:39 CEST (Europe/Zagreb)
 
 - Recorded standing user authorization to commit and push completed authorized

@@ -5,6 +5,11 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-10-19, added a two-device manual validation guide covering uniquely
+  marked items, both directions, remote edits, sync-internals diagnostics,
+  category/platform differences, privacy, and non-destructive troubleshooting.
+  Linked it from installation/upgrade/testing instructions. This is documentation;
+  `0.3` home-server/browser results remain pending operator confirmation.
 - Version `0.3` work on 2026-10-19 added optional mattn selection through the
   `sqlite_cgo` build tag while retaining modernc as the preferred default.
   Both configurations passed automated Linux x86-64 tests. MIPS compilation and

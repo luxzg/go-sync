@@ -21,7 +21,9 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   covers normal SIGINT/SIGTERM, restart, WAL recovery/busy reporting, real HTTPS,
   and incomplete TLS settings.
 - Obtain operator confirmation of `0.2` -> `0.3` upgrade and actual Brave sync on
-  the home server after a consistent backup. Synthetic upgrade tests passed;
+  the home server after a consistent backup, using the [two-device checklist](MANUAL_TESTING.md).
+  Record client versions, both directions, remote edits, category-specific
+  results, and whether manual GetUpdates was needed. Synthetic upgrade tests passed;
   no production server was accessed or updated by the agent.
 - Ask the MIPS reporter to build the optional backend and report actual sync,
   router model/CPU, OS/firmware versions, Go/Zig versions, exact command, and

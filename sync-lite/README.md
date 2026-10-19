@@ -14,6 +14,7 @@ available for community testing.
 ## Documentation
 - [Agent guidance](AGENTS.md): scope, accepted decisions, safety, and workflow.
 - [Development setup](DEVELOPMENT_SETUP.md): clone, run, test, and build instructions.
+- [Two-device sync check](MANUAL_TESTING.md): verify browser results and inspect `brave://sync-internals/`.
 - [Open work](TODO.md): prioritized follow-up work.
 - [Completed and deferred work](FINISHED_TASKS.md): status and evidence archive.
 - [Changelog](CHANGELOG.md): release and documentation history.
@@ -366,6 +367,9 @@ Notes:
 1. Brave is configured with the base URL shown above. The server accepts `/command/` and the `/v2/command/` compatibility alias as request endpoints.
 2. The documented native TLS setup requires a service restart to load renewed certificate files. The accepted operator workaround copies the renewed full chain and private key into `/var/lib/sync-lite/`, makes them readable by `sync-lite` with restricted permissions, and restarts the service. Use the exact filenames configured in the env file. Renewal and copy scheduling are external to this project; no ACME automation was added to sync-lite.
 
+After setup, follow the [two-device sync checklist](MANUAL_TESTING.md) to verify
+fresh items travel in both directions, not just that devices appear in the chain.
+
 ## Upgrading Safely
 Existing SQLite data is valuable. The initial release needed no DynamoDB
 migration, but that does not make later SQLite upgrades safe without checks.
@@ -442,7 +446,8 @@ journalctl -u sync-lite -n 50 --no-pager
 ```
 
 5. Confirm the startup log reports `0.3` and verify that your existing Brave
-   clients resume synchronization. Their server URL stays the same.
+   clients resume synchronization using the [two-device checklist](MANUAL_TESTING.md).
+   Their server URL stays the same.
 
 If an update fails, stop the service before further action. The test matrix
 verified reopening these synthetic databases with `0.2`, so binary-only rollback
@@ -459,6 +464,12 @@ if access should be limited. An optional chain allowlist is planned for design
 review, not available configuration today.
 
 ## Testing
+For a hands-on browser check after installation or an upgrade, use
+[Verify Sync Between Two Brave Devices](MANUAL_TESTING.md). It covers unique
+bookmarks, remote edits, tabs/groups, diagnostic views, and safe troubleshooting.
+Version `0.3` browser validation remains pending until the operator reports results.
+
+### Automated Tests
 From the fork's root directory:
 
 ```bash
