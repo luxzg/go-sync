@@ -130,10 +130,10 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 
 ## Versioning And Records
 
-- The current release is `0.3`, dated 2026-10-19. Documentation-only
+- The current release is `0.3.1`, dated 2026-10-19. Documentation-only
   updates do not bump the service version or imply a new deployed binary.
 - Code changes require a version change. The next normal code release is `0.4`;
-  minor patches may use `0.3.1`. Components are integers:
+  minor patches may use `0.3.2`. Components are integers:
   `0.9` is followed by `0.10`, not automatically `1.0`.
 - Prepend CHANGELOG entries, newest first, including documentation-only changes.
   Use `## docs - YYYY-MM-DD HH:MM TZ (timezone)` or the version in place of
@@ -148,3 +148,9 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   README records the tested categories and limits; do not call this agent testing.
   Automated `0.3` validation on 2026-10-19 is separate from those `0.2` browser
   field results. Do not claim MIPS build/runtime success without user evidence.
+- The 2026-10-19 `0.3` operator check found desktop-to-phone bookmark delivery,
+  but not the reverse rename or fresh groups, with Android backoff and a last
+  commit CONFLICT. The cause remains unconfirmed. `0.3.1` adds opt-in
+  `SYNC_LOG_CONFLICTS=1` diagnostics only; do not claim it fixes the incident.
+  Keep logs bounded and limited to fixed reasons and numeric data types; never
+  add IDs, versions, names, URLs, keys, or payloads to these diagnostics.

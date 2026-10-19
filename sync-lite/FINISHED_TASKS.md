@@ -5,6 +5,12 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- Version `0.3.1` on 2026-10-19 added optional, bounded, privacy-safe conflict
+  reason/type logging and remote-edit/group protocol tests. Both driver suites,
+  race/privacy/rate-limit checks, HTTP/HTTPS smoke checks, govulncheck, and actual
+  `0.2`/`0.3` synthetic upgrade/rollback matrices passed. Schema and write acceptance
+  are unchanged. The user's Android commit conflict is not yet reproduced or
+  fixed; pending operator diagnostics and field validation remain in TODO.
 - On 2026-10-19, added a two-device manual validation guide covering uniquely
   marked items, both directions, remote edits, sync-internals diagnostics,
   category/platform differences, privacy, and non-destructive troubleshooting.

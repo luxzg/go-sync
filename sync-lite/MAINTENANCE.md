@@ -1,5 +1,37 @@
 # Maintenance Record
 
+## 2026-10-19: sync-lite 0.3.1 Diagnostic Follow-Up
+
+The operator reported that a new desktop bookmark reached Android, but the
+phone's rename and fresh tab groups did not propagate during the observation
+window. Android showed a successful Download step, a last Commit result of
+CONFLICT, and backoff. No insert/update error appeared in the journal. This
+does not establish a phone bug or a particular server defect.
+
+The existing store silently returns update conflicts for missing records and
+version mismatches. `0.3.1` adds opt-in, bounded `SYNC_LOG_CONFLICTS=1` logs for
+those cases and duplicate inserts, without IDs, versions, payloads, or changed
+write acceptance. No schema/data migration or automatic recovery is introduced.
+One code-review hypothesis is legacy false acknowledgments after duplicate
+inserts in `0.2`; no evidence yet connects that mechanism to this installation.
+Do not treat it as a diagnosis or silently adopt client-supplied IDs.
+
+Go remains 1.26.9 for this pass. Dependencies, compiler series, embedded SQLite,
+and official upstream revision are unchanged from the baseline below. New
+protocol tests cover a remote bookmark edit (plain and opaque encrypted),
+incremental polling, stale-version rejection and fresh-version retry, and saved
+groups/tabs from both devices. These synthetic cases pass; target reproduction
+and the actual conflicting type/reason remain pending.
+
+Validation passed on both Linux x86-64 backends: the full check helper including
+race tests, diagnostic privacy/disabled-mode/rejection-preservation/rate-limit/
+capacity/concurrency tests, HTTP/HTTPS lifecycle smoke checks, and govulncheck.
+Both actual archived `0.2` (`1c0d957`) and `0.3` (`287bdec`) passed the synthetic
+upgrade/read-write/rollback matrix through both `0.3.1` backends, with clean
+databases and committed-WAL recovery. No real data, browser profiles, production
+service, or devices were accessed. An operator retry with diagnostics is still
+needed; these automated passes do not resolve the field incident.
+
 ## 2026-10-19: sync-lite 0.3
 
 Supported deployment target: Debian/Ubuntu Linux x86-64. The preferred build uses

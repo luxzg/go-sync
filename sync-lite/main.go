@@ -24,7 +24,7 @@ import (
 
 const (
 	payloadLimit10MB = 10 * 1024 * 1024
-	version          = "0.3"
+	version          = "0.3.1"
 )
 
 func main() {
@@ -44,6 +44,9 @@ func main() {
 	db, err := NewSQLiteStore(sqlitePath)
 	if err != nil {
 		log.Fatalf("init sqlite store failed: %v", err)
+	}
+	if db.conflicts != nil {
+		log.Print("sync conflict diagnostics enabled (rate-limited; data type and reason only)")
 	}
 
 	c := cache.NewCache(NewMemoryRedis())

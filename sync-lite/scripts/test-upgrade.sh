@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 LITE_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 REPO_DIR="$(cd -- "$LITE_DIR/.." && pwd)"
 GO="${GO:-go}"
-BASELINE=1c0d957
+BASELINE="${SYNC_LITE_UPGRADE_BASELINE:-1c0d957}"
 
 command -v "$GO" >/dev/null
 command -v git >/dev/null
@@ -53,5 +53,5 @@ for mode in clean wal; do
     SYNC_LITE_UPGRADE_STAGE="$backend" "$WORK_DIR/$backend.test" -test.run '^TestUpgradeFixture$' -test.v
   done
   SYNC_LITE_UPGRADE_STAGE=old-version "$WORK_DIR/old.test" -test.run '^TestUpgradeFixture$' -test.v
-  echo "PASS: v0.2 -> v0.3 modernc -> v0.3 mattn -> v0.2 ($mode database)"
+  echo "PASS: $BASELINE -> current modernc -> current mattn -> $BASELINE ($mode database)"
 done

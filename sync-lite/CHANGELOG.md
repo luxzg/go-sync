@@ -5,6 +5,28 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## 0.3.1 - 2026-10-19 18:39 CEST (Europe/Zagreb)
+
+- Added opt-in `SYNC_LOG_CONFLICTS=1` diagnostics for missing-record,
+  version-mismatch, duplicate-tag, and duplicate-ID conflicts. Logs contain only
+  operation, reason, and numeric type, with a 30-second per-key rate limit and
+  bounded memory. The default remains disabled; schema, data, authentication,
+  write acceptance, and endpoint behavior are unchanged.
+- Added synthetic protocol coverage for remote bookmark edits, opaque encrypted
+  payloads, incremental polling, stale-version rejection/retry, and fresh saved
+  groups/tabs from both devices. Extended the isolated upgrade helper with a
+  reviewed source-baseline override for checking actual `0.3` as well as `0.2`.
+- Recorded the user's partial `0.3` field result: desktop-to-phone bookmark
+  delivery worked, but a reverse rename and fresh groups were not observed,
+  with Android backoff/last-commit CONFLICT and no journal errors. Root cause
+  remains unconfirmed; this patch is diagnostics, not a claimed fix. Added
+  backup-first deployment and non-destructive diagnostic instructions.
+
+Validation: both backend suites/race checks, diagnostic privacy/rejection and
+rate-limit tests, HTTP/HTTPS lifecycle smoke checks, both govulncheck runs, and
+clean/WAL upgrade/rollback matrices from actual `0.2` and `0.3` passed. All state
+was synthetic. No production deployment or real-device test was performed.
+
 ## docs - 2026-10-19 18:06 CEST (Europe/Zagreb)
 
 - Added MANUAL_TESTING with a two-device browser checklist: fresh uniquely

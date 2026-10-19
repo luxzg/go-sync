@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -22,7 +24,8 @@ const (
 )
 
 type SQLiteStore struct {
-	db *sql.DB
+	db        *sql.DB
+	conflicts *conflictDiagnostics
 }
 
 func NewSQLiteStore(path string) (*SQLiteStore, error) {
@@ -35,6 +38,9 @@ func NewSQLiteStore(path string) (*SQLiteStore, error) {
 		return nil, err
 	}
 	store := &SQLiteStore{db: db}
+	if os.Getenv("SYNC_LOG_CONFLICTS") == "1" {
+		store.conflicts = &conflictDiagnostics{logger: log.Default(), last: make(map[conflictLogKey]time.Time)}
+	}
 	if err := store.initSchema(context.Background()); err != nil {
 		_ = db.Close()
 		return nil, err
@@ -132,6 +138,7 @@ func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.Sy
 		)
 		if err != nil {
 			if isConstraintErr(err) {
+				s.logConflict("insert", "duplicate_client_tag", entity)
 				return true, err
 			}
 			return false, err
@@ -140,6 +147,7 @@ func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.Sy
 
 	if err := insertSyncEntity(ctx, tx, entity); err != nil {
 		if isConstraintErr(err) {
+			s.logConflict("insert", "duplicate_entity_id", entity)
 			return true, err
 		}
 		return false, err
@@ -194,6 +202,7 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 	).Scan(&currentVersion, &oldDeletedRaw)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
+			s.logConflict("update", "missing_entity", entity)
 			return true, false, nil
 		}
 		return false, false, err
@@ -201,6 +210,7 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 
 	if entity.DataType != nil && *entity.DataType != datastore.HistoryTypeID {
 		if !currentVersion.Valid || currentVersion.Int64 != oldVersion {
+			s.logConflict("update", "version_mismatch", entity)
 			return true, false, nil
 		}
 	}

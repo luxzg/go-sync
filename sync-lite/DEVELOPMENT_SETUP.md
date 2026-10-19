@@ -14,7 +14,7 @@ git --version
 go version
 ```
 
-Version `0.3` requires Go **1.26 or newer**. Use a maintained patch release;
+Version `0.3.1` requires Go **1.26 or newer**. Use a maintained patch release;
 Go 1.26.9 was used for the October 19 checks. The default shell previously selected
 an older patch, so check `go version` rather than assuming which installation is
 active. See [MAINTENANCE.md](MAINTENANCE.md) for the dated dependency/toolchain record.
@@ -106,6 +106,17 @@ helper requires fork history containing its fixed `0.2` baseline; a shallow
 clone may need its history fetched first. The smoke helper additionally needs
 Python 3 and OpenSSL, only on the development machine.
 
+The upgrade helper defaults to baseline `1c0d957` (`0.2`). To additionally check
+the actual `0.3` release in isolated fixtures, use:
+
+```bash
+SYNC_LITE_UPGRADE_BASELINE=287bdec ./scripts/test-upgrade.sh
+```
+
+This override selects archived source to compile and run, not a live database.
+Use only a reviewed, trusted repository revision. Both matrices keep the same
+disposable-fixture safeguards.
+
 Use `GO=/path/to/go ./scripts/check.sh` (and the same override for build, upgrade,
 or smoke helpers) to select a specific installed compiler. For govulncheck,
 select the compiler through `PATH`; set `GOVULNCHECK=/path/to/govulncheck` if it
@@ -144,8 +155,8 @@ Sanitized `.env.example` templates remain tracked.
 - Require the [data-safety checks](README.md#upgrading-safely) before binary or
   SQLite updates. Use synthetic prior-version fixtures, establish migration and
   rollback compatibility, and back up consistent real state before deployment.
-- The current release is `0.3`; the next normal code release is `0.4`, with optional
-  patch versions such as `0.3.1`. Documentation-only changes keep the version.
+- The current release is `0.3.1`; the next normal code release is `0.4`, with optional
+  patch versions such as `0.3.2`. Documentation-only changes keep the version.
   Prepend dated changelog entries with time and timezone. Review intended changes
   with `git diff --check` and `git status --short`. Standing user authorization
   covers committing and pushing completed authorized passes unless explicitly

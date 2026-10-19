@@ -28,10 +28,10 @@ Upstream repository changes are reviewed separately from release tags. See the
 [upstream-sync policy](AGENTS.md#syncing-the-fork-with-upstream).
 
 ## Version
-- Current `sync-lite` version: `0.3` (2026-10-19)
+- Current `sync-lite` version: `0.3.1` (2026-10-19)
 
 Documentation updates do not change the binary version. Patch releases may use
-`0.3.1`; the next normal code release will be `0.4`. Minor versions count upward as
+`0.3.2`; the next normal code release will be `0.4`. Minor versions count upward as
 integers, so `0.9` is followed by `0.10`.
 
 Print the binary version and selected backend without opening a database:
@@ -40,8 +40,10 @@ Print the binary version and selected backend without opening a database:
 ./sync-lite --version
 ```
 
-Version `0.3` retains the existing configuration and database schema. Existing
-users should use the default build and follow [Upgrade from 0.2](#upgrade-from-02-to-03).
+Version `0.3.1` adds optional, privacy-safe conflict diagnostics without changing
+write acceptance, sync behavior, or the database schema. It is **not a confirmed
+fix** for the reported Android commit conflict. Existing users should use the
+default build and follow the [upgrade guide](#upgrade-from-02-or-03-to-031).
 
 ## Choose A SQLite Build
 
@@ -132,6 +134,10 @@ That client bug has been fixed upstream; both endpoints remain supported.
 - `TLS_KEY_FILE` optional path to private key file (enable HTTPS when set with cert)
 - `BLOCKED_CLIENT_IDS` optional comma-separated list
 - `HIGH_DEVICE_LIMIT_CLIENT_IDS` optional comma-separated list
+- `SYNC_LOG_CONFLICTS` optional: exactly `1` enables rate-limited conflict reason/type logs; unset or other values leave it disabled
+
+Conflict diagnostics do not include item/chain IDs, URLs, names, keys, or
+payloads. See [diagnosing commit conflicts](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts).
 
 ## First Run and SQLite Schema
 `sync-lite` creates/opens the SQLite DB file on startup and automatically creates required schema if missing.
@@ -392,42 +398,46 @@ migration, but that does not make later SQLite upgrades safe without checks.
 Automated synthetic upgrade checks are available in `scripts/test-upgrade.sh`.
 Automation of live backup/update operations remains tracked in [TODO.md](TODO.md).
 
-### Upgrade From 0.2 To 0.3
+<a id="upgrade-from-02-to-03"></a>
+
+### Upgrade From 0.2 Or 0.3 To 0.3.1
 
 **Keep your existing sync chain, SQLite database, env file, certificate paths,
 and systemd unit. No schema migration, database export/import, or client reset
 is needed for this update.** Use the preferred modernc build for existing servers.
+The optional diagnostic setting can be enabled after backing up the old config.
 
 The automated upgrade checks used the actual `0.2` code to create synthetic
-databases, exercised both `0.3` drivers, and reopened them with `0.2`. They
+databases, exercised both current drivers, and reopened them with `0.2`. They
 checked schema, records, BLOB bytes, counts, integrity, and recovery of committed
-WAL data. Back up your own installation before applying the update.
+WAL data. An additional matrix checked the actual `0.3` source against `0.3.1`
+and old-version reopen. Back up your own installation before applying the update.
 
-1. Build `0.3` on the development machine and transfer it to the server:
+1. Build `0.3.1` on the development machine and transfer it to the server:
 
 ```bash
 ./scripts/build.sh
-scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.3
+scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.3.1
 ```
 
 2. On the server, check the candidate before stopping the service:
 
 ```bash
-chmod +x /tmp/sync-lite-0.3
-/tmp/sync-lite-0.3 --version
+chmod +x /tmp/sync-lite-0.3.1
+/tmp/sync-lite-0.3.1 --version
 ```
 
-Expected: `sync-lite 0.3`, backend `modernc`, target `linux/amd64`.
+Expected: `sync-lite 0.3.1`, backend `modernc`, target `linux/amd64`.
 
 3. Stop the service and make a private backup of the working installation:
 
 ```bash
 sudo systemctl stop sync-lite
 sudo install -d -m 0700 /var/backups/sync-lite
-backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.3.XXXXXXXX)"
+backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.3.1.XXXXXXXX)"
 sudo cp -a /var/lib/sync-lite "$backup_dir/state"
 sudo cp -a /etc/sync-lite "$backup_dir/config"
-sudo cp -a /usr/local/bin/sync-lite "$backup_dir/sync-lite-0.2"
+sudo cp -a /usr/local/bin/sync-lite "$backup_dir/sync-lite-previous"
 ```
 
 Confirm the backup completed successfully before continuing. Keep any `.db-wal`
@@ -438,19 +448,19 @@ the same time.
 4. Replace only the binary and start the existing unit:
 
 ```bash
-sudo install -m 0755 /tmp/sync-lite-0.3 /usr/local/bin/sync-lite
+sudo install -m 0755 /tmp/sync-lite-0.3.1 /usr/local/bin/sync-lite
 /usr/local/bin/sync-lite --version
 sudo systemctl start sync-lite
 sudo systemctl status sync-lite
 journalctl -u sync-lite -n 50 --no-pager
 ```
 
-5. Confirm the startup log reports `0.3` and verify that your existing Brave
+5. Confirm the startup log reports `0.3.1` and verify that your existing Brave
    clients resume synchronization using the [two-device checklist](MANUAL_TESTING.md).
    Their server URL stays the same.
 
 If an update fails, stop the service before further action. The test matrix
-verified reopening these synthetic databases with `0.2`, so binary-only rollback
+verified reopening these synthetic databases with `0.2` and `0.3`, so binary-only rollback
 is available for that tested scope. Keep the backup and ask for help if your
 database or configuration differs; do not restore or replace user data
 automatically. This procedure is for the documented systemd layout; adjust paths
@@ -467,7 +477,9 @@ review, not available configuration today.
 For a hands-on browser check after installation or an upgrade, use
 [Verify Sync Between Two Brave Devices](MANUAL_TESTING.md). It covers unique
 bookmarks, remote edits, tabs/groups, diagnostic views, and safe troubleshooting.
-Version `0.3` browser validation remains pending until the operator reports results.
+The `0.3` browser check found a persistent Android commit conflict despite a
+successful desktop-to-phone bookmark transfer. Investigation is ongoing;
+`0.3.1` adds diagnostics, not a confirmed fix. Do not reset the chain to test it.
 
 ### Automated Tests
 From the fork's root directory:

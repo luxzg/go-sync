@@ -103,7 +103,7 @@ def main():
         environment = os.environ.copy()
         environment["SQLITE_PATH"] = str(probe_path)
         version = subprocess.check_output([str(binary), "--version"], env=environment, text=True)
-        assert "sync-lite 0.3" in version and f"sqlite: {backend}" in version, version
+        assert version.split()[1] == "0.3.1" and f"sqlite: {backend}" in version, version
         assert not probe_path.exists(), "--version opened a database"
         subprocess.run(
             ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",

@@ -1,5 +1,11 @@
 # sync-lite 0.3: Issue Reply Draft
 
+**Follow-up:** the current patch is `0.3.1`, adding optional conflict diagnostics.
+An Android commit CONFLICT reported during `0.3` field testing remains under
+investigation; automated passes below do not establish a complete browser pass.
+See the [manual guide](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts)
+before presenting this draft as a current all-clear.
+
 sync-lite **0.3** now keeps modernc as the preferred default and adds an optional
 `mattn/go-sqlite3` build selected with `-tags sqlite_cgo`.
 

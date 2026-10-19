@@ -12,7 +12,7 @@ This guide is an operator procedure, not a claim that these checks have run.
 ## 1. Prepare Both Clients
 
 1. After an upgrade, confirm the service startup log reports the intended version
-   (`0.3` for this release). The installed binary's `--version` output alone does
+   (`0.3.1` for this release). The installed binary's `--version` output alone does
    not prove the running service has restarted with it.
 2. In each browser's Sync settings, confirm both devices belong to the existing
    chain and enable the categories you intend to test on **both** devices.
@@ -104,6 +104,58 @@ main success criterion, not an assumed diagnostic type name.
    does not, record that distinction instead of declaring full success.
 5. Check sanitized service error messages if needed. Do not try clear-data,
    account deletion, profile removal, or a new chain as troubleshooting steps.
+
+### Diagnosing Persistent Commit Conflicts
+
+`Last synced: just now` and a successful Download step do not establish that
+uploads succeeded. Current-cycle counters and last-completed-session results
+are separate; zero current conflicts does not erase a prior failed commit.
+Backoff can postpone the next attempt. Record the displayed retry time and
+timezone, let it pass with the phone awake, and check for a fresh completed
+session. Do not repeatedly force retries or reset Sync.
+
+If ordinary logs show nothing, `0.3.1` can classify otherwise silent update
+conflicts. This is diagnostic support, **not a repair**:
+
+1. Use the [backup-first binary upgrade](README.md#upgrade-from-02-or-03-to-031).
+   Preserve the database and the existing chain. No schema migration is involved.
+2. After backing up the config, edit `/etc/sync-lite/sync-lite.env` and add one
+   line: `SYNC_LOG_CONFLICTS=1`. Preserve every other setting.
+3. Restart with `sudo systemctl restart sync-lite`. Check that startup reports
+   `0.3.1` and says conflict diagnostics are enabled.
+4. Keep the phone open past its retry time. Check the journal without dumping
+   any browser data:
+
+```bash
+sudo journalctl -u sync-lite --since "10 minutes ago" --no-pager |
+  grep -F 'sync conflict operation='
+```
+
+Example, using public type metadata only:
+
+```text
+sync conflict operation=update reason=version_mismatch data_type=32904
+```
+
+| Reason | Meaning, not an automatic repair instruction |
+| --- | --- |
+| `missing_entity` | The requested update's server ID was not found in this chain |
+| `version_mismatch` | The stored version is missing or differs from the submitted base version |
+| `duplicate_client_tag` | A new insert collided with an existing client-tag reservation |
+| `duplicate_entity_id` | A new insert collided with an existing entity ID |
+
+`32904` is Bookmarks; `1004874` is Saved Tab Groups. Other numbers identify
+other protocol types. A session-level conflict does not identify which type
+failed; do not assume it was the bookmark being tested.
+
+Logs are limited to one line per operation/reason/type every 30 seconds, with
+bounded tracking memory. They omit chain/item/device IDs, versions, titles,
+URLs, passwords, keys, and payloads. No output is inconclusive: the client may
+still be in backoff, may not have retried, or may not have reached this process.
+Share only the matching reason/type lines and the client/version/timing summary.
+Remove the setting (or leave it empty) and restart after diagnosis.
+
+The counter distinction is visible in [Chromium's diagnostic implementation](https://chromium.googlesource.com/chromium/src/+/82baf7795e06d210f92656c31919a5711bdec58d/components/sync/service/sync_internals_util.cc).
 
 **Privacy:** diagnostics can reveal URLs, device identifiers, payloads, and key
 material. Do not enable detailed payload capture or export/share full node

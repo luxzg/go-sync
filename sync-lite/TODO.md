@@ -1,12 +1,22 @@
 # Open Work
 
-Updated 2026-10-19 for `0.3`. This file contains remaining work; completed `0.3`
+Updated 2026-10-19 for `0.3.1`. This file contains remaining work; completed `0.3`
 checks/helpers are archived in [FINISHED_TASKS.md](FINISHED_TASKS.md).
 Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
-`0.4`; focused patches may use `0.3.1`.
+`0.4`; focused patches may use `0.3.2`.
 
 ## P1: Validation And Repeatability
 
+- Diagnose the 2026-10-19 Android commit CONFLICT on the updated home server:
+  desktop bookmark reached Android, reverse rename and fresh groups did not
+  appear during the observation window. Phone reported download success and
+  backoff, while the journal showed no insert/update errors. Use `0.3.1`'s
+  optional [reason/type diagnostics](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts),
+  confirm a fresh retry after backoff, and identify the failing data type and
+  missing-record/version/duplicate cause before changing behavior. Do not
+  suppress conflicts, accept stale writes, reset clients, or repair live data
+  speculatively. New synthetic remote-edit/group tests pass but do not reproduce
+  the installation's failure. Full browser validation remains incomplete.
 - Extend protocol tests for general batch parent-ID mapping, command-level
   quota/history-period boundaries, high-device-limit admission at 50/100 devices,
   AI Chat roundtrip, and larger 499/500/501-entry pagination workloads.
