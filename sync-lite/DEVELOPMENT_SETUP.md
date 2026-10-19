@@ -99,12 +99,21 @@ From `sync-lite/`:
 | `./scripts/security-check.sh` | Runs govulncheck against both driver configurations; needs network access to the vulnerability database and may download module metadata |
 | `./scripts/build.sh` | Builds the preferred static Linux x86-64 binary and metadata in ignored `dist/` |
 | `./scripts/build.sh mattn` | Builds the optional CGO binary in `dist/`; requires a suitable C compiler |
+| `./scripts/test-session-reconciliation.sh` | Investigation helper v0.1; overlays synthetic-only Sessions reconciliation tests and runs both backends, with mattn race coverage; accepts no real database input |
 
 The helpers do not install packages, deploy, restart installed services, or read
 live SQLite/config/certificate files. Tests use synthetic fixtures. The upgrade
 helper requires fork history containing its fixed `0.2` baseline; a shallow
 clone may need its history fetched first. The smoke helper additionally needs
 Python 3 and OpenSSL, only on the development machine.
+
+The reconciliation experiment additionally uses Python 3 to generate a Go
+overlay. It injects `testdata/session_reconciliation_test.go` into the test build
+without changing service sources or writing a test file into the checkout.
+Run it separately from `check.sh`; ordinary `go test ./...` does not discover
+files in `testdata/`. It has no input database, repair mode, or deployment step.
+See the [investigation results and limits](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation).
+This validation-only helper has its own version; the service remains `0.3.1`.
 
 The upgrade helper defaults to baseline `1c0d957` (`0.2`). To additionally check
 the actual `0.3` release in isolated fixtures, use:

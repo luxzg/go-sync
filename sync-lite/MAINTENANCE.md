@@ -1,5 +1,78 @@
 # Maintenance Record
 
+## 2026-10-19: Synthetic Sessions Reconciliation Investigation
+
+The operator later confirmed fresh open tabs and history arrived in both
+directions, after delays of several minutes. Two positive-version phone Session
+updates still conflict. Their requested server IDs are absent from the pre-0.3
+backup; both backup and current database contain multiple deleted Sessions rows
+matching each client tag, plus a reservation per tag. The operator confirmed this
+is a single-chain installation. The failed requests have `deleted:false`: they
+are updates, not pending deletion acknowledgments. Matching tags identify logical
+items, not equal server IDs, URLs, or payload bytes. The old rows being deleted
+does not prove the absent requested IDs were deleted. Root cause remains unknown.
+
+The operator accepts loss, resurrection, or duplication of those two obsolete
+tab items only. This is not permission to reset History, the chain, or unrelated
+records. Private IDs, tag hashes, browsing content, and raw diagnostics are not
+stored in this repository. No agent accessed the production database or phone.
+
+Investigation helper v0.1, `scripts/test-session-reconciliation.sh`, runs an
+overlay of `testdata/session_reconciliation_test.go` against disposable databases
+with the unchanged `0.3.1` handler. It accepts no database path and cannot repair
+an installation. The experiment uses invented identities and opaque payloads:
+
+- Reproduce missing-ID conflicts with same-tag tombstones and existing tag
+  reservations. Do not undelete or rename those original tombstones.
+- In one transaction, stage the missing IDs at the exact positive base versions
+  from the simulated client. Require only deleted non-folder Sessions donors,
+  valid typed protobuf specifics, no unique position/server tag/expiry, no existing target,
+  a same-chain reservation, and a consistent normal-item count baseline.
+- Staged rows use `deleted=0` so omitted deletion flags and later genuine
+  deletion follow the existing update/count contract. Add one normal-item count
+  per staged row atomically, without changing History buckets or old rows.
+- Use the minimum signed 64-bit mtime, not zero: strict `mtime > token` excludes
+  the staged contents for every signed 64-bit progress token, including negative
+  ones. This relies on the current GetUpdates implementation, not a new general
+  access-control mechanism. A real retry replaces specifics and timestamp.
+- Keep unknown original originator metadata absent, rather than copying another
+  record's identity. Borrowed tombstone bytes are temporary working state, not
+  claimed historical recovery. The simulated retry supplies its actual opaque
+  payload through the normal authenticated update path.
+
+Both default modernc and race-enabled mattn experiments passed: conflict before,
+successful retry after, exact ID retention, fresh version, incremental peer
+download of the client payload, and later normal deletion/count/tag release.
+Explicit false, omitted, and true retry deletion flags were tested. Old
+tombstones, unrelated entity rows, and History counters were preserved. Stale
+versions still conflict. Refusals for ambiguous/wrong-type/live/missing donors,
+missing reservations, existing IDs, disabled/wrong chains, bad specifics, expiry,
+folder state, count mismatch, and an invalid second target leave all tables
+unchanged. Reopen and integrity checks passed. Go remains 1.26.9; no dependencies,
+schema, application source, or server artifacts changed. Service version stays
+`0.3.1`; this is not a recovery release or a production repair utility.
+
+One inherited limitation was also reproduced: a correctly versioned deletion of
+an older same-tag tombstone releases that tag reservation even while the staged
+identity is active. Reservations are not entity-ownership mappings. This is not
+fixed by staging and needs explicit consideration before production repair; do
+not advertise reconciliation as a general cure for all same-tag state. A normal
+same-tag competing insert is rejected while the reservation remains present.
+
+Before preparing any real repair, check the current count baseline and donor
+metadata using bounded read-only queries, then require a fresh stopped-service
+backup and recheck exact identity/tag/base-version preconditions. A count
+discrepancy must be investigated separately, not silently recounted. Real Brave
+retry, conflict clearance, and continued two-way sync remain operator checks.
+The fixture does not run Chromium's client conflict resolver or establish the
+cause of the existing state. Do not copy its mutation routine into a live query.
+
+Do not toggle the phone's combined History and tabs setting for a Sessions
+reset. Chromium's History-disable path removes imported visits, and sync-lite
+filters History older than its 14-day server expiration. A complete re-download
+is not guaranteed; a server backup does not protect phone-only history. See the
+[manual-testing safety warning](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts).
+
 ## 2026-10-19: Bookmark And Group Transfers Confirmed
 
 The operator subsequently confirmed the phone's bookmark rename reached desktop

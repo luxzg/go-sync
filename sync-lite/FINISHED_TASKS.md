@@ -5,6 +5,18 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-10-19, investigation helper v0.1 reproduced the structural stale
+  Sessions state using synthetic IDs, tombstones, reservations, and opaque
+  payloads. Both SQLite backends passed exact-version staging/retry, download
+  isolation, count/deletion/stale-version checks, and transactional refusals.
+  This is an isolated server-side experiment, not a production repair or proof
+  of browser recovery. The service stays `0.3.1`; remaining preflight/recovery
+  work is in TODO and the contract/limits are in MAINTENANCE.
+- The operator also confirmed fresh open tabs and history syncing both ways on
+  `0.3.1`, with delays of several minutes. Two stale Session updates continue to
+  conflict despite those transfers. Matching tags have only tombstones in both
+  old backup and current data; the requested IDs were absent from the backup.
+  This is user-run read-only evidence, not proof of their origin or deletion.
 - On 2026-10-19, the operator confirmed the desktop bookmark reached Android,
   its phone-side rename returned to desktop, and fresh test groups arrived in
   both directions on `0.3.1`. Phone: Brave Nightly 1.100.5 / Chromium

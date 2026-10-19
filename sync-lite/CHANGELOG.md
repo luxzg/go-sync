@@ -5,6 +5,32 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-10-19 20:41 CEST (Europe/Zagreb)
+
+- Recorded later operator confirmation of fresh tabs/history in both directions
+  and the narrowed stale Sessions state: failed IDs absent from the old backup,
+  with matching tags found only on tombstones in backup/current data. The
+  single-chain installation still reports conflicts; their cause is unproven.
+  Private identifiers, browsing content, and raw diagnostics remain excluded.
+- Added investigation helper v0.1 and an isolated Go-test overlay, using only
+  synthetic state on both backends. Exact-version staging lets normal retries
+  succeed without changing the handler, while preserving original rows and
+  rejecting unsafe candidates atomically. Documented count/donor preconditions,
+  the download-hidden staging contract, and the limits of server-only testing.
+- Characterized an inherited tag-ownership limitation: deleting an older
+  same-tag tombstone can release a live identity's reservation. Recorded the
+  remaining design risk without silently changing production behavior.
+- Added the combined History and tabs reset warning: disabling History can
+  remove imported visits, and 14-day server expiration prevents assuming a full
+  re-download. Updated remaining recovery work and archived completed checks.
+
+Validation: modernc and race-enabled mattn reconciliation experiments, the full
+standard formatting/ShellCheck/vet/no-CGO/both-race/invalid-CGO checks passed.
+No service source, dependency, schema, or binary changes; service stays `0.3.1`.
+No production data was read/written by the agent and no real-client recovery is
+claimed. Fresh backup, reviewed production preflight/repair, and phone retry
+validation remain pending.
+
 ## docs - 2026-10-19 19:08 CEST (Europe/Zagreb)
 
 - Recorded successful `0.3.1` field transfers: desktop bookmark to phone,

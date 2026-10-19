@@ -530,10 +530,14 @@ each device also reached the other. Exact delays were not measured.
 
 The phone was Brave Nightly **1.100.5**, Chromium **156.0.8078.39**, 64-bit,
 on Android **16**. The desktop's exact browser version was not recorded.
-The diagnostic `update/missing_entity data_type=50119` repeats, so Sessions
-recovery remains unresolved. These successful bookmark/group checks do not
-establish complete open-tab/session coverage or prove the conflict began with
-the server update. Other categories were not freshly retested in this report.
+The operator subsequently confirmed fresh open tabs and history arrived in both
+directions too, after delays of several minutes. The diagnostic
+`update/missing_entity data_type=50119` still repeats for two stale Session
+identities. These transfers do not establish complete Sessions coverage or prove
+the conflict began with the server update. A
+[targeted reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
+passes on synthetic databases, but no real-data repair or browser recovery has
+been performed. Other categories were not freshly retested in this report.
 
 ### Earlier Coverage
 

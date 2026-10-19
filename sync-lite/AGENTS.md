@@ -88,6 +88,17 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 - Consistent backups require quiesced writers or a supported snapshot procedure.
   Retain required WAL state; do not infer backup safety from file sizes or remove
   journal files manually. A backup does not authorize a restore.
+- Sessions recovery work must remain scoped to explicitly selected identities.
+  Same-tag tombstones under other server IDs are not the missing records, and
+  a successful synthetic retry is not proof of real-client recovery. The
+  [reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
+  is test-only; its helper accepts no database path and must never become an
+  automatic upsert or bypass of authentication/version checks. Production repair
+  requires a fresh, consistent backup, rechecked preconditions, and explicit scope.
+- Do not recommend toggling a combined History and tabs setting to clear Sessions
+  metadata. Disabling History can remove imported visits; server-side History
+  expires after 14 days, so a lossless re-download cannot be assumed. See the
+  [manual-testing warning](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts).
 - Before deploying binary, dependency, or SQLite changes, require a consistent
   backup and isolated upgrade/read-write/restart/integrity checks using synthetic
   representative databases from the prior version. Determine migration needs

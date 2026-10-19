@@ -18,9 +18,21 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   Use the optional [reason/type diagnostics](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts)
   and distinguish this confirmed symptom from unproven legacy-state theories. Do not
   suppress conflicts, accept stale writes, reset clients, or repair live data
-  speculatively. New synthetic remote-edit/group tests pass but do not reproduce
-  the installation's recurring missing-session state. Sessions validation
-  remains incomplete.
+  speculatively. The operator later confirmed fresh tabs and history in both
+  directions and isolated two stale phone Session updates: missing IDs in the
+  pre-0.3 backup, with only same-tag tombstones in backup and current data.
+  The [synthetic reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
+  now reproduces that structural state and lets exact-version authenticated
+  retries succeed without changing normal API behavior. Next check current
+  count consistency and donor metadata read-only, design the smallest guarded
+  repair, and require fresh backup/explicit scope before any real-data write.
+  Do not mistake fixture success for actual client recovery or an established
+  cause. The combined History and tabs toggle is not a safe reset shortcut.
+- Review same-tag deletion ownership before promoting reconciliation: the
+  synthetic experiment confirms that deleting an older same-tag tombstone can
+  remove a reservation while another same-tag identity is live. Characterization
+  coverage exists; no API behavior was changed. Design a separately scoped
+  guard or repair constraint rather than broadly deleting legacy tombstones.
 - Extend protocol tests for general batch parent-ID mapping, command-level
   quota/history-period boundaries, high-device-limit admission at 50/100 devices,
   AI Chat roundtrip, and larger 499/500/501-entry pagination workloads.
@@ -34,12 +46,11 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   handling, damaged/missing TLS files, and failed startup cleanup. `0.3` already
   covers normal SIGINT/SIGTERM, restart, WAL recovery/busy reporting, real HTTPS,
   and incomplete TLS settings.
-- Extend `0.3.1` field validation beyond the confirmed bookmark/edit/group
-  transfers, using the [two-device checklist](MANUAL_TESTING.md). Next check new
-  open tabs from each device in the other-device tabs view to exercise Sessions
-  separately from saved groups. Other categories and automatic timing/retry
-  behavior remain unverified in this pass. Synthetic upgrade tests passed;
-  no production server was accessed or updated by the agent.
+- Extend `0.3.1` field validation beyond the confirmed bookmark/edit/group,
+  open-tab, and history transfers, using the [two-device checklist](MANUAL_TESTING.md).
+  Check remaining categories and measure automatic timing/retry behavior if
+  needed. Sessions conflict clearance remains pending separately. Synthetic
+  upgrade tests passed; no production server was accessed or updated by the agent.
 - Ask the MIPS reporter to build the optional backend and report actual sync,
   router model/CPU, OS/firmware versions, Go/Zig versions, exact command, and
   sanitized errors. [Original request](https://github.com/brave/go-sync/issues/393#issuecomment-6260138531).
