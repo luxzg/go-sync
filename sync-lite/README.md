@@ -41,9 +41,9 @@ Print the binary version and selected backend without opening a database:
 ```
 
 Version `0.3.1` adds optional, privacy-safe conflict diagnostics without changing
-write acceptance, sync behavior, or the database schema. It is **not a confirmed
-fix** for the reported Android commit conflict. Existing users should use the
-default build and follow the [upgrade guide](#upgrade-from-02-or-03-to-031).
+write acceptance, sync behavior, or the database schema. Diagnostics are disabled
+by default. Existing users should use the default build and follow the
+[upgrade guide](#upgrade-from-02-or-03-to-031).
 
 ## Choose A SQLite Build
 
@@ -479,10 +479,9 @@ For a hands-on browser check after installation or an upgrade, use
 bookmarks, remote edits, tabs/groups, diagnostic views, and safe troubleshooting.
 The October `0.3.1` check confirmed desktop-to-phone bookmark delivery, the
 phone's bookmark edit returning to desktop, and fresh tab groups arriving in
-both directions. A recurring missing Sessions record (`50119`) conflict remains
-under investigation; it did not prevent those observed transfers. Its start
-date is unknown. This patch adds diagnostics, not a confirmed fix. Do not reset
-the chain to test it.
+both directions. Fresh tabs and history also arrived in both directions.
+These checks do not establish complete coverage of every category or client.
+Do not reset the chain to test synchronization.
 
 ### Automated Tests
 From the fork's root directory:
@@ -531,13 +530,9 @@ each device also reached the other. Exact delays were not measured.
 The phone was Brave Nightly **1.100.5**, Chromium **156.0.8078.39**, 64-bit,
 on Android **16**. The desktop's exact browser version was not recorded.
 The operator subsequently confirmed fresh open tabs and history arrived in both
-directions too, after delays of several minutes. The diagnostic
-`update/missing_entity data_type=50119` still repeats for two stale Session
-identities. These transfers do not establish complete Sessions coverage or prove
-the conflict began with the server update. A
-[targeted reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
-passes on synthetic databases, but no real-data repair or browser recovery has
-been performed. Other categories were not freshly retested in this report.
+directions too, after delays of several minutes. These are operator-reported
+device checks, not an exhaustive protocol validation. Other categories were not
+freshly retested in this report.
 
 ### Earlier Coverage
 

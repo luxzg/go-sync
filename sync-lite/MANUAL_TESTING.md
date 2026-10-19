@@ -119,7 +119,7 @@ Chromium's [History-disable path](https://raw.githubusercontent.com/chromium/chr
 removes visits imported from other devices. Sync-lite's server-side History
 expiration is 14 days, so older imported visits may not download again. Exact
 behavior depends on the client version; a server backup does not protect
-phone-only history. Keep the combined setting enabled during this investigation.
+phone-only history. Keep the combined setting enabled while diagnosing sync.
 
 A Commit response can report overall success while individual `entryresponse`
 items say `CONFLICT`. Match each response to the same position in that request's
@@ -167,11 +167,9 @@ still be in backoff, may not have retried, or may not have reached this process.
 Share only the matching reason/type lines and the client/version/timing summary.
 Remove the setting (or leave it empty) and restart after diagnosis.
 
-The [targeted Sessions reconciliation investigation](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
-has synthetic server-side coverage only. It is not a ready-to-run production
-repair. Do not broadly undelete same-tag rows, insert dummy records, delete tag
-reservations, or weaken version checks. A real repair needs separately reviewed
-preconditions, fresh backup, explicit scope, and subsequent browser validation.
+Diagnostics do not authorize changing database records or weakening version
+checks. Any production data change needs separately reviewed preconditions, a
+fresh consistent backup, explicit scope, and subsequent browser validation.
 
 The counter distinction is visible in [Chromium's diagnostic implementation](https://chromium.googlesource.com/chromium/src/+/82baf7795e06d210f92656c31919a5711bdec58d/components/sync/service/sync_internals_util.cc).
 

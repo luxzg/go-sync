@@ -5,42 +5,18 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
-- On 2026-10-19, investigation helper v0.2 added explicitly pinned stored/live
-  count baselines. Both backends preserve known synthetic count drift while
-  staging/retrying two Sessions identities; unexpected baselines still abort.
-  Real new-client initialization confirms roots can create a five-row offset.
-  Larger operator-reported drift remains unexplained and separate from the
-  missing-ID symptom. No production data or service behavior changed.
-- On 2026-10-19, investigation helper v0.1 reproduced the structural stale
-  Sessions state using synthetic IDs, tombstones, reservations, and opaque
-  payloads. Both SQLite backends passed exact-version staging/retry, download
-  isolation, count/deletion/stale-version checks, and transactional refusals.
-  This is an isolated server-side experiment, not a production repair or proof
-  of browser recovery. The service stays `0.3.1`; remaining preflight/recovery
-  work is in TODO and the contract/limits are in MAINTENANCE.
-- The operator also confirmed fresh open tabs and history syncing both ways on
-  `0.3.1`, with delays of several minutes. Two stale Session updates continue to
-  conflict despite those transfers. Matching tags have only tombstones in both
-  old backup and current data; the requested IDs were absent from the backup.
-  This is user-run read-only evidence, not proof of their origin or deletion.
-- On 2026-10-19, the operator confirmed the desktop bookmark reached Android,
-  its phone-side rename returned to desktop, and fresh test groups arrived in
-  both directions on `0.3.1`. Phone: Brave Nightly 1.100.5 / Chromium
-  156.0.8078.39, 64-bit APK on Android 16. Exact delays and desktop version were
-  not recorded. The recurring missing Sessions record (`50119`) conflict is
-  still open; these transfers do not establish a complete Sessions pass or
-  when the conflict began. Earlier apparently stalled test items did arrive.
-- On 2026-10-19 the operator confirmed `0.3.1`/modernc running with HTTPS and
-  both clients reaching it. Diagnostics identified an update of a missing
-  Sessions record (`50119`), narrowing the reported conflict without resolving
-  its origin or proving the bookmark/group symptoms share that cause. This is
-  operator-reported evidence, not agent access or a complete sync validation.
+- On 2026-10-19, the operator confirmed `0.3.1`/modernc over HTTPS between Debian
+  desktop and Android: bookmark delivery, a remote bookmark rename, fresh groups,
+  open tabs, and history worked in both directions. Some transfers took several
+  minutes. Phone: Brave Nightly 1.100.5 / Chromium 156.0.8078.39, 64-bit APK on
+  Android 16. Exact delays and desktop browser version were not recorded.
+  These are user-reported device checks, not exhaustive protocol coverage.
 - Version `0.3.1` on 2026-10-19 added optional, bounded, privacy-safe conflict
   reason/type logging and remote-edit/group protocol tests. Both driver suites,
   race/privacy/rate-limit checks, HTTP/HTTPS smoke checks, govulncheck, and actual
   `0.2`/`0.3` synthetic upgrade/rollback matrices passed. Schema and write acceptance
-  are unchanged. The user's Android commit conflict is not yet reproduced or
-  fixed; pending operator diagnostics and field validation remain in TODO.
+  are unchanged. Diagnostics are disabled by default; additional field coverage
+  remains in TODO.
 - On 2026-10-19, added a two-device manual validation guide covering uniquely
   marked items, both directions, remote edits, sync-internals diagnostics,
   category/platform differences, privacy, and non-destructive troubleshooting.

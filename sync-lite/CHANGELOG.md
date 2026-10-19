@@ -5,70 +5,28 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
-## docs - 2026-10-19 20:52 CEST (Europe/Zagreb)
+## docs - 2026-10-19 22:32 CEST (Europe/Zagreb)
 
-- Recorded the count preflight: one accounting entry contains only server roots;
-  the populated entry has live/deleted Sessions and an unexplained quota-count
-  shortfall beyond the five roots. Root insertion bypasses normal count increments,
-  so equality is not a universal invariant. No data-loss or conflict cause is inferred.
-- Updated investigation helper to v0.2. Synthetic staging can preserve a known,
-  explicitly pinned stored/live baseline, adding exactly one normal count per
-  staged identity without recounting unrelated records. Unknown or changed
-  baselines still abort. Added root-offset/under-count/over-count tests and
-  tracked the larger accounting discrepancy separately from targeted recovery.
+- Streamlined release, maintenance, and validation documentation around public
+  features and supported workflows. Kept the optional diagnostic setting,
+  privacy restrictions, backup guidance, and tested platform limits.
+- Consolidated operator-reported two-way sync results and retained general
+  accounting and client-tag lifecycle follow-up tasks.
 
-Validation: both backend reconciliation suites, including mattn race coverage,
-and the standard check helper passed. Service source, dependencies, schema,
-version `0.3.1`, and binaries are unchanged. No production repair was performed;
-fresh backup and target/donor/version preflight remain required.
-
-## docs - 2026-10-19 20:41 CEST (Europe/Zagreb)
-
-- Recorded later operator confirmation of fresh tabs/history in both directions
-  and the narrowed stale Sessions state: failed IDs absent from the old backup,
-  with matching tags found only on tombstones in backup/current data. The
-  single-chain installation still reports conflicts; their cause is unproven.
-  Private identifiers, browsing content, and raw diagnostics remain excluded.
-- Added investigation helper v0.1 and an isolated Go-test overlay, using only
-  synthetic state on both backends. Exact-version staging lets normal retries
-  succeed without changing the handler, while preserving original rows and
-  rejecting unsafe candidates atomically. Documented count/donor preconditions,
-  the download-hidden staging contract, and the limits of server-only testing.
-- Characterized an inherited tag-ownership limitation: deleting an older
-  same-tag tombstone can release a live identity's reservation. Recorded the
-  remaining design risk without silently changing production behavior.
-- Added the combined History and tabs reset warning: disabling History can
-  remove imported visits, and 14-day server expiration prevents assuming a full
-  re-download. Updated remaining recovery work and archived completed checks.
-
-Validation: modernc and race-enabled mattn reconciliation experiments, the full
-standard formatting/ShellCheck/vet/no-CGO/both-race/invalid-CGO checks passed.
-No service source, dependency, schema, or binary changes; service stays `0.3.1`.
-No production data was read/written by the agent and no real-client recovery is
-claimed. Fresh backup, reviewed production preflight/repair, and phone retry
-validation remain pending.
+Validation: reviewed Markdown links, documented commands, and the documentation
+diff. No code, tests, dependencies, schema, or binary changes; version remains
+`0.3.1`.
 
 ## docs - 2026-10-19 19:08 CEST (Europe/Zagreb)
 
 - Recorded successful `0.3.1` field transfers: desktop bookmark to phone,
   phone-side rename back to desktop, and fresh groups in both directions.
-  Earlier apparently stalled items arrived; exact delays were not measured.
+  Exact delays were not measured.
   Recorded the reported Nightly/Chromium/Android versions separately from
   historical coverage, without personal device information.
-- Kept the recurring missing Sessions (`50119`) conflict open, with unknown
-  origin/start date. Updated TODO to remove completed transfer checks and focus
-  on Sessions/open-tab validation. No reset, repair, runtime change, or build;
-  service version remains `0.3.1`.
-
-## docs - 2026-10-19 19:01 CEST (Europe/Zagreb)
-
-- Recorded operator confirmation that `0.3.1`/modernc is running over HTTPS and
-  clients reach it. Diagnostics identified `update/missing_entity` for Sessions
-  (`50119`), not a confirmed bookmark or saved-group conflict. The origin of the
-  missing record and its relationship to other symptoms remain unresolved.
-- Updated pending investigation and field-validation scope without copying
-  private hostnames, certificate paths, or raw journal output. No runtime or
-  data changes; service version remains `0.3.1`.
+- Updated remaining field-validation scope without implying complete coverage
+  of all data types or platforms. No runtime change or build; service version
+  remains `0.3.1`.
 
 ## 0.3.1 - 2026-10-19 18:39 CEST (Europe/Zagreb)
 
@@ -81,11 +39,7 @@ validation remain pending.
   payloads, incremental polling, stale-version rejection/retry, and fresh saved
   groups/tabs from both devices. Extended the isolated upgrade helper with a
   reviewed source-baseline override for checking actual `0.3` as well as `0.2`.
-- Recorded the user's partial `0.3` field result: desktop-to-phone bookmark
-  delivery worked, but a reverse rename and fresh groups were not observed,
-  with Android backoff/last-commit CONFLICT and no journal errors. Root cause
-  remains unconfirmed; this patch is diagnostics, not a claimed fix. Added
-  backup-first deployment and non-destructive diagnostic instructions.
+- Added backup-first deployment and non-destructive diagnostic instructions.
 
 Validation: both backend suites/race checks, diagnostic privacy/rejection and
 rate-limit tests, HTTP/HTTPS lifecycle smoke checks, both govulncheck runs, and

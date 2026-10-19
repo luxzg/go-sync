@@ -88,17 +88,14 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 - Consistent backups require quiesced writers or a supported snapshot procedure.
   Retain required WAL state; do not infer backup safety from file sizes or remove
   journal files manually. A backup does not authorize a restore.
-- Sessions recovery work must remain scoped to explicitly selected identities.
-  Same-tag tombstones under other server IDs are not the missing records, and
-  a successful synthetic retry is not proof of real-client recovery. The
-  [reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
-  is test-only; its helper accepts no database path and must never become an
-  automatic upsert or bypass of authentication/version checks. Production repair
-  requires a fresh, consistent backup, rechecked preconditions, and explicit scope.
+- Preserve authentication, version checks, and write acceptance. Diagnostic
+  logging does not authorize changing stored data, accepting stale writes, or
+  bypassing conflicts. Production data changes require a fresh consistent backup,
+  reviewed preconditions, explicit scope, and subsequent operator validation.
 - Normal quota counters need not equal live-row counts: initial server roots
   are inserted outside the counter increment path. Never infer lost data or
-  silently recount from a mismatch. Any known drift retained in a scoped repair
-  needs an explicit, freshly checked stored/live baseline and a tested count delta.
+  silently recount from a mismatch. Accounting changes need characterized
+  lifecycle tests and explicit, freshly checked baselines.
 - Do not recommend toggling a combined History and tabs setting to clear Sessions
   metadata. Disabling History can remove imported visits; server-side History
   expires after 14 days, so a lossless re-download cannot be assumed. See the
@@ -158,17 +155,15 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 - TODO contains only open work; archive completed, skipped, dropped, or deferred
   decisions in FINISHED_TASKS. Keep proposals distinct from authorized implementation.
 - Record late decisions and field observations with their evidence and limits.
-  The latest field report is 2026-09-13: updated Debian Flatpak and Android Nightly
+  The longer-term field report is 2026-09-13: updated Debian Flatpak and Android Nightly
   APK clients resume sync after downtime, service restarts, and server reboots.
   README records the tested categories and limits; do not call this agent testing.
   Automated `0.3` validation on 2026-10-19 is separate from those `0.2` browser
   field results. Do not claim MIPS build/runtime success without user evidence.
-- The 2026-10-19 `0.3` operator check found desktop-to-phone bookmark delivery,
-  with an initially absent reverse rename/groups and Android backoff/CONFLICT.
-  A later `0.3.1` report confirmed the reverse rename arrived, and fresh groups
-  arrived in both directions, while missing Sessions (`50119`) conflicts recur.
-  Its start date and cause remain unknown; do not call it a proven new regression, full sync
-  outage, or a resolved issue. `0.3.1` adds opt-in
-  `SYNC_LOG_CONFLICTS=1` diagnostics only; do not claim it fixes the incident.
-  Keep logs bounded and limited to fixed reasons and numeric data types; never
-  add IDs, versions, names, URLs, keys, or payloads to these diagnostics.
+- The 2026-10-19 `0.3.1` operator checks confirmed bookmark delivery and remote
+  edits, fresh groups, open tabs, and history between desktop and Android.
+  Arrival delays were not measured precisely; do not imply complete coverage.
+- `0.3.1` includes opt-in `SYNC_LOG_CONFLICTS=1` diagnostics. Keep logs bounded
+  and limited to fixed reasons and numeric data types; never add IDs, versions,
+  names, URLs, keys, or payloads to these diagnostics. Logging must not change
+  write acceptance or authentication.

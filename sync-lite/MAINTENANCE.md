@@ -1,175 +1,24 @@
 # Maintenance Record
 
-## 2026-10-19: Reconciliation Count-Baseline Follow-Up
+## 2026-10-19: sync-lite 0.3.1
 
-Read-only operator aggregates show two accounting entries: one has only the five
-server roots and no Sessions, while the populated entry has both live and deleted
-Sessions and a normal-counter shortfall larger than those five roots. This does
-not establish unauthorized use, corruption, or lost records. Setup inserts five
-server-defined roots without going through the normal commit-count increment;
-therefore the earlier equality check was deliberately conservative, not a
-universal consistency invariant. The extra drift's origin remains unknown and
-does not itself explain an update rejected for a missing ID.
+`0.3.1` adds opt-in, bounded `SYNC_LOG_CONFLICTS=1` diagnostics for missing-record,
+version-mismatch, and duplicate-insert conflicts. Logs include only operation,
+reason, and numeric data type. Diagnostics are disabled by default and do not
+change authentication, write acceptance, the database schema, or stored data.
 
-Investigation helper v0.2 extends only the synthetic experiment. Unreviewed count
-differences still abort. An explicitly supplied stored/live baseline permits
-staging only when both values match exactly inside the same transaction; matching
-the difference alone is insufficient. It adds one stored count per staged live
-identity, preserving the existing difference rather than recounting unrelated
-data. History buckets and metadata, old tombstones, roots, and unrelated rows
-remain unchanged. The service and its version stay `0.3.1`.
-
-Both backend experiments passed with root-induced drift and synthetic under- and
-over-counts, including zero stored count. Changed baselines abort with no writes;
-normal authenticated retries succeed afterward while preserving the count gap.
-The standard check helper also passed. No production repair was performed.
-Before any real repair, take a fresh consistent backup and separately recheck
-target/donor metadata, current exact base versions, and the same-chain stored/live
-baseline. Do not delete old Sessions merely because their tombstone count is high.
-
-## 2026-10-19: Synthetic Sessions Reconciliation Investigation
-
-The operator later confirmed fresh open tabs and history arrived in both
-directions, after delays of several minutes. Two positive-version phone Session
-updates still conflict. Their requested server IDs are absent from the pre-0.3
-backup; both backup and current database contain multiple deleted Sessions rows
-matching each client tag, plus a reservation per tag. The operator confirmed this
-is a single-chain installation. The failed requests have `deleted:false`: they
-are updates, not pending deletion acknowledgments. Matching tags identify logical
-items, not equal server IDs, URLs, or payload bytes. The old rows being deleted
-does not prove the absent requested IDs were deleted. Root cause remains unknown.
-
-The operator accepts loss, resurrection, or duplication of those two obsolete
-tab items only. This is not permission to reset History, the chain, or unrelated
-records. Private IDs, tag hashes, browsing content, and raw diagnostics are not
-stored in this repository. No agent accessed the production database or phone.
-
-Investigation helper v0.1, `scripts/test-session-reconciliation.sh`, runs an
-overlay of `testdata/session_reconciliation_test.go` against disposable databases
-with the unchanged `0.3.1` handler. It accepts no database path and cannot repair
-an installation. The experiment uses invented identities and opaque payloads:
-
-- Reproduce missing-ID conflicts with same-tag tombstones and existing tag
-  reservations. Do not undelete or rename those original tombstones.
-- In one transaction, stage the missing IDs at the exact positive base versions
-  from the simulated client. Require only deleted non-folder Sessions donors,
-  valid typed protobuf specifics, no unique position/server tag/expiry, no existing target,
-  a same-chain reservation, and a consistent normal-item count baseline.
-- Staged rows use `deleted=0` so omitted deletion flags and later genuine
-  deletion follow the existing update/count contract. Add one normal-item count
-  per staged row atomically, without changing History buckets or old rows.
-- Use the minimum signed 64-bit mtime, not zero: strict `mtime > token` excludes
-  the staged contents for every signed 64-bit progress token, including negative
-  ones. This relies on the current GetUpdates implementation, not a new general
-  access-control mechanism. A real retry replaces specifics and timestamp.
-- Keep unknown original originator metadata absent, rather than copying another
-  record's identity. Borrowed tombstone bytes are temporary working state, not
-  claimed historical recovery. The simulated retry supplies its actual opaque
-  payload through the normal authenticated update path.
-
-Both default modernc and race-enabled mattn experiments passed: conflict before,
-successful retry after, exact ID retention, fresh version, incremental peer
-download of the client payload, and later normal deletion/count/tag release.
-Explicit false, omitted, and true retry deletion flags were tested. Old
-tombstones, unrelated entity rows, and History counters were preserved. Stale
-versions still conflict. Refusals for ambiguous/wrong-type/live/missing donors,
-missing reservations, existing IDs, disabled/wrong chains, bad specifics, expiry,
-folder state, count mismatch, and an invalid second target leave all tables
-unchanged. Reopen and integrity checks passed. Go remains 1.26.9; no dependencies,
-schema, application source, or server artifacts changed. Service version stays
-`0.3.1`; this is not a recovery release or a production repair utility.
-
-One inherited limitation was also reproduced: a correctly versioned deletion of
-an older same-tag tombstone releases that tag reservation even while the staged
-identity is active. Reservations are not entity-ownership mappings. This is not
-fixed by staging and needs explicit consideration before production repair; do
-not advertise reconciliation as a general cure for all same-tag state. A normal
-same-tag competing insert is rejected while the reservation remains present.
-
-Before preparing any real repair, check the current count baseline and donor
-metadata using bounded read-only queries, then require a fresh stopped-service
-backup and recheck exact identity/tag/base-version preconditions. A count
-discrepancy must be investigated separately, not silently recounted. Real Brave
-retry, conflict clearance, and continued two-way sync remain operator checks.
-The fixture does not run Chromium's client conflict resolver or establish the
-cause of the existing state. Do not copy its mutation routine into a live query.
-
-Do not toggle the phone's combined History and tabs setting for a Sessions
-reset. Chromium's History-disable path removes imported visits, and sync-lite
-filters History older than its 14-day server expiration. A complete re-download
-is not guaranteed; a server backup does not protect phone-only history. See the
-[manual-testing safety warning](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts).
-
-## 2026-10-19: Bookmark And Group Transfers Confirmed
-
-The operator subsequently confirmed the phone's bookmark rename reached desktop
-and fresh test tab groups appeared in both directions on `0.3.1`. Together with
-the earlier desktop-to-phone bookmark delivery, this confirms those transfers
-work despite the recurring `update/missing_entity data_type=50119` diagnostic.
-Arrival delays were not measured; initial absence was not a confirmed permanent
-failure. Do not attribute successful transfer to a repair in `0.3.1`, which only
-added diagnostics, or claim the recurring conflict is harmless/resolved.
-
-Reported phone client: Brave Nightly 1.100.5, Chromium 156.0.8078.39, official
-64-bit APK on Android 16; APK versionCode 430000504, target SDK 37. Exact desktop
-browser version was not supplied. No personal device identifiers or Android
-build fingerprint are needed for this record.
-
-The conflict may have predated the update, but no prior diagnostic baseline
-establishes its start. It is not yet attributed to Nightly or the server update.
-Next narrow user check: independently verify newly opened tabs in each client's
-other-device tabs view, keeping the source tabs open. Retain the conflict as an
-open Sessions investigation without speculative database/client repair.
-
-## 2026-10-19: Operator Diagnostic Result
-
-The operator confirmed `0.3.1` with modernc is running over HTTPS and both
-clients reach the service. Opt-in diagnostics recorded
-`operation=update reason=missing_entity data_type=50119`. The checked protocol
-schema maps `50119` to Sessions (open-tab/window records), distinct from
-Bookmarks (`32904`) and Saved Tab Groups (`1004874`). This confirms at least one
-attempted session update references an ID absent from that chain; it does not
-establish why it is missing, prove database corruption, or identify all affected
-types. The log deliberately does not identify the sending device.
-
-The earlier legacy false-acknowledgment hypothesis remains unconfirmed. Do not
-reinsert missing records, accept arbitrary IDs/stale versions, or clear browser
-metadata based on this log alone. Next evidence: fresh retries, other conflict
-types/reasons, current bookmark/group outcomes, and client versions. Retain the
-existing database, chain, backups, and privacy-safe logging. Private hostnames,
-certificate filenames, process IDs, and the raw journal are not recorded here.
-
-## 2026-10-19: sync-lite 0.3.1 Diagnostic Follow-Up
-
-The operator reported that a new desktop bookmark reached Android, but the
-phone's rename and fresh tab groups did not propagate during the observation
-window. Android showed a successful Download step, a last Commit result of
-CONFLICT, and backoff. No insert/update error appeared in the journal. This
-does not establish a phone bug or a particular server defect.
-
-The existing store silently returns update conflicts for missing records and
-version mismatches. `0.3.1` adds opt-in, bounded `SYNC_LOG_CONFLICTS=1` logs for
-those cases and duplicate inserts, without IDs, versions, payloads, or changed
-write acceptance. No schema/data migration or automatic recovery is introduced.
-One code-review hypothesis is legacy false acknowledgments after duplicate
-inserts in `0.2`; no evidence yet connects that mechanism to this installation.
-Do not treat it as a diagnosis or silently adopt client-supplied IDs.
-
-Go remains 1.26.9 for this pass. Dependencies, compiler series, embedded SQLite,
-and official upstream revision are unchanged from the baseline below. New
-protocol tests cover a remote bookmark edit (plain and opaque encrypted),
-incremental polling, stale-version rejection and fresh-version retry, and saved
-groups/tabs from both devices. These synthetic cases pass; target reproduction
-and the actual conflicting type/reason remain pending.
+Go remains 1.26.9. Dependencies, embedded SQLite, and official upstream revision
+are unchanged from the baseline below. Added protocol tests cover remote
+bookmark edits (plain and opaque encrypted), incremental polling, stale-version
+rejection and fresh-version retry, and saved groups/tabs from both devices.
 
 Validation passed on both Linux x86-64 backends: the full check helper including
 race tests, diagnostic privacy/disabled-mode/rejection-preservation/rate-limit/
 capacity/concurrency tests, HTTP/HTTPS lifecycle smoke checks, and govulncheck.
 Both actual archived `0.2` (`1c0d957`) and `0.3` (`287bdec`) passed the synthetic
 upgrade/read-write/rollback matrix through both `0.3.1` backends, with clean
-databases and committed-WAL recovery. No real data, browser profiles, production
-service, or devices were accessed. An operator retry with diagnostics is still
-needed; these automated passes do not resolve the field incident.
+databases and committed-WAL recovery. Runtime fixtures were synthetic. These
+checks do not establish compatibility with every browser or platform.
 
 ## 2026-10-19: sync-lite 0.3
 

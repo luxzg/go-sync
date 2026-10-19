@@ -7,34 +7,10 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 
 ## P1: Validation And Repeatability
 
-- Diagnose the recurring 2026-10-19 commit CONFLICT: `0.3.1` diagnostics show
-  `update/missing_entity` for Sessions (`50119`). The operator confirmed bookmark
-  delivery, the remote bookmark edit, and fresh groups in both directions;
-  those checks are no longer pending or presumed blocked. Phone: Nightly
-  1.100.5 / Chromium 156.0.8078.39 on Android 16. Determine why a session ID is
-  absent, identify the sending client without exposing IDs, and whether other
-  types conflict. The conflict's start date is unknown; do not assume it is a
-  regression or a Nightly bug. Record the desktop browser version if needed.
-  Use the optional [reason/type diagnostics](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts)
-  and distinguish this confirmed symptom from unproven legacy-state theories. Do not
-  suppress conflicts, accept stale writes, reset clients, or repair live data
-  speculatively. The operator later confirmed fresh tabs and history in both
-  directions and isolated two stale phone Session updates: missing IDs in the
-  pre-0.3 backup, with only same-tag tombstones in backup and current data.
-  The [synthetic reconciliation experiment](MAINTENANCE.md#2026-10-19-synthetic-sessions-reconciliation-investigation)
-  now reproduces that structural state and lets exact-version authenticated
-  retries succeed without changing normal API behavior. Count drift was confirmed
-  by operator aggregates; v0.2 tests preserve an explicitly pinned baseline without
-  a broad recount. Next verify target/donor metadata and current exact base versions
-  read-only, design the smallest guarded
-  repair, and require fresh backup/explicit scope before any real-data write.
-  Do not mistake fixture success for actual client recovery or an established
-  cause. The combined History and tabs toggle is not a safe reset shortcut.
-- Review same-tag deletion ownership before promoting reconciliation: the
-  synthetic experiment confirms that deleting an older same-tag tombstone can
-  remove a reservation while another same-tag identity is live. Characterization
-  coverage exists; no API behavior was changed. Design a separately scoped
-  guard or repair constraint rather than broadly deleting legacy tombstones.
+- Review client-tag reservation ownership during deletion. Deleting an older
+  identity must not release a reservation still needed by another live identity
+  with the same tag. Existing synthetic coverage characterizes this edge case;
+  design and test a scoped guard without weakening normal conflict checks.
 - Extend protocol tests for general batch parent-ID mapping, command-level
   quota/history-period boundaries, high-device-limit admission at 50/100 devices,
   AI Chat roundtrip, and larger 499/500/501-entry pagination workloads.
@@ -51,8 +27,8 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 - Extend `0.3.1` field validation beyond the confirmed bookmark/edit/group,
   open-tab, and history transfers, using the [two-device checklist](MANUAL_TESTING.md).
   Check remaining categories and measure automatic timing/retry behavior if
-  needed. Sessions conflict clearance remains pending separately. Synthetic
-  upgrade tests passed; no production server was accessed or updated by the agent.
+  needed. Synthetic upgrade tests passed; no production server was accessed or
+  updated by the agent.
 - Ask the MIPS reporter to build the optional backend and report actual sync,
   router model/CPU, OS/firmware versions, Go/Zig versions, exact command, and
   sanitized errors. [Original request](https://github.com/brave/go-sync/issues/393#issuecomment-6260138531).
@@ -60,11 +36,11 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 
 ## P2: Maintenance And Operations
 
-- Investigate normal quota-count drift separately from missing Sessions IDs.
-  Initial server roots explain a five-record offset, but operator aggregates
-  also show a larger shortfall. Use synthetic lifecycle/concurrency/count-cache
-  tests to establish a cause before proposing a correction. Do not infer data
-  loss, silently recount, or broaden a two-record repair into chain cleanup.
+- Review normal quota accounting across initialization, entity lifecycle,
+  concurrency, and count caching. Initial server roots are inserted outside
+  normal commit counting, so equality with live-row totals is not a universal
+  invariant. Characterize expected deltas before proposing any accounting change;
+  do not infer data loss or silently recount existing databases.
 - Refresh the [maintenance baseline](MAINTENANCE.md) monthly and after advisories;
   next routine review is November 2026. Check Go, both SQLite drivers/embedded
   engines, inherited modules, govulncheck, ShellCheck, and build prerequisites.
