@@ -479,7 +479,10 @@ For a hands-on browser check after installation or an upgrade, use
 bookmarks, remote edits, tabs/groups, diagnostic views, and safe troubleshooting.
 The `0.3` browser check found a persistent Android commit conflict despite a
 successful desktop-to-phone bookmark transfer. Investigation is ongoing;
-`0.3.1` adds diagnostics, not a confirmed fix. Do not reset the chain to test it.
+`0.3.1` diagnostics subsequently identified a missing Sessions record (`50119`).
+That does not yet explain the missing record or establish a bookmark/group
+failure mechanism. This patch adds diagnostics, not a confirmed fix. Do not
+reset the chain to test it.
 
 ### Automated Tests
 From the fork's root directory:

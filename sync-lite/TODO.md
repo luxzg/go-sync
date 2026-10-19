@@ -10,10 +10,12 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 - Diagnose the 2026-10-19 Android commit CONFLICT on the updated home server:
   desktop bookmark reached Android, reverse rename and fresh groups did not
   appear during the observation window. Phone reported download success and
-  backoff, while the journal showed no insert/update errors. Use `0.3.1`'s
-  optional [reason/type diagnostics](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts),
-  confirm a fresh retry after backoff, and identify the failing data type and
-  missing-record/version/duplicate cause before changing behavior. Do not
+  backoff. The operator now confirms `0.3.1` is running and diagnostics show
+  `update/missing_entity` for Sessions (`50119`). Determine why a session ID is
+  absent, whether this repeats after backoff, whether other types conflict,
+  and whether the bookmark rename/groups remain stalled. Record client versions.
+  Use the optional [reason/type diagnostics](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts)
+  and distinguish this confirmed symptom from unproven legacy-state theories. Do not
   suppress conflicts, accept stale writes, reset clients, or repair live data
   speculatively. New synthetic remote-edit/group tests pass but do not reproduce
   the installation's failure. Full browser validation remains incomplete.
@@ -30,8 +32,9 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   handling, damaged/missing TLS files, and failed startup cleanup. `0.3` already
   covers normal SIGINT/SIGTERM, restart, WAL recovery/busy reporting, real HTTPS,
   and incomplete TLS settings.
-- Obtain operator confirmation of `0.2` -> `0.3` upgrade and actual Brave sync on
-  the home server after a consistent backup, using the [two-device checklist](MANUAL_TESTING.md).
+- Complete actual two-way Brave validation on the upgraded home server using
+  the [two-device checklist](MANUAL_TESTING.md); `0.3.1` startup/reachability are
+  operator-confirmed, but the Sessions conflict remains unresolved.
   Record client versions, both directions, remote edits, category-specific
   results, and whether manual GetUpdates was needed. Synthetic upgrade tests passed;
   no production server was accessed or updated by the agent.

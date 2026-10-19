@@ -1,5 +1,23 @@
 # Maintenance Record
 
+## 2026-10-19: Operator Diagnostic Result
+
+The operator confirmed `0.3.1` with modernc is running over HTTPS and both
+clients reach the service. Opt-in diagnostics recorded
+`operation=update reason=missing_entity data_type=50119`. The checked protocol
+schema maps `50119` to Sessions (open-tab/window records), distinct from
+Bookmarks (`32904`) and Saved Tab Groups (`1004874`). This confirms at least one
+attempted session update references an ID absent from that chain; it does not
+establish why it is missing, prove database corruption, or identify all affected
+types. The log deliberately does not identify the sending device.
+
+The earlier legacy false-acknowledgment hypothesis remains unconfirmed. Do not
+reinsert missing records, accept arbitrary IDs/stale versions, or clear browser
+metadata based on this log alone. Next evidence: fresh retries, other conflict
+types/reasons, current bookmark/group outcomes, and client versions. Retain the
+existing database, chain, backups, and privacy-safe logging. Private hostnames,
+certificate filenames, process IDs, and the raw journal are not recorded here.
+
 ## 2026-10-19: sync-lite 0.3.1 Diagnostic Follow-Up
 
 The operator reported that a new desktop bookmark reached Android, but the

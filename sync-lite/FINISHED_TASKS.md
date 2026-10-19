@@ -5,6 +5,11 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-10-19 the operator confirmed `0.3.1`/modernc running with HTTPS and
+  both clients reaching it. Diagnostics identified an update of a missing
+  Sessions record (`50119`), narrowing the reported conflict without resolving
+  its origin or proving the bookmark/group symptoms share that cause. This is
+  operator-reported evidence, not agent access or a complete sync validation.
 - Version `0.3.1` on 2026-10-19 added optional, bounded, privacy-safe conflict
   reason/type logging and remote-edit/group protocol tests. Both driver suites,
   race/privacy/rate-limit checks, HTTP/HTTPS smoke checks, govulncheck, and actual

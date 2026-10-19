@@ -5,6 +5,16 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-10-19 19:01 CEST (Europe/Zagreb)
+
+- Recorded operator confirmation that `0.3.1`/modernc is running over HTTPS and
+  clients reach it. Diagnostics identified `update/missing_entity` for Sessions
+  (`50119`), not a confirmed bookmark or saved-group conflict. The origin of the
+  missing record and its relationship to other symptoms remain unresolved.
+- Updated pending investigation and field-validation scope without copying
+  private hostnames, certificate paths, or raw journal output. No runtime or
+  data changes; service version remains `0.3.1`.
+
 ## 0.3.1 - 2026-10-19 18:39 CEST (Europe/Zagreb)
 
 - Added opt-in `SYNC_LOG_CONFLICTS=1` diagnostics for missing-record,
