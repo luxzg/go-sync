@@ -24,8 +24,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A05 | P2 | Expired History records remain forever | VERIFIED | `19e533c`, pushed; focused/full/race/upgrades pass | Normal tombstones preserved; no startup bulk deletion |
 | A07 | P2 | Unvisited expired hints retain memory | VERIFIED | `56166df`, pushed; focused/full/race pass | Interim counters never evicted |
 | A10 | P2 | Clear-data unnecessarily loads all payloads | VERIFIED | `0e8715a`, pushed; focused/full/race/benchmark/upgrades pass | Returned identity metadata and disabled marker preserved |
-| A11 | P2 | File privacy inherits permissive defaults | IN PROGRESS | 0600 fresh DB; private directory/umask examples | Existing modes deliberately preserved |
-| A13 | P2 | Upstream new-device scan repeats the first page | PENDING | | |
+| A11 | P2 | File privacy inherits permissive defaults | VERIFIED | `54daa1b`, pushed; focused/full/race/smoke/upgrades pass | Existing modes deliberately preserved |
+| A13 | P2 | Upstream new-device scan repeats the first page | IN PROGRESS | Request-local admission sample, maximum 100 live devices | Threshold contract tests; no parent edits |
 | A14 | P3 | Authenticated non-POST requests can mutate state | PENDING | | |
 | A15 | P3 | In-memory database connection lifetime/isolation | PENDING | | |
 
@@ -212,3 +212,18 @@ first-install state directory 0700. Existing modes/group backup access require
 operator review, not automatic recursive changes. No real server or unrelated
 account access was tested. Full/race, HTTP/HTTPS smoke and all historical upgrade
 matrices passed; no schema/data rewrite. `[A11]`.
+
+### A13 - 2026-11-06 15:24 CET
+
+All five red cases exhausted their bounded context while repeatedly reading 501
+tombstones. A NEW_CLIENT-only adapter intercepts just the first setup scan and
+returns at most 100 live eligible DeviceInfo metadata rows. That is sufficient
+for unchanged 50/100 admission thresholds; subsequent reads in the same request
+delegate to normal pagination. NULL legacy deleted state is conservatively live
+in this admission projection. Chain/folder/mtime/expiry filters are preserved.
+
+Both focused backends and full/race checks passed: 0/49/50 live devices, high-limit
+99/100, and normal 500-entry download/more-changes in the same request. Threshold
+tests must be revisited when incorporating upstream limit changes. No schema,
+startup or config change, and no independent upstream source edits. The previous
+upgrade matrix remains applicable. `[A13]`.

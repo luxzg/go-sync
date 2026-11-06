@@ -12,6 +12,7 @@ type commandStore struct {
 	normalResurrections  int
 	historyResurrections int
 	requestContext       context.Context
+	admissionPending     bool
 }
 
 func (s *commandStore) context(fallback context.Context) context.Context {
@@ -28,6 +29,12 @@ func (s *commandStore) InsertSyncEntitiesWithServerTags(ctx context.Context, e [
 	return s.SQLiteStore.InsertSyncEntitiesWithServerTags(s.context(ctx), e)
 }
 func (s *commandStore) GetUpdatesForType(ctx context.Context, d int, token int64, folders bool, chain string, size int) (bool, []datastore.SyncEntity, error) {
+	if s.admissionPending {
+		s.admissionPending = false
+		if d == 154522 && token == 0 && !folders && size == 500 {
+			return s.deviceAdmissionSample(s.context(ctx), chain)
+		}
+	}
 	return s.SQLiteStore.GetUpdatesForType(s.context(ctx), d, token, folders, chain, size)
 }
 func (s *commandStore) HasServerDefinedUniqueTag(ctx context.Context, chain, tag string) (bool, error) {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:24 CET (Europe/Zagreb)
+
+- A13: avoid upstream's repeated-first-page device-admission loop through a
+  request-local live-device sample. Preserve the 50/100 thresholds, roots and
+  ordinary paginated downloads. Tests cover admission after 501 tombstones on
+  both backends; upstream source remains untouched.
+
 ## 0.4 (in development) - 2026-11-06 15:22 CET (Europe/Zagreb)
 
 - A11: create fresh SQLite files with mode 0600; preserve permissions of existing

@@ -189,7 +189,8 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 		}
 
 		pbRsp := &sync_pb.ClientToServerResponse{}
-		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, &commandStore{SQLiteStore: db, requestContext: r.Context()}, clientID); err != nil {
+		store := &commandStore{SQLiteStore: db, requestContext: r.Context(), admissionPending: pb.GetMessageContents() == sync_pb.ClientToServerMessage_GET_UPDATES && pb.GetGetUpdates().GetGetUpdatesOrigin() == sync_pb.SyncEnums_NEW_CLIENT}
+		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, store, clientID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
