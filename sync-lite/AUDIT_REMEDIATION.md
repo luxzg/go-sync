@@ -18,9 +18,9 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | VERIFIED | `726e2e5`, pushed; focused/full/race pass | No storage/startup/config change |
 | A01 | P1 | Precommit timestamps can fall behind issued tokens | VERIFIED | `4a0dc2e`, pushed; focused/full/race/supplemental/upgrades pass | Additive table; old tied cohorts not replayed |
-| A02 | P1 | Tag ownership and resurrection accounting | IN PROGRESS | Stored-tag owner guard; request-owned resurrection deltas | Requires A06 coordination |
+| A02 | P1 | Tag ownership and resurrection accounting | VERIFIED | `6ae54c3`, pushed; focused/full/race/supplemental/upgrades pass | Requires A06 coordination |
 | A06 | P2 | Concurrent absolute quota snapshots lose deltas | VERIFIED | `58ef410`, pushed; focused/full/race/upgrades pass | Single service process; approximate quotas preserved |
-| A09 | P2 | Failed drain closes storage under active requests | PENDING | | |
+| A09 | P2 | Failed drain closes storage under active requests | IN PROGRESS | Handler drain tracker and request-bound datastore calls | Force failure preserves committed WAL; no atomic-batch promise |
 | A05 | P2 | Expired History records remain forever | PENDING | | |
 | A07 | P2 | Unvisited expired hints retain memory | PENDING | | |
 | A10 | P2 | Clear-data unnecessarily loads all payloads | PENDING | | |
@@ -143,3 +143,20 @@ Both focused driver tests, full/race checks, supplemental lifecycle tests and
 all three archived upgrade matrices passed. The supplemental characterization
 that expected the old tag-release defect now explicitly requires preservation.
 No existing entities/tags/counters are rewritten on startup. Commit `[A02]`.
+
+### A09 - 2026-11-06 15:11 CET
+
+Red tests confirmed both Commit and ClearServerData ignored request cancellation
+and mutated state. The adapter now binds every datastore operation to the request
+context. Shutdown tracks handlers, stops admission, drains for 10 seconds,
+force-closes connections on timeout, and waits another 5 seconds. It never
+checkpoints/closes beneath a still-active handler. Failed drain/cleanup returns
+failure; only complete graceful shutdown logs success. TLS pair/file validation
+occurs before storage initialization; unexpected serve failure also drains.
+
+Both driver focused tests exercise cancelled commit/clear, a forced-close drain,
+and a deliberately stuck handler proving SQLite remains open until release.
+Full/race suites, HTTP/HTTPS SIGINT/SIGTERM/restart smoke (including invalid TLS
+opening no database), and all historical upgrade matrices passed. A cancelled
+request can still have committed earlier entries; this is not atomic batch
+rollback or permission to automatically retry unknown-outcome writes. `[A09]`.

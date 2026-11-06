@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:11 CET (Europe/Zagreb)
+
+- A09: track and drain handlers before SQLite cleanup, force-close timed-out
+  connections, propagate request cancellation through the datastore adapter,
+  and report failed shutdown instead of unconditional success. If handlers remain
+  stuck, skip database cleanup and exit with failure for normal WAL recovery.
+- Validate TLS files/settings before opening storage; clean up on listen failure.
+  Both driver/race suites, forced/stuck/cancelled-request tests, real HTTP/HTTPS
+  signal/restart smoke checks and all archived upgrade matrices passed.
+
 ## 0.4 (in development) - 2026-11-06 15:09 CET (Europe/Zagreb)
 
 - A02: preserve client-tag reservation ownership on repeated deletion; validate

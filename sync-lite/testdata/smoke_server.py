@@ -141,6 +141,13 @@ def main():
             [str(binary)], env=invalid_environment, capture_output=True, text=True, timeout=15
         )
         assert invalid.returncode != 0 and "TLS config invalid" in invalid.stderr
+        assert not probe_path.exists(), "invalid TLS settings opened a database"
+        invalid_environment["TLS_KEY_FILE"] = str(directory / "missing-key.pem")
+        invalid = subprocess.run(
+            [str(binary)], env=invalid_environment, capture_output=True, text=True, timeout=15
+        )
+        assert invalid.returncode != 0 and "TLS config invalid" in invalid.stderr
+        assert not probe_path.exists(), "unreadable TLS files opened a database"
         print(f"PASS: {backend} version, HTTP/HTTPS aliases, SIGINT/SIGTERM, persistence, TLS validation")
 
 

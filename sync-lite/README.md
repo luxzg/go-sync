@@ -166,6 +166,15 @@ payloads. See [diagnosing commit conflicts](MANUAL_TESTING.md#diagnosing-persist
   - A busy checkpoint is reported as an error; journal files must never be deleted manually.
 - Both drivers use synchronous=FULL and a 5000 ms busy timeout on each connection.
 
+In the 0.4 working series, shutdown stops admission, gives requests ten seconds
+to drain, then closes connections and waits up to five more seconds. SQLite is
+checkpointed/closed only after tracked handlers finish. Datastore calls remain
+bound to the HTTP request context even where upstream uses a background context.
+Forced, failed or incomplete cleanup returns a nonzero exit status, not a
+"stopped cleanly" message. If handlers remain stuck, database cleanup is skipped
+and normal SQLite WAL recovery is left for the next open. Do not delete journals.
+TLS configuration/files are validated before opening the database.
+
 ### 0.4 Storage Compatibility
 
 The working series automatically adds the small `sync_clocks` table. It does not

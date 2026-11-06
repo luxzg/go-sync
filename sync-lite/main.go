@@ -2,7 +2,7 @@ package main
 
 import (
 	"compress/gzip"
-	"context"
+	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -35,16 +35,35 @@ func main() {
 		fmt.Printf("sync-lite %s (sqlite: %s; %s/%s; %s)\n", version, sqliteBackend, runtime.GOOS, runtime.GOARCH, runtime.Version())
 		return
 	}
+	if err := runServer(); err != nil {
+		log.Printf("sync-lite stopped with error: %v", err)
+		os.Exit(1)
+	}
+	log.Print("sync-lite stopped cleanly")
+}
+
+func runServer() error {
 	log.Printf("sync-lite %s (sqlite backend: %s)", version, sqliteBackend)
 	command.LoadHighDeviceLimitClientIDsFromEnv()
 	listenAddr := getenvDefault("LISTEN_ADDR", ":8295")
 	sqlitePath := getenvDefault("SQLITE_PATH", "./sync-lite.db")
 	tlsCertFile := os.Getenv("TLS_CERT_FILE")
 	tlsKeyFile := os.Getenv("TLS_KEY_FILE")
+	if (tlsCertFile == "") != (tlsKeyFile == "") {
+		return fmt.Errorf("TLS config invalid: set both TLS_CERT_FILE and TLS_KEY_FILE, or neither")
+	}
+	var certificate tls.Certificate
+	if tlsCertFile != "" {
+		var err error
+		certificate, err = tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
+		if err != nil {
+			return fmt.Errorf("TLS config invalid: %w", err)
+		}
+	}
 
 	db, err := NewSQLiteStore(sqlitePath)
 	if err != nil {
-		log.Fatalf("init sqlite store failed: %v", err)
+		return fmt.Errorf("init sqlite store failed: %w", err)
 	}
 	if db.conflicts != nil {
 		log.Print("sync conflict diagnostics enabled (rate-limited; data type and reason only)")
@@ -57,51 +76,34 @@ func main() {
 	mux.HandleFunc("/command/", handler)
 	mux.HandleFunc("/v2/command/", handler)
 
-	if (tlsCertFile == "") != (tlsKeyFile == "") {
-		log.Fatal("TLS config invalid: set both TLS_CERT_FILE and TLS_KEY_FILE, or neither")
+	tracker := newHandlerTracker(mux)
+	srv := newHTTPServer(listenAddr, tracker)
+	if tlsCertFile != "" {
+		srv.TLSConfig = &tls.Config{Certificates: []tls.Certificate{certificate}}
 	}
-
-	srv := newHTTPServer(listenAddr, mux)
-
-	shutdownDone := make(chan struct{})
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigCh)
+	serveErr := make(chan error, 1)
 	go func() {
-		defer close(shutdownDone)
-		sig := <-sigCh
-		log.Printf("received signal %s, shutting down server", sig.String())
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		if err := srv.Shutdown(ctx); err != nil {
-			log.Printf("http shutdown error: %v", err)
-		}
-
-		cpCtx, cpCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cpCancel()
-		if err := db.CheckpointTruncate(cpCtx); err != nil {
-			log.Printf("sqlite checkpoint error during shutdown: %v", err)
-		}
-		if err := db.Close(); err != nil {
-			log.Printf("sqlite close error during shutdown: %v", err)
+		if tlsCertFile != "" && tlsKeyFile != "" {
+			log.Printf("sync-lite listening on %s with HTTPS (sqlite: %s, cert: %s, key: %s)", listenAddr, sqlitePath, tlsCertFile, tlsKeyFile)
+			serveErr <- srv.ListenAndServeTLS("", "")
+		} else {
+			log.Printf("sync-lite listening on %s with HTTP (sqlite: %s)", listenAddr, sqlitePath)
+			serveErr <- srv.ListenAndServe()
 		}
 	}()
-
-	if tlsCertFile != "" && tlsKeyFile != "" {
-		log.Printf("sync-lite listening on %s with HTTPS (sqlite: %s, cert: %s, key: %s)", listenAddr, sqlitePath, tlsCertFile, tlsKeyFile)
-		if err := srv.ListenAndServeTLS(tlsCertFile, tlsKeyFile); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server stopped: %v", err)
-		}
-	} else {
-		log.Printf("sync-lite listening on %s with HTTP (sqlite: %s)", listenAddr, sqlitePath)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server stopped: %v", err)
+	var serverErr error
+	select {
+	case sig := <-sigCh:
+		log.Printf("received signal %s, shutting down server", sig)
+	case serverErr = <-serveErr:
+		if errors.Is(serverErr, http.ErrServerClosed) {
+			serverErr = nil
 		}
 	}
-
-	<-shutdownDone
-	log.Printf("sync-lite stopped cleanly")
+	return errors.Join(serverErr, stopServer(srv, tracker, db, 10*time.Second, 5*time.Second))
 }
 
 func getenvDefault(key string, fallback string) string {
@@ -187,7 +189,7 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 		}
 
 		pbRsp := &sync_pb.ClientToServerResponse{}
-		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, &commandStore{SQLiteStore: db}, clientID); err != nil {
+		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, &commandStore{SQLiteStore: db, requestContext: r.Context()}, clientID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
