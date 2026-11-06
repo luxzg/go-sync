@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:48 CET (Europe/Zagreb)
+
+- A01 integration follow-up: preserve version 1 only during initial server-root
+  insertion, not ordinary updates carrying a server tag. A repeated-time root
+  update now advances both modification time and version and rejects stale bases.
+  Both focused/full/race suites and archived upgrade matrices passed.
+
 ## 0.4 (in development) - 2026-11-06 15:46 CET (Europe/Zagreb)
 
 - A05 integration follow-up: treat NULL legacy expiry as non-expiring when

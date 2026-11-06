@@ -153,7 +153,7 @@ func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, err
 	}
 	defer tx.Rollback()
-	if err := stampEntity(ctx, tx, entity); err != nil {
+	if err := stampEntity(ctx, tx, entity, false); err != nil {
 		return false, err
 	}
 
@@ -198,7 +198,7 @@ func (s *SQLiteStore) InsertSyncEntitiesWithServerTags(ctx context.Context, enti
 
 	now := time.Now().UnixMilli()
 	for _, entity := range entities {
-		if err := stampEntity(ctx, tx, entity); err != nil {
+		if err := stampEntity(ctx, tx, entity, true); err != nil {
 			return err
 		}
 		_, err = tx.ExecContext(ctx,
@@ -230,7 +230,7 @@ func (s *SQLiteStore) updateSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, false, err
 	}
 	defer tx.Rollback()
-	if err := stampEntity(ctx, tx, entity); err != nil {
+	if err := stampEntity(ctx, tx, entity, false); err != nil {
 		return false, false, err
 	}
 

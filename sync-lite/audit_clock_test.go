@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/brave/go-sync/datastore"
 	"path/filepath"
 	"testing"
 )
@@ -147,5 +148,37 @@ func TestAuditA01IndependentHandles(t *testing.T) {
 			t.Fatal("non-monotonic concurrent writes")
 		}
 		previous = *e.Mtime
+	}
+}
+
+func TestAuditA01RootUpdateAdvancesVersion(t *testing.T) {
+	s := sqliteTestOpen(t, filepath.Join(t.TempDir(), "root.db"))
+	ctx := sqliteTestContext(t)
+	root := sqliteTestEntity("a", "root", 100)
+	root.ServerDefinedUniqueTag = stringPtr("google_chrome_nigori")
+	root.DataType = sqliteTestPtr(47745)
+	if err := s.InsertSyncEntitiesWithServerTags(ctx, []*datastore.SyncEntity{&root}); err != nil {
+		t.Fatal(err)
+	}
+	if *root.Version != 1 {
+		t.Fatal("initial root lost version 1")
+	}
+	update := root
+	update.Version = int64Ptr(200)
+	update.Mtime = update.Version
+	if conflict, _, err := s.UpdateSyncEntity(ctx, &update, 1); conflict || err != nil {
+		t.Fatal(conflict, err)
+	}
+	again := update
+	again.Version = int64Ptr(200)
+	again.Mtime = again.Version
+	if conflict, _, err := s.UpdateSyncEntity(ctx, &again, 200); conflict || err != nil {
+		t.Fatal(conflict, err)
+	}
+	if *again.Version <= 200 || *again.Version != *again.Mtime {
+		t.Fatal("root update kept stale version after timestamp clamp")
+	}
+	if conflict, _, err := s.UpdateSyncEntity(ctx, &update, 200); !conflict || err != nil {
+		t.Fatal("stale root update accepted", conflict, err)
 	}
 }

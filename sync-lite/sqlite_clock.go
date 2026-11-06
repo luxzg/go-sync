@@ -10,7 +10,7 @@ import (
 
 // The first write owns SQLite's writer lock before reading the allocation floor.
 // The clock and entity commit/rollback together, including across store handles.
-func stampEntity(ctx context.Context, tx *sql.Tx, e *datastore.SyncEntity) error {
+func stampEntity(ctx context.Context, tx *sql.Tx, e *datastore.SyncEntity, preserveRootVersion bool) error {
 	if e.DataType == nil || e.Mtime == nil {
 		return fmt.Errorf("missing entity type or timestamp")
 	}
@@ -30,7 +30,7 @@ func stampEntity(ctx context.Context, tx *sql.Tx, e *datastore.SyncEntity) error
 		return err
 	}
 	// Parent conversions can alias Ctime and Mtime. Replace pointers, not values.
-	if e.Version != nil && *e.Version == proposed && e.ServerDefinedUniqueTag == nil {
+	if e.Version != nil && *e.Version == proposed && !preserveRootVersion {
 		e.Version = &stamp
 	}
 	e.Mtime = &stamp

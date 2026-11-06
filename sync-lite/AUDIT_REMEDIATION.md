@@ -282,3 +282,13 @@ released its live directive owner's reservation when expiry was NULL. COALESCE
 now makes the ownership predicate NULL-safe and preserves non-expiring semantics.
 Both focused backends, full/race, supplemental and archived upgrade matrices
 passed; HTTP/HTTPS smoke also passed on the integrated state. No schema change.
+
+### A01 Follow-Up - 2026-11-06 15:48 CET
+
+A targeted red regression found that using server-tag presence as the initial
+root-version exception could leave an ordinary root update's version behind its
+clamped timestamp. The allocation call now explicitly preserves versions only
+for the initial server-tag batch. Normal updates, including Nigori roots, advance
+matching timestamp/version values and reject stale versions. Both focused
+backends, full/race suites and all archived upgrade matrices passed. Initial root
+version 1 and original creation times remain covered. No schema change.
