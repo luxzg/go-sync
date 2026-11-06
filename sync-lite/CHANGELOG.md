@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:16 CET (Europe/Zagreb)
+
+- A05: retire explicitly expired History-family rows in bounded chain-scoped
+  transactions, preserving normal tombstones, tag ownership and clock watermarks.
+  Recommitting expired History becomes visible again. No expiry work means no
+  cleanup write transaction; no bulk startup deletion or count recount is added.
+- Historical tests now expect only the known expired History fixture to retire
+  on a History read; startup and every other original value remain preserved.
+  Both backend/race suites and all old-version upgrade matrices passed.
+
 ## 0.4 (in development) - 2026-11-06 15:11 CET (Europe/Zagreb)
 
 - A09: track and drain handlers before SQLite cleanup, force-close timed-out

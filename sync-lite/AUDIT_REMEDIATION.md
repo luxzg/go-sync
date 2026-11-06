@@ -20,8 +20,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A01 | P1 | Precommit timestamps can fall behind issued tokens | VERIFIED | `4a0dc2e`, pushed; focused/full/race/supplemental/upgrades pass | Additive table; old tied cohorts not replayed |
 | A02 | P1 | Tag ownership and resurrection accounting | VERIFIED | `6ae54c3`, pushed; focused/full/race/supplemental/upgrades pass | Requires A06 coordination |
 | A06 | P2 | Concurrent absolute quota snapshots lose deltas | VERIFIED | `58ef410`, pushed; focused/full/race/upgrades pass | Single service process; approximate quotas preserved |
-| A09 | P2 | Failed drain closes storage under active requests | IN PROGRESS | Handler drain tracker and request-bound datastore calls | Force failure preserves committed WAL; no atomic-batch promise |
-| A05 | P2 | Expired History records remain forever | PENDING | | |
+| A09 | P2 | Failed drain closes storage under active requests | VERIFIED | `992ea1f`, pushed; focused/full/race/smoke/upgrades pass | Force failure preserves committed WAL; no atomic-batch promise |
+| A05 | P2 | Expired History records remain forever | IN PROGRESS | Bounded explicit-TTL retirement and targeted recommit cleanup | Normal tombstones preserved; no startup bulk deletion |
 | A07 | P2 | Unvisited expired hints retain memory | PENDING | | |
 | A10 | P2 | Clear-data unnecessarily loads all payloads | PENDING | | |
 | A11 | P2 | File privacy inherits permissive defaults | PENDING | | |
@@ -160,3 +160,20 @@ Full/race suites, HTTP/HTTPS SIGINT/SIGTERM/restart smoke (including invalid TLS
 opening no database), and all historical upgrade matrices passed. A cancelled
 request can still have committed earlier entries; this is not atomic batch
 rollback or permission to automatically retry unknown-outcome writes. `[A09]`.
+
+### A05 - 2026-11-06 15:16 CET
+
+Red tests confirmed an acknowledged History recommit remained expired/invisible
+and expired rows were never retired. Read-only probes now identify actual expiry
+work, followed by an atomic, at-most-256-row History-family retirement. Targeted
+ID/tag cleanup supports recommits without primary-key/reservation collisions;
+tag deletion checks remaining ownership. No normal tombstones or non-expiring
+rows are removed. Legacy timestamp floors are persisted before retirement.
+
+Both driver tests cover recommit, physical retirement, chain isolation, strict
+expiry boundaries, bounded backlog processing, directive tag reuse and legacy
+watermarks. Full check/race suites and all archived upgrade matrices passed.
+The legacy read test deliberately changes only its expired-History expectation;
+startup and all other values still compare exactly. Existing live expiry and
+approximate history buckets are not rewritten. No IO benchmark or SSD-wear
+claim is made. Binary rollback cannot undo legitimate expiry. `[A05]`.

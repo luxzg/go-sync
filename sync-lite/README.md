@@ -196,6 +196,17 @@ already-issued old tokens or replay previously skipped records, and old tied
 cohorts can still straddle a page. Existing records are deliberately not
 retimestamped. Do not reset a valuable chain as an upgrade step.
 
+0.4 also restores physical retirement for History and History-delete-directive
+rows whose explicit expiry is in the past (normally 14 days). Cleanup is lazy,
+chain-scoped and bounded to 256 rows per pass during relevant reads/writes;
+non-expiring records and normal tombstones are not purged. There is no startup
+bulk deletion, background service or counter recount. A recommitted expired
+History item can be inserted again with its normal new expiry instead of being
+acknowledged but remaining invisible. Existing unexpired items keep their expiry.
+When no expired work exists, the cleanup probe is read-only. Clock state is
+preserved before deleting legacy rows, including the last record of a type.
+Binary rollback cannot undo normal expiration; keep the documented backup.
+
 ## Brave Setup Notes
 ### 1) Custom sync URL support (closed/resolved)
 Brave has support for overriding sync server URL, including Android workflows. See:

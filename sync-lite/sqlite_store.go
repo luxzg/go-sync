@@ -126,6 +126,11 @@ func (s *SQLiteStore) initSchema(ctx context.Context) error {
 }
 
 func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.SyncEntity) (bool, error) {
+	if entity.DataType != nil && (*entity.DataType == datastore.HistoryTypeID || *entity.DataType == datastore.HistoryDeleteDirectiveTypeID) {
+		if err := s.retireExpired(ctx, entity.ClientID, &entity.ID, entity.ClientDefinedUniqueTag); err != nil {
+			return false, err
+		}
+	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return false, err
@@ -321,6 +326,11 @@ func (s *SQLiteStore) updateSyncEntity(ctx context.Context, entity *datastore.Sy
 }
 
 func (s *SQLiteStore) GetUpdatesForType(ctx context.Context, dataType int, clientToken int64, fetchFolders bool, clientID string, maxSize int) (bool, []datastore.SyncEntity, error) {
+	if dataType == datastore.HistoryTypeID || dataType == datastore.HistoryDeleteDirectiveTypeID {
+		if err := s.retireExpired(ctx, clientID, nil, nil); err != nil {
+			return false, nil, err
+		}
+	}
 	limit := maxSize + 1
 	if limit < 1 {
 		limit = 1
@@ -547,6 +557,9 @@ func (s *SQLiteStore) IsSyncChainDisabled(ctx context.Context, clientID string) 
 }
 
 func (s *SQLiteStore) HasItem(ctx context.Context, clientID string, id string) (bool, error) {
+	if err := s.retireExpired(ctx, clientID, &id, nil); err != nil {
+		return false, err
+	}
 	return hasRow(ctx, s.db,
 		`SELECT 1 FROM sync_entities WHERE client_id = ? AND id = ? LIMIT 1`,
 		clientID,

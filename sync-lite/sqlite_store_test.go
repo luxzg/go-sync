@@ -449,8 +449,22 @@ func TestSQLiteStoreV02Compatibility(t *testing.T) {
 	if err != nil || !hasTag {
 		t.Fatalf("legacy server tag = %v, err=%v", hasTag, err)
 	}
+	// 0.4 restores the documented History TTL lifecycle during History reads.
+	// Startup above preserved all rows; only this explicitly expired fixture
+	// may disappear now. Every other legacy value must still compare exactly.
+	legacy := before["legacy-active"].(map[string][][]any)
+	kept := make([][]any, 0, len(legacy["sync_entities"])-1)
+	for _, row := range legacy["sync_entities"] {
+		if row[1] != "expired-history" {
+			kept = append(kept, row)
+		}
+	}
+	if len(kept) != len(legacy["sync_entities"])-1 {
+		t.Fatal("missing expected expired fixture")
+	}
+	legacy["sync_entities"] = kept
 	if !reflect.DeepEqual(sqliteTestSnapshot(t, s.db), before) {
-		t.Fatal("reading v0.2 records changed stored logical contents")
+		t.Fatal("History retirement changed non-expired legacy contents")
 	}
 	// Exercise writes and another restart without altering the legacy chains.
 	sqliteTestInsert(t, s, sqliteTestEntity("new-chain", "new-item", 900))
