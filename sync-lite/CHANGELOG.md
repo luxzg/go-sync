@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 14:57 CET (Europe/Zagreb)
+
+- A04: enforce independent 10 MiB wire/decoded request limits without accepting
+  truncated protobuf prefixes. Reject corrupt gzip before dispatch. Bound HTTP
+  header/body/write/idle lifetimes; add real slow-client and boundary regressions.
+
 ## 0.4 (in development) - 2026-11-06 14:55 CET (Europe/Zagreb)
 
 - A03: validate updates against stored type and tag before applying the History

@@ -128,6 +128,13 @@ these additions. A compatible prebuilt binary does not require Go on the server.
 - `POST /command/` (primary endpoint)
 - `POST /v2/command/` (compatibility alias)
 
+In the 0.4 working series, authenticated requests are limited to 10 MiB on the
+wire and after decompression; oversized bodies return HTTP 413 before command
+dispatch. Gzip is read to completion so malformed streams are rejected. The
+standalone server bounds header reads to 10 seconds and body reads, response
+writes and idle connections to two minutes. These are connection deadlines,
+not an atomic rollback or proof that background command work was cancelled.
+
 `/command/` originally worked around Brave stripping `/v2/` from the server URL.
 That client bug has been fixed upstream; both endpoints remain supported.
 

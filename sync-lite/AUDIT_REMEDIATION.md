@@ -14,8 +14,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | ID | Priority | Finding / root cause | Status | Implementation and verification | Upgrade / risks |
 | --- | --- | --- | --- | --- | --- |
 | A12 | P2 | Restart reseeding and chained WAL tests mask failures | VERIFIED | `287806f`, pushed; check/smoke/supplemental/upgrades pass | All three actual archived baselines, both drivers independently |
-| A03 | P1 | Incoming identity controls stored-type/version policy | IN PROGRESS | Reject changed type/tag using stored identity | No schema change |
-| A04 | P1 | Incomplete HTTP limits and absent deadlines | PENDING | | |
+| A03 | P1 | Incoming identity controls stored-type/version policy | VERIFIED | `8ad6cd2`, pushed; focused/full/race/upgrades pass | No schema change |
+| A04 | P1 | Incomplete HTTP limits and absent deadlines | IN PROGRESS | Independent wire/decoded limits; server deadlines | Schema/config unchanged |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | PENDING | | |
 | A01 | P1 | Precommit timestamps can fall behind issued tokens | PENDING | | |
 | A02 | P1 | Tag ownership and resurrection accounting | PENDING | | |
@@ -69,3 +69,13 @@ the History exception only to stored History, and uses stored tag for deletion.
 Omitted tags remain valid. Both focused driver tests, complete check helper and
 all three clean/WAL upgrade matrices passed. No schema, config or existing-row
 rewrite. Commit subject `[A03]`; push recorded by the next tracking update.
+
+### A04 - 2026-11-06 14:57 CET
+
+The oversized-body regression failed before implementation. Limits now read one
+extra decoded byte and cap the wire reader independently, before dispatch. Tests
+cover plain/gzip below/at/above the limit, an otherwise valid maximum-size prefix
+with trailing fields, invalid gzip CRC, no writes on rejection, positive server
+deadlines and actual slow header/body sockets. Focused tests passed on both
+drivers; full checks/races and HTTP/HTTPS smoke passed. No stored-data or config
+changes; prior-version fixture matrix rerun for startup compatibility.

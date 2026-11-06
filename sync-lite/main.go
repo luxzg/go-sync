@@ -3,6 +3,7 @@ package main
 import (
 	"compress/gzip"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -60,10 +61,7 @@ func main() {
 		log.Fatal("TLS config invalid: set both TLS_CERT_FILE and TLS_KEY_FILE, or neither")
 	}
 
-	srv := &http.Server{
-		Addr:    listenAddr,
-		Handler: mux,
-	}
+	srv := newHTTPServer(listenAddr, mux)
 
 	shutdownDone := make(chan struct{})
 	sigCh := make(chan os.Signal, 1)
@@ -114,6 +112,16 @@ func getenvDefault(key string, fallback string) string {
 	return v
 }
 
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr: addr, Handler: handler,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       2 * time.Minute,
+		WriteTimeout:      2 * time.Minute,
+		IdleTimeout:       2 * time.Minute,
+	}
+}
+
 func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clientID, err := auth.Authorize(r)
@@ -140,20 +148,26 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 			return
 		}
 
-		reader := r.Body
+		// Bound wire bytes independently from decoded bytes (including gzip).
+		reader := io.Reader(http.MaxBytesReader(w, r.Body, payloadLimit10MB))
 		if r.Header.Get("Content-Encoding") == "gzip" {
-			gr, err := gzip.NewReader(r.Body)
+			gr, err := gzip.NewReader(reader)
 			if err != nil {
-				http.Error(w, "Create gzip reader failed", http.StatusInternalServerError)
+				http.Error(w, "Invalid gzip body", http.StatusBadRequest)
 				return
 			}
 			defer gr.Close()
 			reader = gr
 		}
 
-		msg, err := io.ReadAll(io.LimitReader(reader, payloadLimit10MB))
+		msg, err := io.ReadAll(io.LimitReader(reader, payloadLimit10MB+1))
+		var maxBytes *http.MaxBytesError
+		if len(msg) > payloadLimit10MB || errors.As(err, &maxBytes) {
+			http.Error(w, "Request body too large", http.StatusRequestEntityTooLarge)
+			return
+		}
 		if err != nil {
-			http.Error(w, "Read request body error", http.StatusInternalServerError)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
 			return
 		}
 
