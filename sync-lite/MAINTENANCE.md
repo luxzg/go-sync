@@ -1,5 +1,20 @@
 # Maintenance Record
 
+## 2026-11-06: Final 0.4 Artifact Verification
+
+The prepared master integration (`3e6f761`) passed release build and independent
+verification, including both exact packaged binaries through the synthetic
+HTTP/HTTPS/signal/restart/persistence/TLS/integrity smoke. Seven packaging-safety
+tests and final full/race checks pass. All raw, archive, metadata and source
+checksums verify. Fresh default/optional binaries report 0.4 and Go 1.26.10.
+
+The modernc deployment binary has no shared-library dependencies. The optional
+native mattn binary requires `libc.so.6` and GLIBC symbols through 2.34; its
+runtime report is part of the handoff. No native MIPS/ARM or real-browser pass
+is implied. Rebuild after this documentation commit so the final ignored
+manifest/build information identifies the final committed master revision.
+Historical-token limits remain accepted unrepaired; the live server is untouched.
+
 ## 2026-11-06: Master Integration And Artifact Preparation
 
 User-approved fork-local fast-forward of the 22-commit remediation series into

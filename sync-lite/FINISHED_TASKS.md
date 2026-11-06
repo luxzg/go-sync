@@ -15,6 +15,12 @@ not claim fresh code verification or replace the changelog timeline.
   build/native-runtime information, checksums and exact-artifact synthetic
   smoke checks. Outputs stay ignored in `dist/`; GitHub release publication and
   CI are separate optional work. No deployed server or real data was accessed.
+- Both fresh 0.4 artifact sets passed build/verify and exact-package HTTP/HTTPS,
+  signal/restart/persistence checks on 2026-11-06. Seven packaging-safety
+  regressions pass, including ignored/index-hidden source exclusion. All
+  checksums verify. Preferred modernc is static; native mattn's report records
+  `libc.so.6` and GLIBC requirements through 2.34. Final artifacts are rebuilt
+  from the clean final documentation commit; the manifest carries its revision.
 - The user accepted unrepaired historical tokens for 0.4 while authorizing the
   merge/artifacts. This does not authorize replay, chain reset or data changes.
 

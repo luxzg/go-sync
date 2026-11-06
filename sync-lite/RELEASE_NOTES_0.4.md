@@ -56,6 +56,8 @@ Use **`dist/sync-lite-linux-amd64`**, the static modernc build, for the preferre
 Debian/Ubuntu deployment. The optional `-cgo` binary requires a compatible system
 C library; check its `.runtime.txt` report or packaged `RUNTIME.txt`. It is not
 an experimentally cross-compiled MIPS binary. MIPS/ARM hardware remains untested.
+The prepared native CGO build requires `libc.so.6` and GLIBC symbols through
+2.34; use the static default if that compatibility is uncertain.
 
 ## Updating
 

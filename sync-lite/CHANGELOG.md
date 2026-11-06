@@ -5,6 +5,20 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-11-06 20:18 CET (Europe/Zagreb)
+
+- Record successful 0.4 artifact preparation and exact-package verification:
+  both Linux amd64 binaries, binary/source archives, notices, source/build/
+  runtime reports and complete checksums. Both packaged binaries passed the
+  isolated HTTP/HTTPS, restart, persistence and signal checks.
+- The preferred modernc binary is static. The optional native CGO build needs
+  `libc.so.6` with GLIBC symbols through 2.34; retain runtime reports rather than
+  claiming support on untested targets. Seven packaging-helper regressions pass.
+- Record clean committed-snapshot builds, including exclusion of ignored and
+  index-hidden local source changes. Final artifacts are rebuilt after this
+  evidence commit; their manifest identifies the exact final source revision.
+  Version remains 0.4. No production deployment or browser/MIPS field pass.
+
 ## 0.4 - 2026-11-06 20:13 CET (Europe/Zagreb)
 
 - Integrate the completed remediation and local follow-ups into this fork's

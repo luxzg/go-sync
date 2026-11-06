@@ -424,3 +424,28 @@ govulncheck for both backends. Final artifact verification is reported separatel
 after building from the committed integration/preparation revision. MIPS/ARM and
 real-browser field checks remain external; the accepted historical-token limit
 does not block this approved release preparation.
+
+### Final Artifact Evidence - 2026-11-06 20:18 CET
+
+Preparation commit `3e6f761` passed the complete artifact build/verification.
+Both fresh binaries identify as 0.4, correct backends, Linux amd64 and Go 1.26.10,
+with the expected clean VCS revision. The default has no shared-library
+dependencies. Optional mattn requires `libc.so.6`, with GLIBC symbol requirements
+through 2.34, recorded in its runtime report; no older-system or MIPS claim.
+
+Both binary archives and the committed fork-source archive are prepared in
+ignored `dist/`, with complete checksums, manifest, source/legal notices and
+sanitized deployment examples. Exact archived bytes, not independent rebuilds,
+passed HTTP/HTTPS, both endpoint aliases, SIGINT/SIGTERM, restart/persistence,
+TLS validation and integrity checks. All output checksums verify.
+
+Independent read-only release review found no unresolved issue after committed
+snapshot builds, compatible streaming hashes and complete linked documentation
+were added. Seven helper regressions pass, including ignored/index-hidden source
+exclusion, unsafe paths/symlinks, normalized archive metadata, dirty source and
+checksum/source mismatch rejection. Full checks were rerun after integration.
+The final docs/evidence commit is followed by the same complete artifact rebuild
+and verification; `dist/release-manifest.json` records that final revision.
+No tags, GitHub release uploads, deployment, production data or real devices were
+involved. The approved local integration/build work is complete; field checks
+and unrelated optional backlog remain separate.
