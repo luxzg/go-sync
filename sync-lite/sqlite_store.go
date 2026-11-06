@@ -493,11 +493,23 @@ func (s *SQLiteStore) UpdateClientItemCount(ctx context.Context, counts *datasto
 }
 
 func (s *SQLiteStore) ClearServerData(ctx context.Context, clientID string) ([]datastore.SyncEntity, error) {
+	return s.clearServerData(ctx, clientID, false)
+}
+
+func (s *SQLiteStore) clearServerData(ctx context.Context, clientID string, disable bool) ([]datastore.SyncEntity, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
+	if disable {
+		now := time.Now().UnixMilli()
+		if _, err := tx.ExecContext(ctx, `INSERT INTO sync_entities (client_id,id,mtime,ctime,name)
+			VALUES (?,?,?,?,?) ON CONFLICT(client_id,id) DO UPDATE SET
+			mtime=excluded.mtime,ctime=excluded.ctime,name=excluded.name`, clientID, disabledChainID, now, now, reasonDeleted); err != nil {
+			return nil, err
+		}
+	}
 	// Acquire writer ownership before collecting invalidation metadata, so it
 	// describes exactly the same snapshot that is cleared. Never load payloads.
 	if _, err := tx.ExecContext(ctx, `DELETE FROM unique_tags WHERE client_id=?`, clientID); err != nil {

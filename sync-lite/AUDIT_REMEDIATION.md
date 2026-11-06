@@ -262,3 +262,15 @@ response encoding/network writes occur after release. Disabled state is checked
 inside the gate immediately before dispatch. Accounting/publication remains
 serialized. Focused tests, full/race suites and real-process smoke passed.
 No storage/config change; previous upgrade evidence remains applicable.
+
+### A09 Follow-Up - 2026-11-06 15:44 CET
+
+Red tests confirmed cancellation between the parent's two calls stranded a
+disabled marker, and injected deletion failure was not observed during Disable.
+The request adapter now performs marker creation, metadata capture, tag/count
+removal and entity deletion in one transaction during Disable, then returns the
+committed metadata from Clear without another mutation. Public standalone store
+methods retain their contracts. Cancellation before commit rolls back; after
+commit, metadata remains available even if the context is cancelled. Synthetic
+trigger failure proves all original rows/tags/counts and enabled state survive
+rollback. Both focused suites, full/race and upgrade matrices passed.

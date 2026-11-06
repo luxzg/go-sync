@@ -101,6 +101,11 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   logging does not authorize changing stored data, accepting stale writes, or
   bypassing conflicts. Production data changes require a fresh consistent backup,
   reviewed preconditions, explicit scope, and subsequent operator validation.
+- The 0.4 request adapter deliberately folds upstream's consecutive Disable and
+  Clear datastore calls into one atomic clear transaction, retaining metadata
+  for cache invalidation. Preserve this bridge when syncing parent command code;
+  a cancelled request must not leave only the disabled marker committed. General
+  multi-entry Commit is still not an atomic batch or automatically retryable.
 - Normal quota counters need not equal live-row counts: initial server roots
   are inserted outside the counter increment path. Never infer lost data or
   silently recount from a mismatch. Accounting changes need characterized

@@ -13,6 +13,9 @@ type commandStore struct {
 	historyResurrections int
 	requestContext       context.Context
 	admissionPending     bool
+	clearComplete        bool
+	clearedChain         string
+	clearedMetadata      []datastore.SyncEntity
 }
 
 func (s *commandStore) context(fallback context.Context) context.Context {
@@ -44,10 +47,27 @@ func (s *commandStore) GetClientItemCount(ctx context.Context, chain string) (*d
 	return s.SQLiteStore.GetClientItemCount(s.context(ctx), chain)
 }
 func (s *commandStore) ClearServerData(ctx context.Context, chain string) ([]datastore.SyncEntity, error) {
+	if s.clearComplete && s.clearedChain == chain {
+		// The work is already committed, even if the request was cancelled
+		// between the upstream handler's two interface calls.
+		return s.clearedMetadata, nil
+	}
 	return s.SQLiteStore.ClearServerData(s.context(ctx), chain)
 }
 func (s *commandStore) DisableSyncChain(ctx context.Context, chain string) error {
-	return s.SQLiteStore.DisableSyncChain(s.context(ctx), chain)
+	if s.clearComplete && s.clearedChain == chain {
+		return nil
+	}
+	// Upstream calls Disable then Clear separately. Commit their storage work
+	// atomically here; the following Clear call returns invalidation metadata.
+	metadata, err := s.SQLiteStore.clearServerData(s.context(ctx), chain, true)
+	if err != nil {
+		return err
+	}
+	s.clearComplete = true
+	s.clearedChain = chain
+	s.clearedMetadata = metadata
+	return nil
 }
 func (s *commandStore) IsSyncChainDisabled(ctx context.Context, chain string) (bool, error) {
 	return s.SQLiteStore.IsSyncChainDisabled(s.context(ctx), chain)

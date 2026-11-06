@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:44 CET (Europe/Zagreb)
+
+- A09 integration follow-up: combine the upstream disable/clear storage calls
+  into one transaction through the request adapter. Cancellation or a deletion
+  failure cannot commit only the disabled marker and strand retained payloads.
+  Return committed invalidation metadata from the following interface call.
+  Cancellation/failure regressions, full/race and upgrade matrices passed.
+
 ## 0.4 (in development) - 2026-11-06 15:42 CET (Europe/Zagreb)
 
 - A06 integration follow-up: limit serialization to command state. Upload/body

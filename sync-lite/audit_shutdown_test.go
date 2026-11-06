@@ -84,6 +84,48 @@ func TestAuditA09ForceCancelsAndDrains(t *testing.T) {
 	}
 }
 
+func TestAuditA09AtomicClearSurvivesCancellation(t *testing.T) {
+	h, cleanup := newTestHandler(t)
+	defer cleanup()
+	token, chain := mustToken(t)
+	protocolRequireCommitSuccess(t, protocolCommit(t, h, token, "device", auditTaggedEntity("keep-until-clear"))[0])
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	store := &commandStore{SQLiteStore: h.db, requestContext: ctx}
+	if err := store.DisableSyncChain(context.Background(), chain); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	if _, err := store.ClearServerData(context.Background(), chain); err != nil {
+		t.Fatal("post-commit cancellation left partial clear", err)
+	}
+	sqliteTestRowCount(t, h.db.db, "sync_entities", chain, 1)
+	sqliteTestRowCount(t, h.db.db, "unique_tags", chain, 0)
+	sqliteTestRowCount(t, h.db.db, "client_item_counts", chain, 0)
+	disabled, err := h.db.IsSyncChainDisabled(context.Background(), chain)
+	if err != nil || !disabled {
+		t.Fatal("atomic clear lost terminal marker", disabled, err)
+	}
+}
+
+func TestAuditA09AtomicClearRollback(t *testing.T) {
+	h, cleanup := newTestHandler(t)
+	defer cleanup()
+	token, chain := mustToken(t)
+	protocolRequireCommitSuccess(t, protocolCommit(t, h, token, "device", auditTaggedEntity("keep"))[0])
+	if _, err := h.db.db.Exec(`CREATE TRIGGER audit_clear_failure BEFORE DELETE ON sync_entities WHEN OLD.id<>'disabled_chain' BEGIN SELECT RAISE(ABORT,'synthetic clear failure'); END`); err != nil {
+		t.Fatal(err)
+	}
+	before := upgradeSnapshot(t, context.Background(), h.db.db)
+	store := &commandStore{SQLiteStore: h.db, requestContext: context.Background()}
+	if err := store.DisableSyncChain(context.Background(), chain); err == nil {
+		t.Fatal("clear failure not reported")
+	}
+	if !bytes.Equal(before, upgradeSnapshot(t, context.Background(), h.db.db)) {
+		t.Fatal("failed clear left disabled marker or partial deletions")
+	}
+}
+
 func (r auditCancelReader) Read(p []byte) (int, error) {
 	n, err := r.Reader.Read(p)
 	if err == io.EOF {
