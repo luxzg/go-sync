@@ -17,9 +17,9 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A03 | P1 | Incoming identity controls stored-type/version policy | VERIFIED | `8ad6cd2`, pushed; focused/full/race/upgrades pass | No schema change |
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | VERIFIED | `726e2e5`, pushed; focused/full/race pass | No storage/startup/config change |
-| A01 | P1 | Precommit timestamps can fall behind issued tokens | IN PROGRESS | Transaction-owned durable clocks | Additive table; old tied cohorts not replayed |
+| A01 | P1 | Precommit timestamps can fall behind issued tokens | VERIFIED | `4a0dc2e`, pushed; focused/full/race/supplemental/upgrades pass | Additive table; old tied cohorts not replayed |
 | A02 | P1 | Tag ownership and resurrection accounting | PENDING | | |
-| A06 | P2 | Concurrent absolute quota snapshots lose deltas | PENDING | | |
+| A06 | P2 | Concurrent absolute quota snapshots lose deltas | IN PROGRESS | Complete-command cancellable gate | Single service process; approximate quotas preserved |
 | A09 | P2 | Failed drain closes storage under active requests | PENDING | | |
 | A05 | P2 | Expired History records remain forever | PENDING | | |
 | A07 | P2 | Unvisited expired hints retain memory | PENDING | | |
@@ -112,3 +112,18 @@ writes no longer promise caller-chosen out-of-order modification times.
 Known limit: old tied cohorts and records skipped by already-issued old tokens
 are not repaired. A client-compatible replay/cursor design is separate follow-up;
 no chain reset or automatic retimestamping is authorized. Commit `[A01]`.
+
+### A06 - 2026-11-06 15:05 CET
+
+Concurrent regression persisted 24 entities but reported a count of 1 before
+the fix. A single cancellable gate now spans the authenticated command, disabled
+check, shared interim-cache drains and final absolute counter save. Both URL
+aliases and every handler using the store share that gate. This also orders
+poll-cache publication against writes. Cancelled waiters do not acquire it.
+
+This intentionally chooses the audit's proportional request-serialization option
+instead of rewriting upstream accounting. Direct internal datastore count calls
+must remain inside that coordinated command path; multiple service processes
+sharing one DB are not supported. Existing version-2 counters/root offsets are
+not recounted. Both focused suites, full/race checks and all archived upgrade
+matrices passed. No schema/config change beyond A01. Commit `[A06]`.

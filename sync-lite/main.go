@@ -129,6 +129,11 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
+		if err := db.acquireCommand(r.Context()); err != nil {
+			http.Error(w, "Request cancelled", http.StatusRequestTimeout)
+			return
+		}
+		defer db.releaseCommand()
 
 		disabled, err := db.IsSyncChainDisabled(r.Context(), clientID)
 		if err != nil {

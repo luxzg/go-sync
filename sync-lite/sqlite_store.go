@@ -24,8 +24,9 @@ const (
 )
 
 type SQLiteStore struct {
-	db        *sql.DB
-	conflicts *conflictDiagnostics
+	db          *sql.DB
+	conflicts   *conflictDiagnostics
+	commandGate chan struct{}
 }
 
 func NewSQLiteStore(path string) (*SQLiteStore, error) {
@@ -37,7 +38,7 @@ func NewSQLiteStore(path string) (*SQLiteStore, error) {
 	if err != nil {
 		return nil, err
 	}
-	store := &SQLiteStore{db: db}
+	store := &SQLiteStore{db: db, commandGate: make(chan struct{}, 1)}
 	if os.Getenv("SYNC_LOG_CONFLICTS") == "1" {
 		store.conflicts = &conflictDiagnostics{logger: log.Default(), last: make(map[conflictLogKey]time.Time)}
 	}

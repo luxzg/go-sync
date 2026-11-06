@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:05 CET (Europe/Zagreb)
+
+- A06: serialize complete authenticated commands with cancellable waiting so
+  overlapping requests cannot lose shared interim deltas or overwrite counts
+  from stale snapshots. Preserve existing quota offsets and both aliases.
+  Both race suites and all prior-version upgrade matrices passed.
+
 ## 0.4 (in development) - 2026-11-06 15:03 CET (Europe/Zagreb)
 
 - A01: allocate commit-ordered per-chain/type timestamps in the entity write

@@ -117,6 +117,12 @@ deployment claims.
 - Prometheus/metrics
 - Health-check endpoints
 
+The 0.4 working series serializes complete authenticated commands, including
+quota/cache bookkeeping. This favors correctness and simplicity for a few
+devices over throughput. Run **one sync-lite process per database**, not a
+multi-worker deployment. Quotas remain approximate; existing counters are not
+silently replaced by live-row recounts.
+
 The build still reuses packages from the parent `go-sync` checkout. This retains
 inherited AWS, Redis, and Prometheus module dependencies to keep changes small;
 their presence does not mean those services need to run. SQLite is the added
