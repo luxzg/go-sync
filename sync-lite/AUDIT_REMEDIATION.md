@@ -13,8 +13,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 
 | ID | Priority | Finding / root cause | Status | Implementation and verification | Upgrade / risks |
 | --- | --- | --- | --- | --- | --- |
-| A12 | P2 | Restart reseeding and chained WAL tests mask failures | IN PROGRESS | Smoke checks seed once; per-driver old-WAL fixtures; reject duplicate identities | Actual archived versions; validation pending |
-| A03 | P1 | Incoming identity controls stored-type/version policy | PENDING | | |
+| A12 | P2 | Restart reseeding and chained WAL tests mask failures | VERIFIED | `287806f`, pushed; check/smoke/supplemental/upgrades pass | All three actual archived baselines, both drivers independently |
+| A03 | P1 | Incoming identity controls stored-type/version policy | IN PROGRESS | Reject changed type/tag using stored identity | No schema change |
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | PENDING | | |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | PENDING | | |
 | A01 | P1 | Precommit timestamps can fall behind issued tokens | PENDING | | |
@@ -57,5 +57,15 @@ passed with Go 1.26.10. Upgrade matrix: all three baselines, independently throu
 modernc and mattn, clean/WAL, old-version read/write reopen, plus cross-driver.
 No application schema/configuration change; only service version metadata changes
 to 0.4 for the unreleased series. Commit subject `[A12]`; push pending until the
-next tracking update. A helper edited during its first run produced a shell
+next tracking update (now confirmed pushed as `287806f`). A helper edited during its first run produced a shell
 parser failure after the matrix; the complete stable helper was rerun successfully.
+
+### A03 - 2026-11-06 14:55 CET
+
+All three reproductions failed before the fix: a claimed History type bypassed
+version checks, another type replaced payloads, and a mismatched deletion tag
+was accepted. Update now reads stored type/tag, rejects identity changes, applies
+the History exception only to stored History, and uses stored tag for deletion.
+Omitted tags remain valid. Both focused driver tests, complete check helper and
+all three clean/WAL upgrade matrices passed. No schema, config or existing-row
+rewrite. Commit subject `[A03]`; push recorded by the next tracking update.

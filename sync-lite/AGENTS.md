@@ -148,6 +148,8 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   on committing or pushing. If push fails, report the failure and ask the user
   to push; do not force-push or leave completed work unpublished without reason.
   This does not authorize new work, upstream merges, deployments, or data changes.
+- Review the entire worktree, then stage with `git add -A` (user convention).
+  Stop for unexpected unrelated edits; do not silently stage or undo them.
 
 ## Versioning And Records
 

@@ -196,10 +196,12 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 
 	var currentVersion sql.NullInt64
 	var oldDeletedRaw sql.NullInt64
+	var storedType sql.NullInt64
+	var storedTag sql.NullString
 	err = tx.QueryRowContext(ctx,
-		`SELECT version, deleted FROM sync_entities WHERE client_id = ? AND id = ?`,
+		`SELECT version, deleted, data_type, client_defined_unique_tag FROM sync_entities WHERE client_id = ? AND id = ?`,
 		entity.ClientID, entity.ID,
-	).Scan(&currentVersion, &oldDeletedRaw)
+	).Scan(&currentVersion, &oldDeletedRaw, &storedType, &storedTag)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			s.logConflict("update", "missing_entity", entity)
@@ -208,7 +210,13 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, false, err
 	}
 
-	if entity.DataType != nil && *entity.DataType != datastore.HistoryTypeID {
+	// An update cannot change identity, even when the incoming type normally
+	// bypasses version checking (History). Omitted tags retain stored identity.
+	if !storedType.Valid || entity.DataType == nil || int64(*entity.DataType) != storedType.Int64 ||
+		(entity.ClientDefinedUniqueTag != nil && (!storedTag.Valid || *entity.ClientDefinedUniqueTag != storedTag.String)) {
+		return true, false, nil
+	}
+	if int(storedType.Int64) != datastore.HistoryTypeID {
 		if !currentVersion.Valid || currentVersion.Int64 != oldVersion {
 			s.logConflict("update", "version_mismatch", entity)
 			return true, false, nil
@@ -249,12 +257,12 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, false, err
 	}
 
-	if entity.Deleted != nil && entity.ClientDefinedUniqueTag != nil && entity.DataType != nil &&
-		*entity.Deleted && *entity.DataType != datastore.HistoryTypeID {
+	if entity.Deleted != nil && storedTag.Valid &&
+		*entity.Deleted && int(storedType.Int64) != datastore.HistoryTypeID {
 		_, err = tx.ExecContext(ctx,
 			`DELETE FROM unique_tags WHERE client_id = ? AND id = ?`,
 			entity.ClientID,
-			clientTagItemPrefix+*entity.ClientDefinedUniqueTag,
+			clientTagItemPrefix+storedTag.String,
 		)
 		if err != nil {
 			return false, false, err

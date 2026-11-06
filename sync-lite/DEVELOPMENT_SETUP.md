@@ -98,6 +98,9 @@ database paths or revisions, installs tools, or deploys. Build/cache writes,
 owned temporary files and loopback processes are the existing helpers' effects;
 security also queries the vulnerability database. Review the compiler pin when
 changing toolchains. Do not prefix the invocation with environment or shell setup.
+Modes `A01` through `A15` run the corresponding focused regressions on both
+backends. Mode `format` formats project Go source and the supplemental synthetic
+test; unlike validation modes, it intentionally edits those source files.
 
 From `sync-lite/`:
 

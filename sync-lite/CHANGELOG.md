@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 14:55 CET (Europe/Zagreb)
+
+- A03: validate updates against stored type and tag before applying the History
+  version exception. Reject identity changes without modifying data; omitted
+  tags retain stored identity. Both backend/race suites and archived upgrade
+  matrices passed. Added stable focused-test and formatting helper modes.
+
 ## 0.4 (in development) - 2026-11-06 14:39 CET (Europe/Zagreb)
 
 - A12: strengthen restart persistence checks (seed once), independently recover
