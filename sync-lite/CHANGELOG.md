@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:17 CET (Europe/Zagreb)
+
+- A07: sweep expired cache hints on insertion and cap disposable hints at 1024,
+  falling back to SQLite rather than evicting pending interim quota counters.
+  Expiry, capacity, concurrency and complete protocol/race checks passed.
+
 ## 0.4 (in development) - 2026-11-06 15:16 CET (Europe/Zagreb)
 
 - A05: retire explicitly expired History-family rows in bounded chain-scoped

@@ -18,6 +18,8 @@ type MemoryRedis struct {
 	kv map[string]memoryValue
 }
 
+const maxMemoryHints = 1024
+
 func NewMemoryRedis() *MemoryRedis {
 	return &MemoryRedis{kv: map[string]memoryValue{}}
 }
@@ -25,11 +27,29 @@ func NewMemoryRedis() *MemoryRedis {
 func (m *MemoryRedis) Set(_ context.Context, key string, val string, ttl time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	hints := 0
+	now := time.Now()
+	for k, v := range m.kv {
+		if v.hasExpiry {
+			if !now.Before(v.expiresAt) {
+				delete(m.kv, k)
+			} else {
+				hints++
+			}
+		}
+	}
+	if ttl > 0 && hints >= maxMemoryHints {
+		if _, exists := m.kv[key]; !exists {
+			// Mtime hints are disposable: a miss safely falls back to SQLite.
+			// Never evict the non-expiring interim quota counters.
+			return nil
+		}
+	}
 
 	entry := memoryValue{value: val}
 	if ttl > 0 {
 		entry.hasExpiry = true
-		entry.expiresAt = time.Now().Add(ttl)
+		entry.expiresAt = now.Add(ttl)
 	}
 	m.kv[key] = entry
 	return nil
