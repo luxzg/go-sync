@@ -25,8 +25,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A07 | P2 | Unvisited expired hints retain memory | VERIFIED | `56166df`, pushed; focused/full/race pass | Interim counters never evicted |
 | A10 | P2 | Clear-data unnecessarily loads all payloads | VERIFIED | `0e8715a`, pushed; focused/full/race/benchmark/upgrades pass | Returned identity metadata and disabled marker preserved |
 | A11 | P2 | File privacy inherits permissive defaults | VERIFIED | `54daa1b`, pushed; focused/full/race/smoke/upgrades pass | Existing modes deliberately preserved |
-| A13 | P2 | Upstream new-device scan repeats the first page | IN PROGRESS | Request-local admission sample, maximum 100 live devices | Threshold contract tests; no parent edits |
-| A14 | P3 | Authenticated non-POST requests can mutate state | PENDING | | |
+| A13 | P2 | Upstream new-device scan repeats the first page | VERIFIED | `b5a8ae5`, pushed; focused/full/race pass | Threshold contract tests; no parent edits |
+| A14 | P3 | Authenticated non-POST requests can mutate state | IN PROGRESS | 405 / Allow POST after auth | Unauthenticated probes retain 401 |
 | A15 | P3 | In-memory database connection lifetime/isolation | PENDING | | |
 
 ## Validation And Scope
@@ -227,3 +227,12 @@ Both focused backends and full/race checks passed: 0/49/50 live devices, high-li
 tests must be revisited when incorporating upstream limit changes. No schema,
 startup or config change, and no independent upstream source edits. The previous
 upgrade matrix remains applicable. `[A13]`.
+
+### A14 - 2026-11-06 15:26 CET
+
+Red test confirmed an authenticated GET committed data and returned 200. A guard
+now rejects unsupported methods before admission/body/database work, returning
+405 and Allow POST. Authentication still runs first, preserving 401 reachability
+checks. Both aliases, GET/PUT/PATCH/DELETE/HEAD, and no-mutation assertions pass
+on both drivers. Full/race and real HTTP/HTTPS smoke checks passed. No storage,
+startup or config change; prior upgrade checks remain applicable. `[A14]`.

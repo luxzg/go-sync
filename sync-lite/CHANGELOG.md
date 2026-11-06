@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:26 CET (Europe/Zagreb)
+
+- A14: require POST for authenticated sync commands on both endpoint aliases;
+  other methods return 405 with `Allow: POST` before reading or changing state.
+  Unauthenticated reachability probes still return 401. Both backend/race and
+  HTTP/HTTPS smoke checks passed.
+
 ## 0.4 (in development) - 2026-11-06 15:24 CET (Europe/Zagreb)
 
 - A13: avoid upstream's repeated-first-page device-admission loop through a
