@@ -1,8 +1,9 @@
 # Audit Remediation
 
-Work branch: `audit-remediation-0.4`. Candidate version: **0.4**, ready for human
-review and controlled staging, not a claimed production/browser validation.
-Production remains untouched. Each finding is
+Version **0.4** is integrated into this fork's `master` with user approval,
+ready for backup-first operator validation. Historical development branch:
+`audit-remediation-0.4`. Production remains untouched; no real-browser result is
+claimed for 0.4. Each finding is
 an independent validated commit; the version identifies the whole release series,
 not each intermediate working-branch commit. All fixtures are synthetic.
 
@@ -396,3 +397,30 @@ raw durable counter rows before any normalizing read, compare exact delivered
 legacy identity/metadata/payload sets without assuming tie order, and compare
 records/clocks again after reopen and the restarted scan. Full/focused checks
 were rerun after those changes. No additional production-code fix was needed.
+
+## Master Integration And Release Preparation
+
+2026-11-06 20:13 CET (Europe/Zagreb). The user authorized fast-forwarding this
+fork's `master` to the completed series (`b458584`) and preparing deployment
+artifacts. This preserves all 22 remediation/follow-up commits, without a fresh
+upstream merge or custom changes outside sync-lite. The restart during work left
+a clean checkout; the completed fast-forward was retained and work resumed there.
+
+Current instructions now use `master`, not the old review branch. Version stays
+0.4; this pass adds release tooling/docs, not runtime/schema/dependency changes.
+The user explicitly accepts unrepaired historical tokens. No replay, reset,
+retimestamping, production database access or deployment is authorized.
+
+The fixed `scripts/release-artifacts.sh` prepares both Linux amd64 backends,
+versioned binary/source archives, notices, runtime/build reports and checksums
+from clean committed source. It validates source/backend identity and archived
+binary equality, and runs isolated HTTP/HTTPS lifecycle/persistence smoke on the
+exact packaged binaries before local publication. No CI, tags, GitHub release
+uploads, system installation or production operations are included.
+
+Post-restart checks passed: full module/format/ShellCheck/vet/default/race suites,
+all three old-version clean/WAL upgrade matrices and supplemental checks, and
+govulncheck for both backends. Final artifact verification is reported separately
+after building from the committed integration/preparation revision. MIPS/ARM and
+real-browser field checks remain external; the accepted historical-token limit
+does not block this approved release preparation.

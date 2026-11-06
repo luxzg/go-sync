@@ -47,12 +47,11 @@ Codex, Go generators, and development linters are not runtime requirements.
 
 Clone **this fork**, which includes both the reused upstream sources and
 `sync-lite/`. A clone of `brave/go-sync` alone does not include sync-lite.
-The 0.4 candidate is not merged into `master`; these commands explicitly select
-its review branch so you do not accidentally build the older release.
+Version 0.4 is integrated into this fork's `master`; use that branch for builds.
 In a directory where you want the source checkout:
 
 ```bash
-git clone --branch audit-remediation-0.4 https://github.com/luxzg/go-sync.git
+git clone --branch master https://github.com/luxzg/go-sync.git
 cd go-sync/sync-lite
 git status --short
 go mod tidy
@@ -61,8 +60,8 @@ go mod tidy
 All remaining commands in this chapter run from `go-sync/sync-lite/`. If you
 already have the checkout, enter that directory instead of cloning again. Keep
 the parent sources: sync-lite intentionally reuses local upstream packages.
-For an existing clean checkout, select `audit-remediation-0.4` before building
-this candidate. Review local changes first; do not discard them to switch.
+For an existing clean checkout, select and update `master` before building.
+Review local changes first; do not discard them to switch or pull.
 `go mod tidy` may download dependencies and modify module records; review any
 changes rather than treating them as an automatic dependency upgrade.
 
@@ -181,6 +180,50 @@ settings. The `sqlite_cgo` tag intentionally fails when CGO is disabled. Both
 drivers must pass the suite after future storage changes. Keep modernc's libc
 pin aligned with the exact version required by the selected modernc release.
 
+## Release Artifact Preparation
+
+Run from a clean, committed `master` checkout:
+
+```bash
+./scripts/release-artifacts.sh test
+./scripts/release-artifacts.sh build
+./scripts/release-artifacts.sh verify
+```
+
+With no arguments the helper prints usage only. These are fixed modes, not an
+arbitrary command or database wrapper. It selects `~/sdk/go1.26.10/bin/go`, Linux
+amd64 and the existing two backend settings; no system Go fallback or package
+installation. Prerequisites are the SDK, cached verified modules, Python 3,
+GCC, binutils (`readelf`) and the existing smoke requirements (OpenSSL). Missing
+modules fail offline rather than rewriting module records or upgrading packages.
+
+`build` compiles from an isolated checkout of the selected committed revision;
+ignored files or tracked local changes hidden by index flags cannot enter it.
+It refreshes both raw binaries and prepares versioned `.tar.gz` handoffs,
+committed-source archive, linked-module/Go license notices, source links,
+build/runtime reports and checksums in ignored `dist/`. It rejects a dirty
+checkout, unsafe output symlinks, unexpected source identity and mismatched
+archive binaries. Only intended committed files are included; local `.env`,
+SQLite state, Git metadata, private work and credentials are not packaged.
+The publication checksum is written last, so a partial set does not pass verify.
+
+Both exact archived binaries pass the existing synthetic HTTP/HTTPS, signal,
+restart and persistence smoke before local publication. The preferred modernc
+binary must have no shared-library dependencies. The optional mattn build uses
+the local C toolchain; its required GLIBC symbol versions and dynamic-library
+report are in `.runtime.txt`/packaged `RUNTIME.txt`, not an assumption of universal
+Debian/Ubuntu compatibility. This is not MIPS/ARM hardware validation.
+
+`verify` rechecks checksums, source revision, build identity, target/backend,
+safe archive structure and packaged/raw binary equality without installing or
+running a service. `test` uses only synthetic temporary files for helper
+regressions. The helper never tags, uploads, deploys, installs, changes services
+or touches production state. Finish commits before final packaging to embed the
+clean final revision. Local artifacts remain ignored, not pushed as source.
+The regular `check.sh` also runs the packaging helper regressions, including
+the ignored/index-hidden source-input case; no application is built by that
+test mode itself.
+
 ## Optional VS Code Setup
 
 Open the full fork checkout in VS Code and install the Go extension published by
@@ -208,7 +251,7 @@ Sanitized `.env.example` templates remain tracked.
 - Require the [data-safety checks](README.md#upgrading-safely) before binary or
   SQLite updates. Use synthetic prior-version fixtures, establish migration and
   rollback compatibility, and back up consistent real state before deployment.
-- The current candidate is `0.4`, with operator/browser validation still pending;
+- The current version is `0.4` on `master`, with operator/browser validation pending;
   the last field-tested release is `0.3.1`. After 0.4, normal releases advance to
   `0.5`, with optional patches such as `0.4.1`. Docs-only changes keep the version.
   Prepend dated changelog entries with time and timezone. Review intended changes

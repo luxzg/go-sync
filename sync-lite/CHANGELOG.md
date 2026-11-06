@@ -5,6 +5,23 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## 0.4 - 2026-11-06 20:13 CET (Europe/Zagreb)
+
+- Integrate the completed remediation and local follow-ups into this fork's
+  `master` by approved fast-forward, preserving all finding commits. Update
+  current clone/build guidance and add concise 0.4 release notes.
+- Record the operator's acceptance of unrepaired historical tokens. Keep
+  existing data, chain, config, default backend and API aliases; no runtime,
+  schema, dependency or fresh upstream change in this integration pass.
+- Add fixed local release-artifact build/verify/test tooling: both Linux amd64
+  binaries, versioned binary/source archives, legal/source notices, build/native
+  runtime reports and checksums. Package only committed source/sanitized inputs;
+  run exact archived binaries through isolated HTTP/HTTPS/restart smoke checks.
+- Post-restart full/race, historical upgrade/WAL/reopen, supplemental, smoke and
+  vulnerability checks passed. Final artifact verification follows the clean
+  preparation commit. No GitHub release upload, automatic deployment or real
+  client/hardware validation is claimed.
+
 ## 0.4 (validation) - 2026-11-06 19:42 CET (Europe/Zagreb)
 
 - Complete the local remediation follow-ups: nested batch parent-ID mapping,

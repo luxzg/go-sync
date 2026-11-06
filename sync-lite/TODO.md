@@ -2,10 +2,10 @@
 
 The A01-A15 audit fixes and local remediation follow-ups are complete; evidence
 is tracked in [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
-Version 0.4 is a candidate on a separate non-deploying branch. Existing
-release and field evidence below refer to 0.3.1 unless explicitly stated.
+Version 0.4 is integrated into this fork's `master` and prepared for operator
+testing. Existing release and field evidence below refer to 0.3.1 unless stated.
 
-Updated 2026-11-06 for candidate `0.4`. This file contains remaining work; completed
+Updated 2026-11-06 for version `0.4`. This file contains remaining work; completed
 checks/helpers are archived in [FINISHED_TASKS.md](FINISHED_TASKS.md).
 Follow [AGENTS.md](AGENTS.md) before starting. After the 0.4 series, the next normal
 release is `0.5`; focused patches may use `0.4.1`.
@@ -50,10 +50,10 @@ release is `0.5`; focused patches may use `0.4.1`.
   and filesystem I/O under a small synthetic workload before diagnosing or
   optimizing. Preserve durability and sync semantics; retain a regression test
   for any confirmed defect. Do not label this as a proven bug.
-- Extend build artifacts into reviewed release packages with required notices
-  and source links, checksums, optional CI and downloadable binaries. The `0.3`
-  build helper and version output already exist. Add config-check mode only if
-  useful; avoid metrics or health endpoints by default.
+- Consider optional CI and GitHub release uploads for the locally prepared
+  binary/source archives. Local release packaging with notices, source links
+  and checksums is complete. Add config-check mode only if useful; avoid metrics
+  or health endpoints by default.
 - Automate the documented consistent backup and safe binary update/rollback
   procedure if requested. Keep restores explicitly authorized and preserve
   user-managed config, certificates, and backups; do not overwrite old backups.

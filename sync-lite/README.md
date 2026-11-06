@@ -2,10 +2,10 @@
 
 Minimal Brave Sync server implementation for small self-hosted setups.
 
-**Version 0.4 candidate:** audit fixes are on `audit-remediation-0.4`, separate
-from `master`. See [fixes, validation and limitations](AUDIT_REMEDIATION.md).
-Real-browser validation of this candidate remains an operator step; no server
-was deployed or changed by these development checks.
+**Version 0.4:** the completed audit fixes and local follow-ups are integrated
+into this fork's `master`. See [release notes](RELEASE_NOTES_0.4.md) and
+[validation and limitations](AUDIT_REMEDIATION.md). Real-browser validation
+remains an operator step; no server was deployed or changed by development checks.
 
 This is a fork of https://github.com/brave/go-sync.
 All custom modifications are contained within `/sync-lite/`; official upstream
@@ -34,7 +34,7 @@ Upstream repository changes are reviewed separately from release tags. See the
 [upstream-sync policy](AGENTS.md#syncing-the-fork-with-upstream).
 
 ## Version
-- Current candidate: `0.4` (2026-11-06)
+- Current version: `0.4` (2026-11-06), prepared for operator validation
 - Last operator-tested release: `0.3.1` (2026-10-19)
 
 Documentation updates do not change the binary version. Patch releases may use
@@ -56,7 +56,7 @@ Both endpoint aliases, authentication, config and optional diagnostics remain.
 ## Choose A SQLite Build
 
 Build from `go-sync/sync-lite/` with **Go 1.26 or newer**; a maintained patch
-release is recommended. Go 1.26.10 was used for this candidate's checks.
+release is recommended. Go 1.26.10 was used for the 0.4 checks and artifacts.
 
 | Build | Selection | Validation |
 | --- | --- | --- |
@@ -80,6 +80,39 @@ also writes SHA-256 and Go build-information files beside the binary.
 
 `go build -o sync-lite .` still selects modernc. Use the helper above when you
 want the documented static deployment artifact.
+
+### Release Archives
+
+From a clean, committed checkout, maintainers can build both Linux x86-64
+backends and versioned binary/source archives with:
+
+```bash
+./scripts/release-artifacts.sh build
+./scripts/release-artifacts.sh verify
+```
+
+The fixed helper uses installed Go 1.26.10 under `~/sdk/` and writes only ignored
+`dist/` outputs and owned temporary fixtures. It runs HTTP/HTTPS restart/signal
+smoke checks against the exact archived binaries before publishing local outputs.
+It does not deploy or publish a GitHub release. See
+[artifact preparation](DEVELOPMENT_SETUP.md#release-artifact-preparation) for tools
+and effects. The output set is:
+
+- `dist/sync-lite-linux-amd64`: preferred static modernc binary.
+- `dist/sync-lite-linux-amd64-cgo`: optional mattn binary, requiring compatible
+  system libraries; inspect its `.runtime.txt` report before using it elsewhere.
+- `dist/sync-lite-0.4-linux-amd64.tar.gz` and
+  `dist/sync-lite-0.4-linux-amd64-cgo.tar.gz`: binaries plus docs, sanitized service/
+  env examples, source references, license notices and build/runtime information.
+- `dist/go-sync-lite-0.4-source.tar.gz`: the committed fork source, including
+  reused parent packages; no Git history or untracked/ignored runtime files.
+- `dist/SHA256SUMS` and `dist/release-manifest.json`: integrity, source commit
+  and artifact identity. Raw binaries also have individual checksum/build reports.
+
+Use the preferred static binary for normal Debian/Ubuntu upgrades. From `dist/`,
+`sha256sum -c SHA256SUMS` checks the complete output set. An archive is not an
+installer: preserve existing config, certificates, SQLite files and backups;
+follow the [upgrade guide](#upgrade-to-04). MIPS/ARM artifacts are not included.
 
 ### Experimental MIPS Build
 
@@ -610,7 +643,7 @@ field results. The focused repeatable command is:
 
 It also characterizes historical token omissions; passing those tests does not
 mean old skipped updates have been recovered. No production code changed during
-this follow-up pass, so the candidate remains 0.4.
+the local follow-up pass, so version 0.4 is unchanged.
 
 The repeatable checks are:
 

@@ -5,6 +5,19 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-11-06, integrated the completed 0.4 remediation/follow-up branch into
+  this fork's `master` by an explicitly approved fast-forward, preserving the
+  per-finding history. Updated current clone/build instructions and added
+  [0.4 release notes](RELEASE_NOTES_0.4.md). Historical records remain intact;
+  no original upstream files changed in this integration pass.
+- Added fixed local release artifact preparation/verification with both Linux
+  amd64 backends, versioned binary/source archives, source/license notices,
+  build/native-runtime information, checksums and exact-artifact synthetic
+  smoke checks. Outputs stay ignored in `dist/`; GitHub release publication and
+  CI are separate optional work. No deployed server or real data was accessed.
+- The user accepted unrepaired historical tokens for 0.4 while authorizing the
+  merge/artifacts. This does not authorize replay, chain reset or data changes.
+
 - On 2026-11-06, completed the authorized local remediation follow-ups without
   changing production sources, dependencies, schema, configuration or version
   `0.4`. Added batch parent-ID/reopen checks, plain/opaque AI Chat lifecycle and

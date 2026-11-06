@@ -1,5 +1,27 @@
 # Maintenance Record
 
+## 2026-11-06: Master Integration And Artifact Preparation
+
+User-approved fork-local fast-forward of the 22-commit remediation series into
+`master`, followed by current-doc alignment and fixed artifact preparation.
+No fresh upstream/dependency/schema/runtime change. Historical token omissions
+are explicitly accepted unrepaired; operator-tested version remains 0.3.1.
+
+After the laptop restart, the worktree was clean and the fast-forward retained.
+Reran full check (including both races), all archived 0.2/0.3/0.3.1 clean/WAL
+upgrade/read-write/reopen matrices, supplemental and HTTP/HTTPS smoke checks,
+and both govulncheck configurations successfully. Go 1.26.10 remains selected
+from `~/sdk/`; no tools were installed or upgraded. Scanner database update:
+2026-11-05 23:49:57 UTC. Release-helper tests use synthetic files only.
+
+The artifact helper builds the preferred static modernc and optional native
+CGO Linux amd64 binaries from clean committed source. It records native runtime
+requirements rather than assuming CGO portability, packages source/notices and
+sanitized examples, and verifies/smokes exact packaged bytes before completing
+local outputs. Final build evidence follows after the preparation commit.
+No service, browser profile, phone, production SQLite/config/certificate or
+private archive was accessed. Field validation and MIPS/ARM remain separate.
+
 ## 2026-11-06: Local Remediation Follow-Ups
 
 Completed local protocol/quota coverage and the legacy-token assessment for

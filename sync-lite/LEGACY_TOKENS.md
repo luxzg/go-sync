@@ -7,6 +7,10 @@ writer clock prevents new timestamp ties and late-commit omissions; it does not
 repair a client's earlier omissions. No replay, token rewind, retimestamping,
 client reset or database repair runs automatically.
 
+The operator explicitly accepted these unrepaired historical-token limitations
+when approving integration into `master` and artifact preparation on 2026-11-06.
+This acceptance does not claim historical recovery or authorize later data changes.
+
 This completes the local strategy assessment requested after remediation. A
 recovery implementation is a separate, explicitly approved data/protocol change,
 not a prerequisite silently bundled into the candidate. Existing useful sync

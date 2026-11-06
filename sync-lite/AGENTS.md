@@ -166,14 +166,25 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 
 ## Versioning And Records
 
-- The authorized 2026-11-06 remediation series targets `0.4` on
-  `audit-remediation-0.4`; see [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
-  Each validated finding is committed/pushed separately. Do not deploy or merge
-  the unfinished series automatically; release-version metadata spans the series.
+- The completed 2026-11-06 remediation series was developed on
+  `audit-remediation-0.4` and integrated into this fork's `master` with explicit
+  user approval. See [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md). Keep the
+  historical per-finding commits; do not rewrite or squash their evidence.
 
-- Current code candidate is `0.4`, dated 2026-11-06, on the remediation branch.
+- Current version is `0.4`, dated 2026-11-06, on `master`, prepared for operator testing.
   Last operator-tested release remains `0.3.1` (2026-10-19); never imply the
-  candidate is already deployed. Documentation-only updates do not bump version.
+  version is already deployed. Documentation-only updates do not bump version.
+- The user explicitly accepts unrepaired historical tokens for 0.4. No replay,
+  retimestamping, chain reset or private-data work is part of release preparation.
+  The approved fork-local merge is not a fresh upstream merge or a deployment.
+- `scripts/release-artifacts.sh` is the fixed build/verify/test entry point for
+  Linux amd64 release archives, source, notices and integrity/build/runtime
+  reports. It requires clean committed source and installed Go 1.26.10 from
+  `~/sdk/`; inspect it before use. Final artifacts must match the final committed
+  revision. Outputs stay ignored in `dist/`; do not force-add binaries. The helper
+  never tags, publishes GitHub releases, deploys or reads live data. Both archived
+  binaries receive synthetic smoke checks; use static modernc by default and
+  review optional mattn's native-runtime requirements before deployment.
 - The authorized local follow-ups add tests, a fixed `followups` validation mode
   and the [legacy-token strategy](LEGACY_TOKENS.md), not runtime changes. Keep
   version 0.4; historical replay/cursors require a separate explicit protocol/
