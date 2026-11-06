@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 if [[ $# -eq 0 ]]; then
-  echo 'Usage: ./scripts/validate-remediation.sh {check|smoke|upgrades|supplemental|build|security|format|benchmark-clear|A01..A15}'
+  echo 'Usage: ./scripts/validate-remediation.sh {check|smoke|upgrades|supplemental|followups|build|security|format|benchmark-clear|A01..A15}'
   echo 'Uses installed Go 1.26.10; disposable synthetic state only, no deployment.'
   exit 0
 fi
@@ -26,6 +26,11 @@ run_upgrades() {
 }
 
 case "$1" in
+  followups)
+    export GOWORK=off
+    CGO_ENABLED=0 "$GO" test -count=1 -run '^TestRemediation' ./...
+    CGO_ENABLED=1 "$GO" test -race -tags sqlite_cgo -count=1 -run '^TestRemediation' ./...
+    ;;
   benchmark-clear)
     export GOWORK=off
     CGO_ENABLED=0 "$GO" test -run '^$' -bench '^BenchmarkAuditA10Clear$' -benchmem -benchtime=3x -count=1 .

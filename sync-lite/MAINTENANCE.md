@@ -1,5 +1,26 @@
 # Maintenance Record
 
+## 2026-11-06: Local Remediation Follow-Ups
+
+Completed local protocol/quota coverage and the legacy-token assessment for
+candidate 0.4; see [evidence](AUDIT_REMEDIATION.md#local-remediation-follow-ups)
+and [strategy](LEGACY_TOKENS.md). No production source, module record, driver,
+SQLite schema, configuration, installed service or upstream revision changed.
+Go 1.26.10 remains the newest installed SDK in `~/sdk/` and the helper's selected
+compiler. The November/October component versions below remain unchanged.
+
+Passed `validate-remediation.sh followups`, full `check`, `A12` (HTTP/HTTPS,
+all three actual archived clean/WAL upgrade matrices and supplemental checks),
+`security` for both drivers and default static `build`. Both scanners reported
+no vulnerabilities found; the vulnerability database update reported was still
+2026-11-05 23:49:57 UTC. These are local synthetic/scanner results, not field
+validation or a fresh latest-release/upstream maintenance review.
+
+No replay/retimestamping of existing entities is implemented. Candidate remains
+0.4; operator-tested release remains 0.3.1. Real-browser/MIPS/ARM validation and
+the optional backlog remain separate. The strategy assessment explicitly defines
+client evidence and data/rollback gates before any future cursor/replay change.
+
 ## 2026-11-06: sync-lite 0.4 Candidate
 
 Scope: audit remediation inside `sync-lite/`, not deployment, dependency

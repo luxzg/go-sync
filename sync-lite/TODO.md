@@ -1,7 +1,8 @@
 # Open Work
 
-The authorized audit backlog is tracked in [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
-Version 0.4 is in development on a separate non-deploying branch. Existing
+The A01-A15 audit fixes and local remediation follow-ups are complete; evidence
+is tracked in [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
+Version 0.4 is a candidate on a separate non-deploying branch. Existing
 release and field evidence below refer to 0.3.1 unless explicitly stated.
 
 Updated 2026-11-06 for candidate `0.4`. This file contains remaining work; completed
@@ -11,14 +12,6 @@ release is `0.5`; focused patches may use `0.4.1`.
 
 ## P1: Validation And Repeatability
 
-- After the 0.4 commit-order fix, assess a client-compatible strategy for old
-  tied cohorts and updates already skipped by old scalar tokens. Do not
-  automatically retimestamp existing rows, reset chains, or replay private data.
-  Prevention for new writes does not retroactively recover past omissions.
-
-- Extend protocol tests for general batch parent-ID mapping, command-level
-  quota/history-period boundaries and AI Chat roundtrip. Device admission at
-  50/100 and 499/500/501-entry timestamp pagination are now covered in 0.4.
 - Validate candidate `0.4` on the supported Debian/Ubuntu home-server setup,
   using a consistent backup and [two-device checklist](MANUAL_TESTING.md).
   Preserve the existing database/config/chain; check ordinary synchronization,
@@ -36,11 +29,6 @@ release is `0.5`; focused patches may use `0.4.1`.
 
 ## P2: Maintenance And Operations
 
-- Extend quota characterization across initialization, history bucket rotation
-  and uncommon old states. 0.4 covers concurrent commands and normal
-  deletion/resurrection without recounting existing baselines. Initial server
-  roots remain outside normal commit counting; equality with live-row totals is
-  not a universal invariant. Do not infer data loss from a count mismatch.
 - Refresh the [maintenance baseline](MAINTENANCE.md) monthly and after advisories;
   next routine review is November 2026. Check Go, both SQLite drivers/embedded
   engines, inherited modules, govulncheck, ShellCheck, and build prerequisites.

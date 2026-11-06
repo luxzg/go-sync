@@ -5,6 +5,20 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-11-06, completed the authorized local remediation follow-ups without
+  changing production sources, dependencies, schema, configuration or version
+  `0.4`. Added batch parent-ID/reopen checks, plain/opaque AI Chat lifecycle and
+  unknown-field preservation, command-level soft-quota/legacy-boost tests, root
+  counter offsets, History bucket rotation and legacy/future count versions.
+  `scripts/validate-remediation.sh followups` runs these and the legacy-token
+  characterization on both backends. Full validation results are recorded in
+  [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md#local-remediation-follow-ups).
+- Completed the [legacy-token strategy assessment](LEGACY_TOKENS.md). Preserve
+  the scalar protocol and existing records for 0.4; no automatic historical
+  replay or retimestamping. Synthetic tests retain the oversized-tie and old
+  skipped-token limitations. A future compound cursor and opt-in replay need
+  explicit approval, client evidence and separate rollback/data-safety design.
+
 - On 2026-11-06, implemented the A01-A15 audit remediation series as candidate
   `0.4` on `audit-remediation-0.4`, with separate finding commits and pushes.
   See [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md) for exact roots, regressions,
@@ -99,6 +113,12 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Deferred / Out Of Scope By Decision
 
+- The 2026-11-06 follow-up authorization covers local remediation tests,
+  legacy-token assessment, validation and documentation only. It does not
+  authorize implementing replay/cursors, optional features, packaging, upstream
+  merges, dependency upgrades, deployment, production access or device actions.
+  A future replay implementation is not required to close this assessment and
+  is not advertised as working. Real-device and MIPS/ARM evidence remain in TODO.
 - A dependency-minimization refactor was deferred by the user: keep upstream
   auth, command, cache, datastore, and protobuf package reuse for now.
 - Docker, external DynamoDB/Redis services, metrics, and health-check endpoints

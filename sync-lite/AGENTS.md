@@ -174,6 +174,11 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 - Current code candidate is `0.4`, dated 2026-11-06, on the remediation branch.
   Last operator-tested release remains `0.3.1` (2026-10-19); never imply the
   candidate is already deployed. Documentation-only updates do not bump version.
+- The authorized local follow-ups add tests, a fixed `followups` validation mode
+  and the [legacy-token strategy](LEGACY_TOKENS.md), not runtime changes. Keep
+  version 0.4; historical replay/cursors require a separate explicit protocol/
+  data-safety pass. Do not mistake characterization tests of known omissions for
+  a claim that they are repaired, or expand this scope into optional backlog work.
 - Code changes require a version change. After the `0.4` series, the next normal
   release is `0.5`; focused patches may use `0.4.1`. Components are integers:
   `0.9` is followed by `0.10`, not automatically `1.0`.

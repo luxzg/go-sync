@@ -5,6 +5,24 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## 0.4 (validation) - 2026-11-06 19:42 CET (Europe/Zagreb)
+
+- Complete the local remediation follow-ups: nested batch parent-ID mapping,
+  plain/opaque AI Chat lifecycle and unknown-field preservation, command-level
+  quota boundaries/legacy boosts, root offsets, History bucket rotation and
+  legacy/future count-version characterization.
+- Add a fixed `followups` validation mode. Both focused backends, full checks/
+  race suites, HTTP/HTTPS smoke, actual 0.2/0.3/0.3.1 clean/WAL upgrade and
+  old-version reopen matrices, supplemental checks, govulncheck and default
+  static build passed with Go 1.26.10.
+- Finish the legacy-token strategy assessment with synthetic HTTP regressions
+  for old ties and skipped updates. Preserve existing data/scalar protocol;
+  historical recovery is not automatic or claimed. Document future cursor/replay
+  acceptance gates and inherited soft-quota acknowledgements without storage.
+- Update guidance and close only completed local tasks. No runtime, version,
+  schema, dependencies, configuration, upstream merge or production changes;
+  candidate stays 0.4. Real-device/hardware checks and optional backlog remain.
+
 ## docs - 2026-11-06 16:00 CET (Europe/Zagreb)
 
 - Record final commit/push and artifact-validation status. Make clone instructions

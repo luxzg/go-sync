@@ -105,6 +105,12 @@ main success criterion, not an assumed diagnostic type name.
 5. Check sanitized service error messages if needed. Do not try clear-data,
    account deletion, profile removal, or a new chain as troubleshooting steps.
 
+Version 0.4 prevents new timestamp-order omissions, but cannot automatically
+prove or recover every older delivery. See [legacy token limits](LEGACY_TOKENS.md)
+if fresh items sync but a specific old item appears absent. Restarting, clearing
+poll hints or resetting the chain is not a general repair for tied old pages.
+Keep the chain/category settings intact and request a scoped investigation.
+
 ### Diagnosing Persistent Commit Conflicts
 
 `Last synced: just now` and a successful Download step do not establish that

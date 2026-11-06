@@ -24,6 +24,7 @@ available for community testing.
 - [Completed and deferred work](FINISHED_TASKS.md): status and evidence archive.
 - [Changelog](CHANGELOG.md): release and documentation history.
 - [Maintenance record](MAINTENANCE.md): checked versions, upstream revision, and validation results.
+- [Legacy token limits](LEGACY_TOKENS.md): historical omissions, the 0.4 safety decision, and future recovery requirements.
 
 ## Upstream Reference
 - Original project: https://github.com/brave/go-sync
@@ -124,8 +125,18 @@ Version 0.4 serializes complete authenticated commands, including
 quota/cache bookkeeping. This favors correctness and simplicity for a few
 devices over throughput. Run **one sync-lite process per database**, not a
 multi-worker deployment. Uploads and response writes stay outside that gate.
-Quotas remain approximate; existing counters are not
+Quotas remain approximate; existing version-2 counters are not
 silently replaced by live-row recounts.
+
+The inherited soft quotas are normally 50,000 combined items and 30,000 History
+items, with a bounded allowance for legacy over-limit History counts. At the
+History-only cap, upstream may acknowledge additional History items with
+`SUCCESS` without storing them; other types can continue below the combined
+cap. An overall successful commit is therefore not always proof of persistence.
+Initial roots are outside normal commit counting, and History quota buckets
+age separately from row expiry. These behaviors are covered by synthetic tests,
+not changed or silently recounted in 0.4. The pre-existing positive version-1
+count migration remains separate; it can recalculate counts, not entity payloads.
 
 The build still reuses packages from the parent `go-sync` checkout. This retains
 inherited AWS, Redis, and Prometheus module dependencies to keep changes small;
@@ -204,6 +215,8 @@ This prevents new timestamp ties and late-commit omissions. It does not repair
 already-issued old tokens or replay previously skipped records, and old tied
 cohorts can still straddle a page. Existing records are deliberately not
 retimestamped. Do not reset a valuable chain as an upgrade step.
+The [legacy-token strategy](LEGACY_TOKENS.md) explains the tested limitations and
+why recovery is a separate opt-in design, not an automatic upgrade migration.
 
 0.4 also restores physical retirement for History and History-delete-directive
 rows whose explicit expiry is in the past (normally 14 days). Cleanup is lazy,
@@ -582,6 +595,22 @@ The user reported the integration suite passing. Its documented cases cover:
 - Gzip request body handling
 - Multi-client isolation (no cross-chain data leakage)
 - Same client-side entity ID in different chains (no cross-chain conflict)
+
+The local remediation follow-ups also cover nested batch parent-ID mapping,
+AI Chat conversation/entry creation, remote updates, stale conflicts, tombstones
+and reopen, including opaque payloads and unknown specifics fields. Quota tests
+cover initialization/root offsets, batch boundaries, legacy boosts, History
+acknowledgement at its cap, bucket rotation and legacy/future count versions.
+These are synthetic server protocol checks, not AI Chat or quota-limit browser
+field results. The focused repeatable command is:
+
+```bash
+./scripts/validate-remediation.sh followups
+```
+
+It also characterizes historical token omissions; passing those tests does not
+mean old skipped updates have been recovered. No production code changed during
+this follow-up pass, so the candidate remains 0.4.
 
 The repeatable checks are:
 

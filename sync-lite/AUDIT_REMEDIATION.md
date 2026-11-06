@@ -348,3 +348,51 @@ already-skipped tokens are not automatically replayed; quotas remain approximate
 one process owns the DB, and normal explicit History expiry is not undone by
 binary rollback. Remaining work is in TODO. Only helper-owned synthetic data and
 TLS fixtures were used; no user databases, profiles or credentials were accessed.
+
+## Local Remediation Follow-Ups
+
+2026-11-06 19:42 CET (Europe/Zagreb). Scope: remaining local tests, legacy-token
+assessment, validation and documentation only. No production-source, schema,
+dependency, configuration or version change; candidate remains 0.4. Optional
+backlog features, upstream updates, deployments and real-device access are not
+part of this pass.
+
+| Evidence | Additional coverage |
+| --- | --- |
+| `remediation_protocol_test.go` | Nested parent-before-child batch mapping with an intervening sibling; later server-parent reference; exact entity sets/relationships after HTTP download and reopen |
+| `remediation_protocol_test.go` | AI Chat conversation/entry plain and opaque payloads; remote update, scalar polling, stale conflicts, tombstones and reopen; nested compressed/binary/truncation fields and unknown specifics preserved |
+| `remediation_quota_test.go` | Root initialization/count offsets/reopen; combined batch quota and capped legacy History boost; updates/deletion at capacity; History/directive acknowledgement without persistence at 30,000; other-type progress below combined cap |
+| `remediation_quota_test.go` | History bucket rotation around one/two/four/40 periods, persistence on command completion, future anchors, positive/zero old count versions and preserved version-2/future-version offsets |
+| `remediation_legacy_token_test.go` | Actual HTTP traversal of 501 legacy tied rows; no silent record/clock rewrite; unchanged reopen; already-skipped old-token case versus safely ordered new writes |
+| [LEGACY_TOKENS.md](LEGACY_TOKENS.md) | Completed assessment: keep current scalar protocol/data; a future keyset cursor and explicitly scoped replay require browser/rollback evidence and separate authorization |
+
+Quota-limit fixtures seed synthetic counters rather than loading 30,000/50,000
+rows. Rotation tests use a 60-second margin on either side of a boundary to
+avoid second-level scheduling races; they do not claim a frozen-clock exact
+equality test or performance coverage. Positive version-1 recount is inherited,
+not a new automatic recount of current version-2 counters. AI Chat tests verify
+server transport/storage, not browser UI, encryption correctness or AI execution.
+Unknown outer SyncEntity fields and forward parent references are not covered.
+Historical omissions remain characterized limitations, not recovered data.
+
+The fixed helper's `followups` mode runs `TestRemediation...` with default
+no-CGO modernc and race-enabled mattn. Full `check` also discovers the new tests.
+Both focused backends and the full check passed with installed Go 1.26.10,
+including module verification, formatting, ShellCheck, both vet configurations,
+default tests, both race suites and the invalid-CGO guard. `A12` passed real
+HTTP/HTTPS lifecycle checks, all actual 0.2/0.3/0.3.1 independent clean/WAL
+upgrade/read-write/old-version reopen matrices and supplemental synthetic tests.
+Both govulncheck configurations returned no vulnerabilities found. The default
+static Linux x86-64 artifact rebuilt and reports 0.4/modernc/Go 1.26.10.
+
+Initial legacy fixture attempts used storage-only placeholder UniquePosition
+bytes and failed protobuf decoding. Corrected the synthetic fixture to a valid
+protobuf; no runtime correction was needed or made. Only helper-owned temporary
+fixtures and loopback processes were used. Production/browser/MIPS validation
+and all unrelated TODOs remain open; the authorized local follow-ups are closed.
+
+Independent static review strengthened the new tests before completion: verify
+raw durable counter rows before any normalizing read, compare exact delivered
+legacy identity/metadata/payload sets without assuming tie order, and compare
+records/clocks again after reopen and the restarted scan. Full/focused checks
+were rerun after those changes. No additional production-code fix was needed.

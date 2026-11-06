@@ -118,6 +118,16 @@ Mode `benchmark-clear` measures the default backend clearing 100 synthetic
 64 KiB payloads with three iterations; temporary state is helper-owned. It does
 not benchmark production data or establish representative disk/SSD behavior.
 
+Mode `followups` runs `TestRemediation...` on default no-CGO modernc and
+race-enabled mattn. It covers batch parent-ID mapping, plain/opaque AI Chat
+lifecycle and protobuf preservation, soft-quota and History-period boundaries,
+root/legacy/future counter states and legacy-token characterization. The tests
+use helper-owned synthetic temporary databases only, with no new external tool
+or production-state input. Ordinary `check` also discovers these tests; the mode
+is a quicker focused check, not a replacement for full validation. The
+[legacy-token assessment](LEGACY_TOKENS.md) deliberately preserves current
+limitations instead of implementing an unsafe replay.
+
 From `sync-lite/`:
 
 | Command | Scope and effects |
