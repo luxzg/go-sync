@@ -171,10 +171,11 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   Each validated finding is committed/pushed separately. Do not deploy or merge
   the unfinished series automatically; release-version metadata spans the series.
 
-- The current release is `0.3.1`, dated 2026-10-19. Documentation-only
-  updates do not bump the service version or imply a new deployed binary.
-- Code changes require a version change. The next normal code release is `0.4`;
-  minor patches may use `0.3.2`. Components are integers:
+- Current code candidate is `0.4`, dated 2026-11-06, on the remediation branch.
+  Last operator-tested release remains `0.3.1` (2026-10-19); never imply the
+  candidate is already deployed. Documentation-only updates do not bump version.
+- Code changes require a version change. After the `0.4` series, the next normal
+  release is `0.5`; focused patches may use `0.4.1`. Components are integers:
   `0.9` is followed by `0.10`, not automatically `1.0`.
 - Prepend CHANGELOG entries, newest first, including documentation-only changes.
   Use `## docs - YYYY-MM-DD HH:MM TZ (timezone)` or the version in place of

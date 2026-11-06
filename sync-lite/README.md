@@ -2,9 +2,10 @@
 
 Minimal Brave Sync server implementation for small self-hosted setups.
 
-**Working branch:** version 0.4 audit fixes are in development. The published
-0.3.1 deployment guidance below remains historical until the series is validated.
-See [remediation status and evidence](AUDIT_REMEDIATION.md) before using this branch.
+**Version 0.4 candidate:** audit fixes are on `audit-remediation-0.4`, separate
+from `master`. See [fixes, validation and limitations](AUDIT_REMEDIATION.md).
+Real-browser validation of this candidate remains an operator step; no server
+was deployed or changed by these development checks.
 
 This is a fork of https://github.com/brave/go-sync.
 All custom modifications are contained within `/sync-lite/`; official upstream
@@ -26,16 +27,17 @@ available for community testing.
 
 ## Upstream Reference
 - Original project: https://github.com/brave/go-sync
-- Latest listed upstream release: [`v0.1.21`](https://github.com/brave/go-sync/releases/tag/v0.1.21), released by `@johnhalbert` on **September 18, 2023**.
+- Upstream release reference: [`v0.1.21`](https://github.com/brave/go-sync/releases/tag/v0.1.21), released by `@johnhalbert` on **September 18, 2023**.
 
 Upstream repository changes are reviewed separately from release tags. See the
 [upstream-sync policy](AGENTS.md#syncing-the-fork-with-upstream).
 
 ## Version
-- Current `sync-lite` version: `0.3.1` (2026-10-19)
+- Current candidate: `0.4` (2026-11-06)
+- Last operator-tested release: `0.3.1` (2026-10-19)
 
 Documentation updates do not change the binary version. Patch releases may use
-`0.3.2`; the next normal code release will be `0.4`. Minor versions count upward as
+`0.4.1`; the next normal release after `0.4` will be `0.5`. Minor versions count upward as
 integers, so `0.9` is followed by `0.10`.
 
 Print the binary version and selected backend without opening a database:
@@ -44,15 +46,16 @@ Print the binary version and selected backend without opening a database:
 ./sync-lite --version
 ```
 
-Version `0.3.1` adds optional, privacy-safe conflict diagnostics without changing
-write acceptance, sync behavior, or the database schema. Diagnostics are disabled
-by default. Existing users should use the default build and follow the
-[upgrade guide](#upgrade-from-02-or-03-to-031).
+Version `0.4` addresses the audit's storage ordering, tag/accounting, protocol
+validation, HTTP limits, shutdown, expiry, cache and test-safety findings. It adds
+one small clock table without rewriting existing entities. Existing users should
+keep the preferred default build and follow the [upgrade guide](#upgrade-to-04).
+Both endpoint aliases, authentication, config and optional diagnostics remain.
 
 ## Choose A SQLite Build
 
 Build from `go-sync/sync-lite/` with **Go 1.26 or newer**; a maintained patch
-release is recommended. Go 1.26.9 was used for this release's checks.
+release is recommended. Go 1.26.10 was used for this candidate's checks.
 
 | Build | Selection | Validation |
 | --- | --- | --- |
@@ -117,10 +120,11 @@ deployment claims.
 - Prometheus/metrics
 - Health-check endpoints
 
-The 0.4 working series serializes complete authenticated commands, including
+Version 0.4 serializes complete authenticated commands, including
 quota/cache bookkeeping. This favors correctness and simplicity for a few
 devices over throughput. Run **one sync-lite process per database**, not a
-multi-worker deployment. Quotas remain approximate; existing counters are not
+multi-worker deployment. Uploads and response writes stay outside that gate.
+Quotas remain approximate; existing counters are not
 silently replaced by live-row recounts.
 
 The build still reuses packages from the parent `go-sync` checkout. This retains
@@ -134,7 +138,7 @@ these additions. A compatible prebuilt binary does not require Go on the server.
 - `POST /command/` (primary endpoint)
 - `POST /v2/command/` (compatibility alias)
 
-In the 0.4 working series, authenticated requests are limited to 10 MiB on the
+In 0.4, authenticated requests are limited to 10 MiB on the
 wire and after decompression; oversized bodies return HTTP 413 before command
 dispatch. Gzip is read to completion so malformed streams are rejected. The
 standalone server bounds header reads to 10 seconds and body reads, response
@@ -155,6 +159,8 @@ That client bug has been fixed upstream; both endpoints remain supported.
 
 Conflict diagnostics do not include item/chain IDs, URLs, names, keys, or
 payloads. See [diagnosing commit conflicts](MANUAL_TESTING.md#diagnosing-persistent-commit-conflicts).
+`:memory:` is supported only as disposable development state: one retained
+private connection per store, no disk persistence and no restart recovery.
 
 ## First Run and SQLite Schema
 `sync-lite` creates/opens the SQLite DB file on startup and automatically creates required schema if missing.
@@ -166,7 +172,7 @@ payloads. See [diagnosing commit conflicts](MANUAL_TESTING.md#diagnosing-persist
   - A busy checkpoint is reported as an error; journal files must never be deleted manually.
 - Both drivers use synchronous=FULL and a 5000 ms busy timeout on each connection.
 
-In the 0.4 working series, shutdown stops admission, gives requests ten seconds
+In 0.4, shutdown stops admission, gives requests ten seconds
 to drain, then closes connections and waits up to five more seconds. SQLite is
 checkpointed/closed only after tracked handlers finish. Datastore calls remain
 bound to the HTTP request context even where upstream uses a background context.
@@ -174,10 +180,14 @@ Forced, failed or incomplete cleanup returns a nonzero exit status, not a
 "stopped cleanly" message. If handlers remain stuck, database cleanup is skipped
 and normal SQLite WAL recovery is left for the next open. Do not delete journals.
 TLS configuration/files are validated before opening the database.
+ClearServerData commits its disabled marker and data removal atomically; a
+cancelled request cannot leave just the marker committed with data stranded.
+General multi-entry commits retain upstream's per-entry outcomes, not atomic-batch
+semantics.
 
 ### 0.4 Storage Compatibility
 
-The working series automatically adds the small `sync_clocks` table. It does not
+Version 0.4 automatically adds the small `sync_clocks` table. It does not
 rewrite existing entities, tokens, counts, tags or encrypted payloads. Subsequent
 entity writes allocate strictly increasing per-chain/type timestamps under
 SQLite's writer lock, so commit order and scalar progress tokens agree even
@@ -185,8 +195,7 @@ within one millisecond. Clock state commits with the entity and survives restart
 and future expiry cleanup. Creation times and server-root version conventions stay.
 
 Existing configuration and database files remain usable. Follow the backup-first
-binary update procedure below, substituting **0.4** for the historical 0.3.1
-candidate names. No export/import or client reset is required. Automated checks
+binary update procedure below. No export/import or client reset is required. Automated checks
 include actual 0.2, 0.3 and 0.3.1 fixtures through both backends and old-version
 reopen. Older binaries ignore the new table but reintroduce the old ordering bug;
 binary rollback is not a database restore or an automatic recovery procedure.
@@ -465,42 +474,46 @@ Automated synthetic upgrade checks are available in `scripts/test-upgrade.sh`.
 Automation of live backup/update operations remains tracked in [TODO.md](TODO.md).
 
 <a id="upgrade-from-02-to-03"></a>
+<a id="upgrade-from-02-or-03-to-031"></a>
+<a id="upgrade-to-04"></a>
 
-### Upgrade From 0.2 Or 0.3 To 0.3.1
+### Upgrade From 0.2, 0.3 Or 0.3.1 To 0.4
 
 **Keep your existing sync chain, SQLite database, env file, certificate paths,
-and systemd unit. No schema migration, database export/import, or client reset
-is needed for this update.** Use the preferred modernc build for existing servers.
-The optional diagnostic setting can be enabled after backing up the old config.
+and systemd unit. The clock table is added automatically; no database export/import
+or client reset is needed.** Use the preferred modernc build for existing servers.
+Review the [storage/expiry changes and limitations](#04-storage-compatibility)
+first. Do not replace your configuration or certificate files with examples.
 
-The automated upgrade checks used the actual `0.2` code to create synthetic
-databases, exercised both current drivers, and reopened them with `0.2`. They
-checked schema, records, BLOB bytes, counts, integrity, and recovery of committed
-WAL data. An additional matrix checked the actual `0.3` source against `0.3.1`
-and old-version reopen. Back up your own installation before applying the update.
+Automated checks use actual `0.2`, `0.3` and `0.3.1` source to create synthetic
+databases, independently upgrade clean/committed-WAL fixtures through each
+current driver, and reopen/read/write with the old version. They compare original
+schema and records (including exact BLOB/NULL values), exercise datastore
+write/readback, integrity and cross-driver reopen. Only the clock table is an
+allowed schema addition. Back up your own installation before applying the update.
 
-1. Build `0.3.1` on the development machine and transfer it to the server:
+1. Build `0.4` on the development machine and transfer it to the server:
 
 ```bash
 ./scripts/build.sh
-scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.3.1
+scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.4
 ```
 
 2. On the server, check the candidate before stopping the service:
 
 ```bash
-chmod +x /tmp/sync-lite-0.3.1
-/tmp/sync-lite-0.3.1 --version
+chmod +x /tmp/sync-lite-0.4
+/tmp/sync-lite-0.4 --version
 ```
 
-Expected: `sync-lite 0.3.1`, backend `modernc`, target `linux/amd64`.
+Expected: `sync-lite 0.4`, backend `modernc`, target `linux/amd64`.
 
 3. Stop the service and make a private backup of the working installation:
 
 ```bash
 sudo systemctl stop sync-lite
 sudo install -d -m 0700 /var/backups/sync-lite
-backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.3.1.XXXXXXXX)"
+backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.4.XXXXXXXX)"
 sudo cp -a /var/lib/sync-lite "$backup_dir/state"
 sudo cp -a /etc/sync-lite "$backup_dir/config"
 sudo cp -a /usr/local/bin/sync-lite "$backup_dir/sync-lite-previous"
@@ -514,20 +527,21 @@ the same time.
 4. Replace only the binary and start the existing unit:
 
 ```bash
-sudo install -m 0755 /tmp/sync-lite-0.3.1 /usr/local/bin/sync-lite
+sudo install -m 0755 /tmp/sync-lite-0.4 /usr/local/bin/sync-lite
 /usr/local/bin/sync-lite --version
 sudo systemctl start sync-lite
 sudo systemctl status sync-lite
 journalctl -u sync-lite -n 50 --no-pager
 ```
 
-5. Confirm the startup log reports `0.3.1` and verify that your existing Brave
+5. Confirm the startup log reports `0.4` and verify that your existing Brave
    clients resume synchronization using the [two-device checklist](MANUAL_TESTING.md).
    Their server URL stays the same.
 
 If an update fails, stop the service before further action. The test matrix
-verified reopening these synthetic databases with `0.2` and `0.3`, so binary-only rollback
-is available for that tested scope. Keep the backup and ask for help if your
+verified reopening these synthetic databases with `0.2`, `0.3` and `0.3.1`, so
+binary-only rollback is available for that tested scope, but reintroduces old
+bugs and cannot undo normal TTL expiration. Keep the backup and ask for help if your
 database or configuration differs; do not restore or replace user data
 automatically. This procedure is for the documented systemd layout; adjust paths
 only if your installation deliberately uses another layout.
@@ -569,7 +583,7 @@ The user reported the integration suite passing. Its documented cases cover:
 - Multi-client isolation (no cross-chain data leakage)
 - Same client-side entity ID in different chains (no cross-chain conflict)
 
-For `0.3`, the repeatable checks are:
+The repeatable checks are:
 
 ```bash
 ./scripts/check.sh

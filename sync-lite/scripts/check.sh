@@ -8,6 +8,7 @@ export GOWORK=off
 
 command -v "$GO" >/dev/null
 command -v shellcheck >/dev/null
+"$GO" mod verify
 UNFORMATTED="$(gofmt -l ./*.go)"
 if [[ -n "$UNFORMATTED" ]]; then
   printf 'Run gofmt on:\n%s\n' "$UNFORMATTED" >&2

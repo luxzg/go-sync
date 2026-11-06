@@ -19,13 +19,24 @@ if [[ ! -x "$GO" ]]; then
   echo 'Install Go 1.26.10 in ~/sdk/go1.26.10 or review this pinned helper.' >&2
   exit 1
 fi
+run_upgrades() {
+  for baseline in 1c0d957 287bdec 07d147a; do
+    SYNC_LITE_UPGRADE_BASELINE="$baseline" ./scripts/test-upgrade.sh
+  done
+}
+
 case "$1" in
   benchmark-clear)
     export GOWORK=off
     CGO_ENABLED=0 "$GO" test -run '^$' -bench '^BenchmarkAuditA10Clear$' -benchmem -benchtime=3x -count=1 .
     ;;
   format) exec "$(dirname "$GO")/gofmt" -w ./*.go testdata/session_reconciliation_test.go ;;
-  A01|A02|A03|A04|A05|A06|A07|A08|A09|A10|A11|A12|A13|A14|A15)
+  A12)
+    ./scripts/smoke-test.sh
+    run_upgrades
+    ./scripts/test-session-reconciliation.sh
+    ;;
+  A01|A02|A03|A04|A05|A06|A07|A08|A09|A10|A11|A13|A14|A15)
     export GOWORK=off
     CGO_ENABLED=0 "$GO" test -count=1 -run "^TestAudit$1" ./...
     CGO_ENABLED=1 "$GO" test -race -tags sqlite_cgo -count=1 -run "^TestAudit$1" ./...
@@ -35,10 +46,6 @@ case "$1" in
   supplemental) exec ./scripts/test-session-reconciliation.sh ;;
   build) exec ./scripts/build.sh ;;
   security) exec ./scripts/security-check.sh ;;
-  upgrades)
-    for baseline in 1c0d957 287bdec 07d147a; do
-      SYNC_LITE_UPGRADE_BASELINE="$baseline" ./scripts/test-upgrade.sh
-    done
-    ;;
+  upgrades) run_upgrades ;;
   *) echo 'Unknown validation mode; run without arguments for usage' >&2; exit 2 ;;
 esac

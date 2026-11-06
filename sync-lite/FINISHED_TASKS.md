@@ -5,6 +5,19 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-11-06, implemented the A01-A15 audit remediation series as candidate
+  `0.4` on `audit-remediation-0.4`, with separate finding commits and pushes.
+  See [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md) for exact roots, regressions,
+  compatibility evidence, integration follow-ups, commits and limits. Custom
+  changes remain entirely in sync-lite; upstream/dependencies were not changed.
+  Real production/browser/MIPS validation is separate and remains in TODO.
+- The candidate adds transactional ordered clocks, stored-identity/tag lifecycle
+  checks, coordinated counting, bounded HTTP/cache behavior, semantic validation,
+  atomic clear and drained shutdown, lazy explicit History TTL retirement,
+  metadata-only clearing, private fresh files, device-admission compatibility and
+  reliable private in-memory stores. Old tied cohorts are not replayed, and
+  existing version-2 counter offsets are not automatically recounted.
+
 - On 2026-10-19, the operator confirmed `0.3.1`/modernc over HTTPS between Debian
   desktop and Android: bookmark delivery, a remote bookmark rename, fresh groups,
   open tabs, and history worked in both directions. Some transfers took several

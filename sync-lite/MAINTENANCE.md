@@ -1,5 +1,50 @@
 # Maintenance Record
 
+## 2026-11-06: sync-lite 0.4 Candidate
+
+Scope: audit remediation inside `sync-lite/`, not deployment, dependency
+upgrades or an upstream merge. Candidate branch: `audit-remediation-0.4`.
+All original upstream files remain unchanged from the pre-pass fork; incorporated
+official revision remains `71f27af460f4524a1d4dac4c35d8e7ef2a072c50`.
+No claim is made that upstream or driver releases were refreshed in this pass.
+
+Selected compiler: installed Go **1.26.10** from `~/sdk/`, rather than shell
+Go 1.26.8. User-managed shared SDK locations and optional Playwright tooling are
+documented in AGENTS/DEVELOPMENT_SETUP. ShellCheck 0.11.0, GCC 16.2.0 and
+govulncheck 1.8.0 were available. Modules/versions remain unchanged: modernc
+1.60.1, required libc 1.77.1, mattn 1.14.52, protobuf 1.36.12 and Go minimum
+1.26.0. Actual upgrade tests report embedded SQLite **3.53.4** on both current
+drivers and **3.49.2** in archived 0.2.
+
+Both govulncheck configurations returned **No vulnerabilities found**, using
+Go 1.26.10. The database update reported during the pass was
+2026-11-05 23:49:57 UTC. This is a dated source/package vulnerability check,
+not a guarantee about native SQLite, all threats or experimental architectures.
+Module-cache checks report all downloaded modules verified. No dependency files
+were rewritten, installed tools upgraded, or global configuration changed.
+
+Validation uses the fixed `scripts/validate-remediation.sh` entry point: full
+format/ShellCheck/vet/tests, both race suites, no-CGO default/invalid-tag checks,
+real-process HTTP/HTTPS and signal/restart smoke, supplemental synthetic state,
+and actual 0.2/0.3/0.3.1 upgrade/read-write/reopen matrices. Each backend receives
+an independent clean and committed-WAL fixture; a cross-driver sequence is extra.
+Original objects/rows/BLOB/NULL values are checked before each stage's datastore
+write/readback. Only `sync_clocks` is an allowed schema addition, separately
+tested for lifetime, rollback, concurrent handles and legacy retention cleanup.
+
+See [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md) for per-finding evidence,
+integration follow-ups and measured clear-data allocations. Independent review
+was static and did not claim to run the coordinator's tests. All data and TLS
+material were synthetic and helper-owned; no installed server, browser profile,
+phone, private diagnostics or recovery archives were accessed.
+
+Remaining operator work: consistent backup, reviewed binary update, verify loaded
+version, then real two-device checks. MIPS/ARM remain untested. Old scalar-token
+ties are not replayed automatically; approximate quotas/root offsets remain.
+Normal explicit History expiry can retire already-hidden old rows after upgrade.
+Follow the existing monthly upstream/dependency review TODO separately; no
+automatic merge, package upgrade, deployment or restore is authorized here.
+
 ## 2026-10-19: sync-lite 0.3.1
 
 `0.3.1` adds opt-in, bounded `SYNC_LOG_CONFLICTS=1` diagnostics for missing-record,

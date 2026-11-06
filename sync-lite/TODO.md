@@ -4,10 +4,10 @@ The authorized audit backlog is tracked in [AUDIT_REMEDIATION.md](AUDIT_REMEDIAT
 Version 0.4 is in development on a separate non-deploying branch. Existing
 release and field evidence below refer to 0.3.1 unless explicitly stated.
 
-Updated 2026-10-19 for `0.3.1`. This file contains remaining work; completed `0.3`
+Updated 2026-11-06 for candidate `0.4`. This file contains remaining work; completed
 checks/helpers are archived in [FINISHED_TASKS.md](FINISHED_TASKS.md).
-Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
-`0.4`; focused patches may use `0.3.2`.
+Follow [AGENTS.md](AGENTS.md) before starting. After the 0.4 series, the next normal
+release is `0.5`; focused patches may use `0.4.1`.
 
 ## P1: Validation And Repeatability
 
@@ -16,24 +16,15 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
   automatically retimestamp existing rows, reset chains, or replay private data.
   Prevention for new writes does not retroactively recover past omissions.
 
-- Review client-tag reservation ownership during deletion. Deleting an older
-  identity must not release a reservation still needed by another live identity
-  with the same tag. Existing synthetic coverage characterizes this edge case;
-  design and test a scoped guard without weakening normal conflict checks.
 - Extend protocol tests for general batch parent-ID mapping, command-level
-  quota/history-period boundaries, high-device-limit admission at 50/100 devices,
-  AI Chat roundtrip, and larger 499/500/501-entry pagination workloads.
-- Investigate timestamp ties across GetUpdates page boundaries: tokens use only
-  mtime, so a page ending inside a tie can omit remaining tied records. Also
-  review upstream new-client device scanning, which repeats token zero when more
-  pages exist. Keep fixes compatible with Brave and confined to sync-lite or
-  propose an upstream patch separately. These are pre-existing review findings,
-  not regressions introduced by the driver switch.
-- Extend lifecycle checks to shutdown during in-flight requests, shutdown timeout
-  handling, damaged/missing TLS files, and failed startup cleanup. `0.3` already
-  covers normal SIGINT/SIGTERM, restart, WAL recovery/busy reporting, real HTTPS,
-  and incomplete TLS settings.
-- Extend `0.3.1` field validation beyond the confirmed bookmark/edit/group,
+  quota/history-period boundaries and AI Chat roundtrip. Device admission at
+  50/100 and 499/500/501-entry timestamp pagination are now covered in 0.4.
+- Validate candidate `0.4` on the supported Debian/Ubuntu home-server setup,
+  using a consistent backup and [two-device checklist](MANUAL_TESTING.md).
+  Preserve the existing database/config/chain; check ordinary synchronization,
+  edits, deletion, restart and resumed sync. No 0.4 browser/MIPS field pass has
+  been claimed by automated tests.
+- Extend candidate field validation beyond the confirmed `0.3.1` bookmark/edit/group,
   open-tab, and history transfers, using the [two-device checklist](MANUAL_TESTING.md).
   Check remaining categories and measure automatic timing/retry behavior if
   needed. Synthetic upgrade tests passed; no production server was accessed or
@@ -45,11 +36,11 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 
 ## P2: Maintenance And Operations
 
-- Review normal quota accounting across initialization, entity lifecycle,
-  concurrency, and count caching. Initial server roots are inserted outside
-  normal commit counting, so equality with live-row totals is not a universal
-  invariant. Characterize expected deltas before proposing any accounting change;
-  do not infer data loss or silently recount existing databases.
+- Extend quota characterization across initialization, history bucket rotation
+  and uncommon old states. 0.4 covers concurrent commands and normal
+  deletion/resurrection without recounting existing baselines. Initial server
+  roots remain outside normal commit counting; equality with live-row totals is
+  not a universal invariant. Do not infer data loss from a count mismatch.
 - Refresh the [maintenance baseline](MAINTENANCE.md) monthly and after advisories;
   next routine review is November 2026. Check Go, both SQLite drivers/embedded
   engines, inherited modules, govulncheck, ShellCheck, and build prerequisites.
@@ -78,8 +69,9 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 - Automate the documented consistent backup and safe binary update/rollback
   procedure if requested. Keep restores explicitly authorized and preserve
   user-managed config, certificates, and backups; do not overwrite old backups.
-- Assess HTTP header/resource timeouts for public hosting; the standalone lite
-  server does not inherit timeout settings from upstream's HTTP server wrapper.
+- Profile whether the new bounded expiry probe needs an expiry index at larger
+  retained volumes. Do not claim disk-wear or throughput improvement without IO
+  measurements; the clear-data benchmark measures only its documented sample.
 
 ## P3: Optional Access Control And Coverage
 

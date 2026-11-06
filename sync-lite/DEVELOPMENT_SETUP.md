@@ -14,10 +14,10 @@ git --version
 go version
 ```
 
-Version `0.3.1` requires Go **1.26 or newer**. Use a maintained patch release;
-Go 1.26.9 was used for the October 19 checks. The default shell previously selected
-an older patch, so check `go version` rather than assuming which installation is
-active. See [MAINTENANCE.md](MAINTENANCE.md) for the dated dependency/toolchain record.
+Source builds require Go **1.26 or newer**. Use a maintained patch release;
+Go 1.26.10 was used for the 0.4 checks (October's baseline used 1.26.9).
+Check the selected compiler rather than assuming which installation is active.
+See [MAINTENANCE.md](MAINTENANCE.md) for the dated toolchain record.
 
 In the maintainer's shared workspace, agents use Go installations under `~/sdk/`
 and check compatible newer installed versions before code passes. The fixed
@@ -108,6 +108,8 @@ changing toolchains. Do not prefix the invocation with environment or shell setu
 Modes `A01` through `A15` run the corresponding focused regressions on both
 backends. Mode `format` formats project Go source and the supplemental synthetic
 test; unlike validation modes, it intentionally edits those source files.
+`A12` is the exception to the focused Go-test modes: it runs smoke, all upgrade
+matrices and supplemental checks, rather than succeeding with no matching tests.
 Mode `benchmark-clear` measures the default backend clearing 100 synthetic
 64 KiB payloads with three iterations; temporary state is helper-owned. It does
 not benchmark production data or establish representative disk/SSD behavior.
@@ -116,7 +118,7 @@ From `sync-lite/`:
 
 | Command | Scope and effects |
 | --- | --- |
-| `./scripts/check.sh` | gofmt check, ShellCheck, vet, default no-CGO tests, race-enabled tests for both drivers, and the invalid-CGO build guard; synthetic temporary databases |
+| `./scripts/check.sh` | module-cache verification, gofmt check, ShellCheck, vet, default no-CGO tests, race-enabled tests for both drivers, and the invalid-CGO build guard; synthetic temporary databases |
 | `./scripts/test-upgrade.sh` | Archives an explicit source allowlist from `0.2` commit `1c0d957`, compiles old/new test executables, tests both drivers and old-version reopen on clean/WAL fixtures, then removes its own temporary files |
 | `./scripts/smoke-test.sh` | Builds both drivers in a temporary directory; creates disposable TLS certificates and databases; tests actual loopback HTTP/HTTPS startup, aliases, SIGINT/SIGTERM, persistence, and invalid TLS settings |
 | `./scripts/security-check.sh` | Runs govulncheck against both driver configurations; needs network access to the vulnerability database and may download module metadata |
@@ -136,8 +138,15 @@ service sources or writing a test file into the checkout. Run it separately from
 `check.sh`; ordinary `go test ./...` does not discover files in `testdata/`.
 It has no production database input, repair mode, or deployment step.
 
-The upgrade helper defaults to baseline `1c0d957` (`0.2`). To additionally check
-the actual `0.3` release in isolated fixtures, use:
+The fixed remediation helper's `upgrades` mode checks actual `0.2`, `0.3` and
+`0.3.1` independently, using fresh clean/WAL fixtures for each backend, plus a
+cross-driver sequence. Each stage verifies original data before writing through
+its actual datastore and reading the new payload back. Older test executables
+also verify read/write reopen. Only the added clock table is exempted from the
+old-schema equality comparison; original objects, values and BLOBs stay exact.
+
+The lower-level upgrade helper defaults to `1c0d957` (`0.2`). For a manually
+selected reviewed baseline, its existing override remains available:
 
 ```bash
 SYNC_LITE_UPGRADE_BASELINE=287bdec ./scripts/test-upgrade.sh
@@ -185,8 +194,9 @@ Sanitized `.env.example` templates remain tracked.
 - Require the [data-safety checks](README.md#upgrading-safely) before binary or
   SQLite updates. Use synthetic prior-version fixtures, establish migration and
   rollback compatibility, and back up consistent real state before deployment.
-- The current release is `0.3.1`; the next normal code release is `0.4`, with optional
-  patch versions such as `0.3.2`. Documentation-only changes keep the version.
+- The current candidate is `0.4`, with operator/browser validation still pending;
+  the last field-tested release is `0.3.1`. After 0.4, normal releases advance to
+  `0.5`, with optional patches such as `0.4.1`. Docs-only changes keep the version.
   Prepend dated changelog entries with time and timezone. Review intended changes
   with `git diff --check` and `git status --short`. Standing user authorization
   covers committing and pushing completed authorized passes unless explicitly

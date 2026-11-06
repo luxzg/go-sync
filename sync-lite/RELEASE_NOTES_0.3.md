@@ -1,5 +1,8 @@
 # sync-lite 0.3: Issue Reply Draft
 
+Historical draft for the 0.3 series. Current candidate instructions are in
+[README.md](README.md); preserve this draft's original version-specific claims.
+
 **Follow-up:** the current patch is `0.3.1`, adding optional conflict diagnostics.
 Diagnostics are disabled by default and do not change the schema or write
 acceptance. Use the [manual guide](MANUAL_TESTING.md) to verify fresh two-way

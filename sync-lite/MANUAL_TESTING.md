@@ -12,7 +12,7 @@ This guide is an operator procedure, not a claim that these checks have run.
 ## 1. Prepare Both Clients
 
 1. After an upgrade, confirm the service startup log reports the intended version
-   (`0.3.1` for this release). The installed binary's `--version` output alone does
+   (`0.4` for this candidate). The installed binary's `--version` output alone does
    not prove the running service has restarted with it.
 2. In each browser's Sync settings, confirm both devices belong to the existing
    chain and enable the categories you intend to test on **both** devices.
@@ -126,15 +126,16 @@ items say `CONFLICT`. Match each response to the same position in that request's
 entry list; do not assume the conflict refers to the last bookmark you changed.
 `changes_remaining` indicates more download pages, not a count of failed commits.
 
-If ordinary logs show nothing, `0.3.1` can classify otherwise silent update
+If ordinary logs show nothing, `0.3.1` and newer can classify otherwise silent update
 conflicts. This is diagnostic support, **not a repair**:
 
-1. Use the [backup-first binary upgrade](README.md#upgrade-from-02-or-03-to-031).
-   Preserve the database and the existing chain. No schema migration is involved.
+1. Use the [backup-first binary upgrade](README.md#upgrade-to-04).
+   Preserve the database and existing chain. The 0.4 clock table is added
+   automatically; do not export/import, restore or reset your chain for diagnostics.
 2. After backing up the config, edit `/etc/sync-lite/sync-lite.env` and add one
    line: `SYNC_LOG_CONFLICTS=1`. Preserve every other setting.
 3. Restart with `sudo systemctl restart sync-lite`. Check that startup reports
-   `0.3.1` and says conflict diagnostics are enabled.
+   the intended version and says conflict diagnostics are enabled.
 4. Keep the phone open past its retry time. Check the journal without dumping
    any browser data:
 

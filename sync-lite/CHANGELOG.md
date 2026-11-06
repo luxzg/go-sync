@@ -1,5 +1,26 @@
 # Changelog
 
+Newest entries first. Documentation-only entries do not change the binary version.
+Historical entries retain their known dates; missing times/timezones are not
+invented. February follow-up changes are grouped because individual timestamps
+were not recorded.
+
+## 0.4 Candidate - 2026-11-06 15:58 CET (Europe/Zagreb)
+
+- Complete the A01-A15 remediation series and integration corrections on the
+  separate working branch. Keep all custom changes inside sync-lite.
+- A12 follow-up: exercise each archived/current version's actual datastore
+  write/readback API, preserving exact pre-write snapshots. Make its helper mode
+  run real smoke/upgrade/supplemental checks and verify module checksums.
+- Final automated checks passed: both backend/race suites, formatting/ShellCheck/
+  vet, module integrity, HTTP/HTTPS signals/restart, actual 0.2/0.3/0.3.1 clean/WAL
+  upgrade and old-version read/write reopen, supplemental tests and govulncheck.
+- Align upgrade/manual instructions, task status and maintenance evidence.
+  Existing data/config/chain are retained; the clock table is additive. Normal
+  explicit History TTL retirement, approximate quotas and unreplayed old token
+  ties are documented. Real-browser/MIPS checks remain pending; no deployment,
+  upstream merge, dependency upgrade or private-data access was performed.
+
 ## 0.4 (in development) - 2026-11-06 15:48 CET (Europe/Zagreb)
 
 - A01 integration follow-up: preserve version 1 only during initial server-root
@@ -90,7 +111,7 @@
   Both driver/race suites, forced/stuck/cancelled-request tests, real HTTP/HTTPS
   signal/restart smoke checks and all archived upgrade matrices passed.
 
-## 0.4 (in development) - 2026-11-06 15:09 CET (Europe/Zagreb)
+## 0.4 (in development) - 2026-11-06 15:08 CET (Europe/Zagreb)
 
 - A02: preserve client-tag reservation ownership on repeated deletion; validate
   and reacquire ownership on resurrection. Use stored tags even when omitted
@@ -141,11 +162,6 @@
   old committed WAL through each SQLite backend, and reject duplicate/missing
   identities in supplemental protocol assertions. Add a resumable audit tracker.
 - This is an unreleased working-branch series, not an automatic server update.
-
-Newest entries first. Documentation-only entries do not change the binary version.
-Historical entries retain their known dates; missing times/timezones are not
-invented. February follow-up changes are grouped because individual timestamps
-were not recorded.
 
 ## docs - 2026-10-19 22:32 CEST (Europe/Zagreb)
 

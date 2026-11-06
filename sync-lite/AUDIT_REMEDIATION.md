@@ -1,7 +1,8 @@
 # Audit Remediation
 
-Work branch: `audit-remediation-0.4`. Target version: **0.4**, unreleased until
-the reviewed series is complete. Production remains untouched. Each finding is
+Work branch: `audit-remediation-0.4`. Candidate version: **0.4**, ready for human
+review and controlled staging, not a claimed production/browser validation.
+Production remains untouched. Each finding is
 an independent validated commit; the version identifies the whole release series,
 not each intermediate working-branch commit. All fixtures are synthetic.
 
@@ -17,11 +18,11 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A03 | P1 | Incoming identity controls stored-type/version policy | VERIFIED | `8ad6cd2`, pushed; focused/full/race/upgrades pass | No schema change |
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | VERIFIED | `726e2e5`, pushed; focused/full/race pass | No storage/startup/config change |
-| A01 | P1 | Precommit timestamps can fall behind issued tokens | VERIFIED | `4a0dc2e`, pushed; focused/full/race/supplemental/upgrades pass | Additive table; old tied cohorts not replayed |
+| A01 | P1 | Precommit timestamps can fall behind issued tokens | VERIFIED | `4a0dc2e`, `612b02d`, pushed; focused/full/race/supplemental/upgrades pass | Additive table; old tied cohorts not replayed |
 | A02 | P1 | Tag ownership and resurrection accounting | VERIFIED | `6ae54c3`, pushed; focused/full/race/supplemental/upgrades pass | Requires A06 coordination |
-| A06 | P2 | Concurrent absolute quota snapshots lose deltas | VERIFIED | `58ef410`, pushed; focused/full/race/upgrades pass | Single service process; approximate quotas preserved |
-| A09 | P2 | Failed drain closes storage under active requests | VERIFIED | `992ea1f`, pushed; focused/full/race/smoke/upgrades pass | Force failure preserves committed WAL; no atomic-batch promise |
-| A05 | P2 | Expired History records remain forever | VERIFIED | `19e533c`, pushed; focused/full/race/upgrades pass | Normal tombstones preserved; no startup bulk deletion |
+| A06 | P2 | Concurrent absolute quota snapshots lose deltas | VERIFIED | `58ef410`, `3f16969`, pushed; focused/full/race/upgrades pass | Single service process; approximate quotas preserved |
+| A09 | P2 | Failed drain closes storage under active requests | VERIFIED | `992ea1f`, `579514b`, pushed; focused/full/race/smoke/upgrades pass | Force failure preserves committed WAL; clear is atomic |
+| A05 | P2 | Expired History records remain forever | VERIFIED | `19e533c`, `ee28db8`, pushed; focused/full/race/upgrades pass | Normal tombstones preserved; no startup bulk deletion |
 | A07 | P2 | Unvisited expired hints retain memory | VERIFIED | `56166df`, pushed; focused/full/race pass | Interim counters never evicted |
 | A10 | P2 | Clear-data unnecessarily loads all payloads | VERIFIED | `0e8715a`, pushed; focused/full/race/benchmark/upgrades pass | Returned identity metadata and disabled marker preserved |
 | A11 | P2 | File privacy inherits permissive defaults | VERIFIED | `54daa1b`, pushed; focused/full/race/smoke/upgrades pass | Existing modes deliberately preserved |
@@ -31,7 +32,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 
 ## Validation And Scope
 
-Use `GO=/path/to/go` with the existing check, smoke, upgrade and build helpers.
+Use `./scripts/validate-remediation.sh` with its fixed documented modes; SDK
+selection and execution details live inside the helper, never in approval prefixes.
 Run upgrade matrices against `1c0d957` (0.2), `287bdec` (0.3), and
 `07d147a` (0.3.1). Independently exercise each backend's first open of committed
 old-version WAL, plus cross-driver reopen. No live databases, profiles, secrets,
@@ -56,9 +58,9 @@ and identity-set exhaustion. `check`, `smoke`, `supplemental`, and `upgrades`
 passed with Go 1.26.10. Upgrade matrix: all three baselines, independently through
 modernc and mattn, clean/WAL, old-version read/write reopen, plus cross-driver.
 No application schema/configuration change; only service version metadata changes
-to 0.4 for the unreleased series. Commit subject `[A12]`; push pending until the
-next tracking update (now confirmed pushed as `287806f`). A helper edited during its first run produced a shell
-parser failure after the matrix; the complete stable helper was rerun successfully.
+to 0.4 for the candidate series. Commit `287806f` was pushed. A helper edited
+during its first run produced a parser failure after the matrix; the complete
+stable helper was rerun successfully before committing.
 
 ### A03 - 2026-11-06 14:55 CET
 
@@ -68,7 +70,7 @@ was accepted. Update now reads stored type/tag, rejects identity changes, applie
 the History exception only to stored History, and uses stored tag for deletion.
 Omitted tags remain valid. Both focused driver tests, complete check helper and
 all three clean/WAL upgrade matrices passed. No schema, config or existing-row
-rewrite. Commit subject `[A03]`; push recorded by the next tracking update.
+rewrite. Commit `8ad6cd2` was pushed.
 
 ### A04 - 2026-11-06 14:57 CET
 
@@ -89,14 +91,14 @@ INVALID_MESSAGE result without aborting valid siblings. Both focused backends
 and full check/race suites passed, including opaque encrypted remote edits.
 No storage, startup, dependencies or configuration changed; the A04 upgrade
 matrix remains applicable. Future unknown-only specifics are explicitly rejected,
-not acknowledged and lost. Commit `[A08]`, push recorded next.
+not acknowledged and lost. Commit `726e2e5` was pushed.
 
 ### A01 - 2026-11-06 15:03 CET
 
 Red tests confirmed missed late commits and tied timestamps. Allocate from the
 greater of the supplied timestamp and persisted clock/existing-row maximum + 1,
 after acquiring SQLite's writer lock, before committing the entity. Fresh pointer
-assignment preserves aliased creation times. Root versions stay unchanged.
+assignment preserves aliased creation times. Initial root version 1 stays unchanged.
 The durable table anticipates bounded expiry cleanup without losing watermark
 state. No automatic existing-data rewrite or token replay is performed.
 
@@ -128,7 +130,7 @@ sharing one DB are not supported. Existing version-2 counters/root offsets are
 not recounted. Both focused suites, full/race checks and all archived upgrade
 matrices passed. No schema/config change beyond A01. Commit `[A06]`.
 
-### A02 - 2026-11-06 15:09 CET
+### A02 - 2026-11-06 15:08 CET
 
 Red protocol tests reproduced releasing another live identity's reservation and
 failure to restore the normal count after resurrection. Updates now use stored
@@ -248,11 +250,13 @@ persistence. `[A15]`.
 
 ## Independent Integration Review Follow-Up
 
-The read-only integration review found three cases requiring correction before
-final sign-off: A06's gate includes slow network IO; A09 cancellation can interrupt
-the two-step disable/clear sequence; A05 tag ownership needs NULL-safe expiry.
-Their original tests passed, but they are not considered finally resolved until
-these additional regressions pass. No production deployment occurred.
+The independent read-only integration review found three additional cases:
+A06's gate included slow network IO; A09 cancellation could interrupt the two-step
+disable/clear sequence; A05 tag ownership needed NULL-safe expiry. All three now
+have red/green regressions and pushed corrections. A targeted A01 root-version
+case was also reproduced and corrected. Follow-up static review found no remaining
+blocker in these paths; its reviewer did not run the coordinator's tests. No
+production deployment occurred.
 
 ### A06 Follow-Up - 2026-11-06 15:42 CET
 
@@ -292,3 +296,37 @@ for the initial server-tag batch. Normal updates, including Nigori roots, advanc
 matching timestamp/version values and reject stale versions. Both focused
 backends, full/race suites and all archived upgrade matrices passed. Initial root
 version 1 and original creation times remain covered. No schema change.
+
+### A12 Follow-Up - 2026-11-06 15:54 CET
+
+Upgrade stages now use each compiled version's real InsertSyncEntity and
+GetUpdatesForType APIs, rather than raw SQL writes. Exact pre-write snapshot
+comparison remains unchanged. All three archived baselines passed independent
+clean/WAL modernc/mattn upgrade and old-version reopen/write/readback, plus
+cross-driver sequences. A12's helper mode now invokes smoke/upgrade/supplemental
+checks explicitly instead of allowing an empty focused-test selection. The check
+helper also verifies downloaded module checksums. Candidate docs, TODO and
+finished-task status are aligned with this validated series.
+
+## Implementation Map
+
+| Findings | Production files | Regression evidence |
+| --- | --- | --- |
+| A01 | `sqlite_clock.go`, `sqlite_store.go` | `audit_clock_test.go`, upgrade matrices |
+| A02, A03 | `sqlite_store.go`, `command_store.go` | `audit_lifecycle_test.go`, `audit_identity_test.go` |
+| A04, A08, A14 | `main.go`, `protocol_validation.go` | `audit_http_test.go`, `audit_validation_test.go`, `audit_methods_test.go` |
+| A05 | `sqlite_expiration.go`, `sqlite_store.go` | `audit_expiration_test.go`, legacy preservation tests |
+| A06 | `command_dispatch.go`, `command_gate.go` | `audit_accounting_test.go` |
+| A07 | `memory_cache.go` | `audit_cache_test.go` |
+| A09 | `server_lifecycle.go`, `command_store.go`, `sqlite_store.go` | `audit_shutdown_test.go`, real-process smoke |
+| A10 | `sqlite_store.go` | `audit_clear_test.go`, fixed benchmark mode |
+| A11 | `sqlite_store.go`, unit/README examples | `audit_permissions_test.go` |
+| A12 | test/upgrade/smoke/check helpers and synthetic fixtures | independent WAL matrices, negative sentinel check, identity-set assertions |
+| A13 | `device_admission.go`, `command_store.go` | `audit_admission_test.go` |
+| A15 | `sqlite_store.go` | `audit_memory_test.go` |
+
+The HTTP layer authenticates and bounds/validates the body before serializing
+only command state. A request-owned adapter preserves upstream API contracts
+while handling cancellation, resurrection deltas, atomic clear and device
+admission. SQLite remains authoritative; hints are disposable and quota counters
+remain approximate. No new service, framework or runtime dependency was added.

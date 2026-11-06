@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/brave/go-sync/datastore"
 )
 
 // scripts/test-upgrade.sh copies this test into the archived v0.2 sources and
@@ -87,11 +89,29 @@ func TestUpgradeFixture(t *testing.T) {
 			}
 			t.Fatalf("synthetic snapshot length changed: got %d, expected %d", len(got), len(expected))
 		}
-		if _, err := s.db.ExecContext(ctx, `INSERT INTO sync_entities
-			(client_id, id, version, mtime, deleted, specifics, data_type, folder)
-			VALUES ('upgrade-writes', ?, 1, 1000, 0, ?, 32904, 0)`, stage,
-			[]byte{0, 0xff, 0x80, 0, 0xa5}); err != nil {
-			t.Fatalf("write with %s: %v", stage, err)
+		stamp, version, dataType := int64(1000), int64(1), 32904
+		deleted, folder := false, false
+		entity := &datastore.SyncEntity{ClientID: "upgrade-writes", ID: stage,
+			Version: &version, Mtime: &stamp, Deleted: &deleted, Folder: &folder,
+			DataType: &dataType, Specifics: []byte{0, 0xff, 0x80, 0, 0xa5}}
+		if conflict, err := s.InsertSyncEntity(ctx, entity); err != nil || conflict {
+			t.Fatalf("datastore write with %s: conflict=%v error=%v", stage, conflict, err)
+		}
+		_, records, err := s.GetUpdatesForType(ctx, 32904, 0, true, "upgrade-writes", 100)
+		if err != nil {
+			t.Fatal(err)
+		}
+		found := false
+		for _, record := range records {
+			if record.ID == stage {
+				found = true
+				if !bytes.Equal(record.Specifics, entity.Specifics) {
+					t.Fatal("datastore read changed new payload bytes")
+				}
+			}
+		}
+		if !found {
+			t.Fatal("datastore write not visible through GetUpdates")
 		}
 	}
 	var integrity string
