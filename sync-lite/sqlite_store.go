@@ -49,6 +49,12 @@ func NewSQLiteStore(path string) (*SQLiteStore, error) {
 	if err != nil {
 		return nil, err
 	}
+	if path == ":memory:" {
+		// This DSN is private per physical connection. Retain exactly one for
+		// the store lifetime, rather than silently opening independent databases.
+		db.SetMaxOpenConns(1)
+		db.SetMaxIdleConns(1)
+	}
 	store := &SQLiteStore{db: db, commandGate: make(chan struct{}, 1)}
 	if os.Getenv("SYNC_LOG_CONFLICTS") == "1" {
 		store.conflicts = &conflictDiagnostics{logger: log.Default(), last: make(map[conflictLogKey]time.Time)}

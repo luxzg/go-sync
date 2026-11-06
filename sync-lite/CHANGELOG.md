@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:28 CET (Europe/Zagreb)
+
+- A15: retain one private physical connection for each `:memory:` store, avoiding
+  pool-created empty databases while preserving isolation between stores. Disk
+  pooling is unchanged. Both backends/races, smoke and upgrade checks passed.
+
 ## 0.4 (in development) - 2026-11-06 15:26 CET (Europe/Zagreb)
 
 - A14: require POST for authenticated sync commands on both endpoint aliases;

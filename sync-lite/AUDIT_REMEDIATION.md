@@ -26,8 +26,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A10 | P2 | Clear-data unnecessarily loads all payloads | VERIFIED | `0e8715a`, pushed; focused/full/race/benchmark/upgrades pass | Returned identity metadata and disabled marker preserved |
 | A11 | P2 | File privacy inherits permissive defaults | VERIFIED | `54daa1b`, pushed; focused/full/race/smoke/upgrades pass | Existing modes deliberately preserved |
 | A13 | P2 | Upstream new-device scan repeats the first page | VERIFIED | `b5a8ae5`, pushed; focused/full/race pass | Threshold contract tests; no parent edits |
-| A14 | P3 | Authenticated non-POST requests can mutate state | IN PROGRESS | 405 / Allow POST after auth | Unauthenticated probes retain 401 |
-| A15 | P3 | In-memory database connection lifetime/isolation | PENDING | | |
+| A14 | P3 | Authenticated non-POST requests can mutate state | VERIFIED | `5a10b6c`, pushed; focused/full/race/smoke pass | Unauthenticated probes retain 401 |
+| A15 | P3 | In-memory database connection lifetime/isolation | IN PROGRESS | Retain one private physical connection | Disk pooling unchanged |
 
 ## Validation And Scope
 
@@ -236,3 +236,20 @@ now rejects unsupported methods before admission/body/database work, returning
 checks. Both aliases, GET/PUT/PATCH/DELETE/HEAD, and no-mutation assertions pass
 on both drivers. Full/race and real HTTP/HTTPS smoke checks passed. No storage,
 startup or config change; prior upgrade checks remain applicable. `[A14]`.
+
+### A15 - 2026-11-06 15:28 CET
+
+Red tests opened a second empty database, producing missing sync_entities and
+sync_clocks tables. Memory stores now retain exactly one open/idle connection;
+waiters respect cancellation and separate stores stay private. Disk-backed pools
+are unchanged. Both focused backends, full/race suites, smoke and all archived
+upgrade matrices passed. The memory mode remains disposable, not production
+persistence. `[A15]`.
+
+## Independent Integration Review Follow-Up
+
+The read-only integration review found three cases requiring correction before
+final sign-off: A06's gate includes slow network IO; A09 cancellation can interrupt
+the two-step disable/clear sequence; A05 tag ownership needs NULL-safe expiry.
+Their original tests passed, but they are not considered finally resolved until
+these additional regressions pass. No production deployment occurred.
