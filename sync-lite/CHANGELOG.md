@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:09 CET (Europe/Zagreb)
+
+- A02: preserve client-tag reservation ownership on repeated deletion; validate
+  and reacquire ownership on resurrection. Use stored tags even when omitted
+  from updates. Account for confirmed resurrection with request-local deltas,
+  preserving existing quota baselines and the upstream datastore interface.
+
 ## 0.4 (in development) - 2026-11-06 15:05 CET (Europe/Zagreb)
 
 - A06: serialize complete authenticated commands with cancellable waiting so

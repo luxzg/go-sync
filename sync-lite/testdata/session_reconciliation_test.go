@@ -240,8 +240,8 @@ func TestSessionReconciliationExperimentInheritedTagRelease(t *testing.T) {
 	if err := reconciliationStage(context.Background(), h.db, chain, entries); err != nil {
 		t.Fatal(err)
 	}
-	// Characterize an inherited limitation, not a repair guarantee: deleting
-	// another same-tag tombstone can release the active identity's reservation.
+	// 0.4 preserves a live identity's reservation when another same-tag
+	// tombstone is deleted again. This intentionally replaces the old behavior.
 	oldDeletion := makeCommitEntity("synthetic-old-0-4", entries[0].Specifics)
 	oldDeletion.Version = int64Ptr(204)
 	oldDeletion.Deleted = boolPtr(true)
@@ -256,8 +256,8 @@ func TestSessionReconciliationExperimentInheritedTagRelease(t *testing.T) {
 		chain, entries[0].GetIdString()).Scan(&activeCount); err != nil {
 		t.Fatal(err)
 	}
-	if reservationCount != 0 || activeCount != 1 {
-		t.Fatal("inherited reservation ownership behavior changed; re-review recovery assumptions")
+	if reservationCount != 1 || activeCount != 1 {
+		t.Fatal("deleting a tombstone released a live identity's reservation")
 	}
 }
 

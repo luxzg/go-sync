@@ -18,8 +18,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | VERIFIED | `726e2e5`, pushed; focused/full/race pass | No storage/startup/config change |
 | A01 | P1 | Precommit timestamps can fall behind issued tokens | VERIFIED | `4a0dc2e`, pushed; focused/full/race/supplemental/upgrades pass | Additive table; old tied cohorts not replayed |
-| A02 | P1 | Tag ownership and resurrection accounting | PENDING | | |
-| A06 | P2 | Concurrent absolute quota snapshots lose deltas | IN PROGRESS | Complete-command cancellable gate | Single service process; approximate quotas preserved |
+| A02 | P1 | Tag ownership and resurrection accounting | IN PROGRESS | Stored-tag owner guard; request-owned resurrection deltas | Requires A06 coordination |
+| A06 | P2 | Concurrent absolute quota snapshots lose deltas | VERIFIED | `58ef410`, pushed; focused/full/race/upgrades pass | Single service process; approximate quotas preserved |
 | A09 | P2 | Failed drain closes storage under active requests | PENDING | | |
 | A05 | P2 | Expired History records remain forever | PENDING | | |
 | A07 | P2 | Unvisited expired hints retain memory | PENDING | | |
@@ -127,3 +127,19 @@ must remain inside that coordinated command path; multiple service processes
 sharing one DB are not supported. Existing version-2 counters/root offsets are
 not recounted. Both focused suites, full/race checks and all archived upgrade
 matrices passed. No schema/config change beyond A01. Commit `[A06]`.
+
+### A02 - 2026-11-06 15:09 CET
+
+Red protocol tests reproduced releasing another live identity's reservation and
+failure to restore the normal count after resurrection. Updates now use stored
+identity and effective deletion state; repeated deletion cannot release a live
+owner's reservation, and resurrection checks ownership and reacquires its tag.
+Omitted tags/deletion fields retain their meanings. A request-owned adapter adds
+resurrection deltas when upstream saves counts, under A06's complete-command gate.
+This preserves the public deleted-only datastore return contract and existing
+counter offsets; quotas remain approximate, not strict per-batch admission.
+
+Both focused driver tests, full/race checks, supplemental lifecycle tests and
+all three archived upgrade matrices passed. The supplemental characterization
+that expected the old tag-release defect now explicitly requires preservation.
+No existing entities/tags/counters are rewritten on startup. Commit `[A02]`.

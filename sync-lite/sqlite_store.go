@@ -199,6 +199,10 @@ func (s *SQLiteStore) InsertSyncEntitiesWithServerTags(ctx context.Context, enti
 }
 
 func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.SyncEntity, oldVersion int64) (bool, bool, error) {
+	return s.updateSyncEntity(ctx, entity, oldVersion, nil)
+}
+
+func (s *SQLiteStore) updateSyncEntity(ctx context.Context, entity *datastore.SyncEntity, oldVersion int64, resurrected func()) (bool, bool, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return false, false, err
@@ -234,6 +238,26 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 		if !currentVersion.Valid || currentVersion.Int64 != oldVersion {
 			s.logConflict("update", "version_mismatch", entity)
 			return true, false, nil
+		}
+	}
+	oldDeleted := oldDeletedRaw.Valid && oldDeletedRaw.Int64 != 0
+	newDeleted := oldDeleted
+	if entity.Deleted != nil {
+		newDeleted = *entity.Deleted
+	}
+	if oldDeleted && !newDeleted && storedTag.Valid && int(storedType.Int64) != datastore.HistoryTypeID {
+		var owners int
+		if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM sync_entities
+			WHERE client_id=? AND client_defined_unique_tag=? AND id<>?
+			AND data_type<>? AND COALESCE(deleted,0)=0`, entity.ClientID, storedTag.String, entity.ID, datastore.HistoryTypeID).Scan(&owners); err != nil {
+			return false, false, err
+		}
+		if owners != 0 {
+			return true, false, nil
+		}
+		now := time.Now().UnixMilli()
+		if _, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO unique_tags (client_id,id,mtime,ctime) VALUES (?,?,?,?)`, entity.ClientID, clientTagItemPrefix+storedTag.String, now, now); err != nil {
+			return false, false, err
 		}
 	}
 
@@ -274,9 +298,12 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 	if entity.Deleted != nil && storedTag.Valid &&
 		*entity.Deleted && int(storedType.Int64) != datastore.HistoryTypeID {
 		_, err = tx.ExecContext(ctx,
-			`DELETE FROM unique_tags WHERE client_id = ? AND id = ?`,
+			`DELETE FROM unique_tags WHERE client_id = ? AND id = ?
+			AND NOT EXISTS (SELECT 1 FROM sync_entities WHERE client_id=?
+			AND client_defined_unique_tag=? AND data_type<>? AND COALESCE(deleted,0)=0)`,
 			entity.ClientID,
 			clientTagItemPrefix+storedTag.String,
+			entity.ClientID, storedTag.String, datastore.HistoryTypeID,
 		)
 		if err != nil {
 			return false, false, err
@@ -287,8 +314,9 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, false, err
 	}
 
-	oldDeleted := oldDeletedRaw.Valid && oldDeletedRaw.Int64 != 0
-	newDeleted := entity.Deleted != nil && *entity.Deleted
+	if oldDeleted && !newDeleted && resurrected != nil {
+		resurrected()
+	}
 	return false, !oldDeleted && newDeleted, nil
 }
 

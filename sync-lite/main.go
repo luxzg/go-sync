@@ -187,7 +187,7 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 		}
 
 		pbRsp := &sync_pb.ClientToServerResponse{}
-		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, db, clientID); err != nil {
+		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, &commandStore{SQLiteStore: db}, clientID); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
