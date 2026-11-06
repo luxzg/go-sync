@@ -1,5 +1,9 @@
 # Open Work
 
+The authorized audit backlog is tracked in [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
+Version 0.4 is in development on a separate non-deploying branch. Existing
+release and field evidence below refer to 0.3.1 unless explicitly stated.
+
 Updated 2026-10-19 for `0.3.1`. This file contains remaining work; completed `0.3`
 checks/helpers are archived in [FINISHED_TASKS.md](FINISHED_TASKS.md).
 Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is

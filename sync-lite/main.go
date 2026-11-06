@@ -24,7 +24,7 @@ import (
 
 const (
 	payloadLimit10MB = 10 * 1024 * 1024
-	version          = "0.3.1"
+	version          = "0.4"
 )
 
 func main() {

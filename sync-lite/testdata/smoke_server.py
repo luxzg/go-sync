@@ -39,7 +39,12 @@ def stop(process, requested_signal):
     assert "checkpoint error" not in stderr, stderr
 
 
-def run_server(binary, directory, tls, requested_signal):
+def verify_payload(db):
+    row = db.execute("SELECT specifics FROM sync_entities WHERE id='opaque-item'").fetchone()
+    assert row == (b"\x00\xff\x80\x00synthetic",), "persisted sentinel missing or changed"
+
+
+def run_server(binary, directory, tls, requested_signal, seed=False):
     with socket.socket() as available:
         available.bind(("127.0.0.1", 0))
         port = available.getsockname()[1]
@@ -77,16 +82,19 @@ def run_server(binary, directory, tls, requested_signal):
         assert probe(base + "/v2/command/", context) == 401
         with sqlite3.connect(database) as db:
             assert db.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
-            db.execute(
-                "INSERT OR IGNORE INTO sync_entities "
-                "(client_id, id, specifics) VALUES ('smoke-chain', 'opaque-item', ?)",
-                (b"\x00\xff\x80\x00synthetic",),
-            )
+            if seed:
+                db.execute(
+                    "INSERT INTO sync_entities "
+                    "(client_id, id, specifics) VALUES ('smoke-chain', 'opaque-item', ?)",
+                    (b"\x00\xff\x80\x00synthetic",),
+                )
+            else:
+                # Check immediately after restart, before any fixture writes.
+                verify_payload(db)
         stop(process, requested_signal)
         with sqlite3.connect(database) as db:
             assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
-            payload = db.execute("SELECT specifics FROM sync_entities WHERE id='opaque-item'").fetchone()[0]
-            assert payload == b"\x00\xff\x80\x00synthetic"
+            verify_payload(db)
     finally:
         if process.poll() is None:
             process.kill()
@@ -95,6 +103,14 @@ def run_server(binary, directory, tls, requested_signal):
 
 def main():
     work = Path(sys.argv[1]).resolve()
+    with sqlite3.connect(":memory:") as db:
+        db.execute("CREATE TABLE sync_entities (id TEXT, specifics BLOB)")
+        try:
+            verify_payload(db)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("missing sentinel incorrectly passed verification")
     for backend in ("modernc", "mattn"):
         binary = work / backend
         directory = work / f"state-{backend}"
@@ -103,7 +119,9 @@ def main():
         environment = os.environ.copy()
         environment["SQLITE_PATH"] = str(probe_path)
         version = subprocess.check_output([str(binary), "--version"], env=environment, text=True)
-        assert version.split()[1] == "0.3.1" and f"sqlite: {backend}" in version, version
+        expected_version = (Path(__file__).resolve().parent.parent / "main.go").read_text()
+        assert f'version          = "{version.split()[1]}"' in expected_version, version
+        assert f"sqlite: {backend}" in version, version
         assert not probe_path.exists(), "--version opened a database"
         subprocess.run(
             ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes",
@@ -113,7 +131,7 @@ def main():
             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
         for tls in (False, True):
-            run_server(binary, directory, tls, signal.SIGINT)
+            run_server(binary, directory, tls, signal.SIGINT, seed=not tls)
             run_server(binary, directory, tls, signal.SIGTERM)
         invalid_environment = environment.copy()
         invalid_environment.update(

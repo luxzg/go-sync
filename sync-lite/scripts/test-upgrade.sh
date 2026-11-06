@@ -32,10 +32,12 @@ cd "$LITE_DIR"
 CGO_ENABLED=0 "$GO" test -c -o "$WORK_DIR/modernc.test" .
 CGO_ENABLED=1 "$GO" test -tags sqlite_cgo -c -o "$WORK_DIR/mattn.test" .
 
+for target in modernc mattn cross-driver; do
 for mode in clean wal; do
-  mkdir "$WORK_DIR/$mode"
-  printf 'sync-lite disposable upgrade fixture\n' >"$WORK_DIR/$mode/.synthetic-upgrade-test"
-  export SYNC_LITE_UPGRADE_TEST_DIR="$WORK_DIR/$mode"
+  fixture_dir="$WORK_DIR/$target-$mode"
+  mkdir "$fixture_dir"
+  printf 'sync-lite disposable upgrade fixture\n' >"$fixture_dir/.synthetic-upgrade-test"
+  export SYNC_LITE_UPGRADE_TEST_DIR="$fixture_dir"
   export SYNC_LITE_UPGRADE_STAGE=seed
   if [[ "$mode" == wal ]]; then
     export SYNC_LITE_UPGRADE_LEAVE_WAL=1
@@ -45,13 +47,18 @@ for mode in clean wal; do
     "$WORK_DIR/old.test" -test.run '^TestUpgradeFixture$' -test.v
   )
   unset SYNC_LITE_UPGRADE_LEAVE_WAL
-  if [[ "$mode" == wal && ! -s "$WORK_DIR/$mode/fixture.db-wal" ]]; then
+  if [[ "$mode" == wal && ! -s "$fixture_dir/fixture.db-wal" ]]; then
     echo 'Expected committed v0.2 WAL data for the recovery test' >&2
     exit 1
   fi
-  for backend in modernc mattn; do
+  backends=("$target")
+  if [[ "$target" == cross-driver ]]; then
+    backends=(modernc mattn)
+  fi
+  for backend in "${backends[@]}"; do
     SYNC_LITE_UPGRADE_STAGE="$backend" "$WORK_DIR/$backend.test" -test.run '^TestUpgradeFixture$' -test.v
   done
   SYNC_LITE_UPGRADE_STAGE=old-version "$WORK_DIR/old.test" -test.run '^TestUpgradeFixture$' -test.v
-  echo "PASS: $BASELINE -> current modernc -> current mattn -> $BASELINE ($mode database)"
+  echo "PASS: $BASELINE -> current $target -> $BASELINE ($mode database)"
+done
 done

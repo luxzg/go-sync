@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 14:39 CET (Europe/Zagreb)
+
+- A12: strengthen restart persistence checks (seed once), independently recover
+  old committed WAL through each SQLite backend, and reject duplicate/missing
+  identities in supplemental protocol assertions. Add a resumable audit tracker.
+- This is an unreleased working-branch series, not an automatic server update.
+
 Newest entries first. Documentation-only entries do not change the binary version.
 Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps

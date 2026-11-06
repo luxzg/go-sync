@@ -167,6 +167,10 @@ func TestSessionReconciliationExperimentRetry(t *testing.T) {
 				if want == nil || !proto.Equal(got.Specifics, want.Specifics) || got.GetDeleted() != deleteOnRetry {
 					t.Fatal("retry did not replace staged specifics with the actual opaque client payload")
 				}
+				delete(byID, got.GetIdString())
+			}
+			if len(byID) != 0 {
+				t.Fatal("incremental poll omitted an expected identity")
 			}
 			for _, response := range protocolCommit(t, h, token, "synthetic-phone", entries...) {
 				if response.GetResponseType() != sync_pb.CommitResponse_CONFLICT {

@@ -79,6 +79,15 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 
 ## Workflow And Safety
 
+- Use permanent reviewable helpers for environment setup, pipelines, command
+  chaining, interpreter flags, timeout wrappers and repeated network probes.
+  Approval requests use the bare helper entry point and that same prefix; once
+  approved invoke its bounded modes directly, never wrap it in shell/env prefixes.
+  Run inspection, formatting and validation separately. Do not build arbitrary
+  command/passthrough wrappers or bypass denied operations. Explain new side
+  effects before extending an approved helper. `scripts/validate-remediation.sh`
+  pins this series' installed compiler and exposes fixed synthetic checks only.
+
 - Preserve unrelated edits and historical records. Use synthetic isolated
   fixtures for tests; never use live sync chains, browser profiles, phones,
   SQLite files, certs, keys, local `.env`, backups, or private diagnostics without
@@ -141,6 +150,11 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   This does not authorize new work, upstream merges, deployments, or data changes.
 
 ## Versioning And Records
+
+- The authorized 2026-11-06 remediation series targets `0.4` on
+  `audit-remediation-0.4`; see [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
+  Each validated finding is committed/pushed separately. Do not deploy or merge
+  the unfinished series automatically; release-version metadata spans the series.
 
 - The current release is `0.3.1`, dated 2026-10-19. Documentation-only
   updates do not bump the service version or imply a new deployed binary.

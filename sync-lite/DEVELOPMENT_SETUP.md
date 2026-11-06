@@ -89,6 +89,16 @@ possible with Go installed, but the production unit runs the binary, not `go run
 
 ## Validation Commands
 
+The 0.4 remediation series uses `./scripts/validate-remediation.sh` as a stable
+approval entry point. With no arguments it prints usage; fixed modes `check`,
+`smoke`, `upgrades`, `supplemental`, `build`, and `security` call the existing
+helpers using installed Go 1.26.10 from `~/sdk/go1.26.10`. `upgrades` covers
+actual 0.2, 0.3 and 0.3.1 source baselines. No mode accepts arbitrary commands,
+database paths or revisions, installs tools, or deploys. Build/cache writes,
+owned temporary files and loopback processes are the existing helpers' effects;
+security also queries the vulnerability database. Review the compiler pin when
+changing toolchains. Do not prefix the invocation with environment or shell setup.
+
 From `sync-lite/`:
 
 | Command | Scope and effects |

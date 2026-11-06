@@ -2,6 +2,10 @@
 
 Minimal Brave Sync server implementation for small self-hosted setups.
 
+**Working branch:** version 0.4 audit fixes are in development. The published
+0.3.1 deployment guidance below remains historical until the series is validated.
+See [remediation status and evidence](AUDIT_REMEDIATION.md) before using this branch.
+
 This is a fork of https://github.com/brave/go-sync.
 All custom modifications are contained within `/sync-lite/`; official upstream
 updates may also be merged into the fork.
