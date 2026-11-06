@@ -11,6 +11,11 @@ Follow [AGENTS.md](AGENTS.md) before starting. The next normal code release is
 
 ## P1: Validation And Repeatability
 
+- After the 0.4 commit-order fix, assess a client-compatible strategy for old
+  tied cohorts and updates already skipped by old scalar tokens. Do not
+  automatically retimestamp existing rows, reset chains, or replay private data.
+  Prevention for new writes does not retroactively recover past omissions.
+
 - Review client-tag reservation ownership during deletion. Deleting an older
   identity must not release a reservation still needed by another live identity
   with the same tag. Existing synthetic coverage characterizes this edge case;

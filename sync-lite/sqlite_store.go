@@ -69,6 +69,10 @@ func (s *SQLiteStore) CheckpointTruncate(ctx context.Context) error {
 
 func (s *SQLiteStore) initSchema(ctx context.Context) error {
 	stmts := []string{
+		`CREATE TABLE IF NOT EXISTS sync_clocks (
+			client_id TEXT NOT NULL, data_type INTEGER NOT NULL,
+			mtime INTEGER NOT NULL, PRIMARY KEY(client_id, data_type)
+		)`,
 		`CREATE TABLE IF NOT EXISTS sync_entities (
 			client_id TEXT NOT NULL,
 			id TEXT NOT NULL,
@@ -126,6 +130,9 @@ func (s *SQLiteStore) InsertSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, err
 	}
 	defer tx.Rollback()
+	if err := stampEntity(ctx, tx, entity); err != nil {
+		return false, err
+	}
 
 	if entity.ClientDefinedUniqueTag != nil && entity.DataType != nil && *entity.DataType != datastore.HistoryTypeID {
 		now := time.Now().UnixMilli()
@@ -168,6 +175,9 @@ func (s *SQLiteStore) InsertSyncEntitiesWithServerTags(ctx context.Context, enti
 
 	now := time.Now().UnixMilli()
 	for _, entity := range entities {
+		if err := stampEntity(ctx, tx, entity); err != nil {
+			return err
+		}
 		_, err = tx.ExecContext(ctx,
 			`INSERT INTO unique_tags (client_id, id, mtime, ctime) VALUES (?, ?, ?, ?)`,
 			entity.ClientID,
@@ -193,6 +203,9 @@ func (s *SQLiteStore) UpdateSyncEntity(ctx context.Context, entity *datastore.Sy
 		return false, false, err
 	}
 	defer tx.Rollback()
+	if err := stampEntity(ctx, tx, entity); err != nil {
+		return false, false, err
+	}
 
 	var currentVersion sql.NullInt64
 	var oldDeletedRaw sql.NullInt64

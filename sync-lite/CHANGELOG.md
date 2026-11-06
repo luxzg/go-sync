@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:03 CET (Europe/Zagreb)
+
+- A01: allocate commit-ordered per-chain/type timestamps in the entity write
+  transaction. Add durable `sync_clocks` state without rewriting existing rows.
+  Preserve root versions and creation times. Cover frozen clocks, 499/500/501
+  pages, late commits, independent handles, rollback and reopen on both drivers.
+- Actual 0.2/0.3/0.3.1 clean/WAL upgrades and old-version reopen passed. Legacy
+  snapshots still compare all original objects/rows exactly; the one new table
+  has independent schema/behavior tests. Existing tied cohorts/tokens are not
+  repaired automatically. Historical pagination fixtures now seed legacy raw
+  timestamps explicitly rather than expecting new writes to remain unordered.
+
 ## 0.4 (in development) - 2026-11-06 14:59 CET (Europe/Zagreb)
 
 - A08: validate optional envelope fields before reused handlers and route unsafe

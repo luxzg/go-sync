@@ -243,7 +243,13 @@ func TestSQLiteStoreUpdateAndDeletion(t *testing.T) {
 func TestSQLiteStorePaginationAndFilters(t *testing.T) {
 	s := sqliteTestOpen(t, filepath.Join(t.TempDir(), "pages.db"))
 	ctx := sqliteTestContext(t)
-	// Deliberately insert out of order and place filtered records between pages.
+	// Seed historical timestamps directly: new writes are commit-ordered in 0.4.
+	// Reading existing out-of-order rows must retain the original filter contract.
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
 	for _, mtime := range []int64{300, 100, 200, 150, 175} {
 		entity := sqliteTestEntity("chain-a", fmt.Sprintf("item-%d", mtime), mtime)
 		if mtime == 150 {
@@ -255,7 +261,12 @@ func TestSQLiteStorePaginationAndFilters(t *testing.T) {
 		if mtime == 300 {
 			entity.Deleted = sqliteTestPtr(true)
 		}
-		sqliteTestInsert(t, s, entity)
+		if err := insertSyncEntity(ctx, tx, &entity); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
 	}
 	sqliteTestInsert(t, s, sqliteTestEntity("chain-b", "foreign", 125))
 	otherType := sqliteTestEntity("chain-a", "other-type", 125)
@@ -661,7 +672,7 @@ func sqliteTestChainSnapshot(t *testing.T, db *sql.DB, chain string) map[string]
 func sqliteTestSnapshot(t *testing.T, db *sql.DB) map[string]any {
 	t.Helper()
 	result := map[string]any{
-		"schema": sqliteTestQuery(t, db, `SELECT type, name, tbl_name, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name`),
+		"schema": sqliteTestQuery(t, db, `SELECT type, name, tbl_name, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' AND name <> 'sync_clocks' ORDER BY type, name`),
 	}
 	for _, row := range sqliteTestQuery(t, db, `SELECT client_id FROM sync_entities UNION SELECT client_id FROM unique_tags UNION SELECT client_id FROM client_item_counts ORDER BY client_id`) {
 		chain := row[0].(string)

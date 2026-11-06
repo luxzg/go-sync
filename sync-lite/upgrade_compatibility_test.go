@@ -117,7 +117,9 @@ func TestUpgradeFixture(t *testing.T) {
 func upgradeSnapshot(t *testing.T, ctx context.Context, db *sql.DB) []byte {
 	t.Helper()
 	queries := []string{
-		`SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name`,
+		// 0.4 adds only this clock table; retain byte-exact checks for every
+		// pre-existing object and row, including BLOB/NULL distinctions.
+		`SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name <> 'sync_clocks' ORDER BY type, name`,
 		`SELECT * FROM sync_entities ORDER BY client_id, id`,
 		`SELECT * FROM unique_tags ORDER BY client_id, id`,
 		`SELECT * FROM client_item_counts ORDER BY client_id`,

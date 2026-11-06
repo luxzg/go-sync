@@ -160,6 +160,27 @@ payloads. See [diagnosing commit conflicts](MANUAL_TESTING.md#diagnosing-persist
   - A busy checkpoint is reported as an error; journal files must never be deleted manually.
 - Both drivers use synchronous=FULL and a 5000 ms busy timeout on each connection.
 
+### 0.4 Storage Compatibility
+
+The working series automatically adds the small `sync_clocks` table. It does not
+rewrite existing entities, tokens, counts, tags or encrypted payloads. Subsequent
+entity writes allocate strictly increasing per-chain/type timestamps under
+SQLite's writer lock, so commit order and scalar progress tokens agree even
+within one millisecond. Clock state commits with the entity and survives restart
+and future expiry cleanup. Creation times and server-root version conventions stay.
+
+Existing configuration and database files remain usable. Follow the backup-first
+binary update procedure below, substituting **0.4** for the historical 0.3.1
+candidate names. No export/import or client reset is required. Automated checks
+include actual 0.2, 0.3 and 0.3.1 fixtures through both backends and old-version
+reopen. Older binaries ignore the new table but reintroduce the old ordering bug;
+binary rollback is not a database restore or an automatic recovery procedure.
+
+This prevents new timestamp ties and late-commit omissions. It does not repair
+already-issued old tokens or replay previously skipped records, and old tied
+cohorts can still straddle a page. Existing records are deliberately not
+retimestamped. Do not reset a valuable chain as an upgrade step.
+
 ## Brave Setup Notes
 ### 1) Custom sync URL support (closed/resolved)
 Brave has support for overriding sync server URL, including Android workflows. See:

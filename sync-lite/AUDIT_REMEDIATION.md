@@ -16,8 +16,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A12 | P2 | Restart reseeding and chained WAL tests mask failures | VERIFIED | `287806f`, pushed; check/smoke/supplemental/upgrades pass | All three actual archived baselines, both drivers independently |
 | A03 | P1 | Incoming identity controls stored-type/version policy | VERIFIED | `8ad6cd2`, pushed; focused/full/race/upgrades pass | No schema change |
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
-| A08 | P2 | Optional wire fields violate upstream semantic preconditions | IN PROGRESS | Semantic validation before dispatch | No storage/startup/config change |
-| A01 | P1 | Precommit timestamps can fall behind issued tokens | PENDING | | |
+| A08 | P2 | Optional wire fields violate upstream semantic preconditions | VERIFIED | `726e2e5`, pushed; focused/full/race pass | No storage/startup/config change |
+| A01 | P1 | Precommit timestamps can fall behind issued tokens | IN PROGRESS | Transaction-owned durable clocks | Additive table; old tied cohorts not replayed |
 | A02 | P1 | Tag ownership and resurrection accounting | PENDING | | |
 | A06 | P2 | Concurrent absolute quota snapshots lose deltas | PENDING | | |
 | A09 | P2 | Failed drain closes storage under active requests | PENDING | | |
@@ -90,3 +90,25 @@ and full check/race suites passed, including opaque encrypted remote edits.
 No storage, startup, dependencies or configuration changed; the A04 upgrade
 matrix remains applicable. Future unknown-only specifics are explicitly rejected,
 not acknowledged and lost. Commit `[A08]`, push recorded next.
+
+### A01 - 2026-11-06 15:03 CET
+
+Red tests confirmed missed late commits and tied timestamps. Allocate from the
+greater of the supplied timestamp and persisted clock/existing-row maximum + 1,
+after acquiring SQLite's writer lock, before committing the entity. Fresh pointer
+assignment preserves aliased creation times. Root versions stay unchanged.
+The durable table anticipates bounded expiry cleanup without losing watermark
+state. No automatic existing-data rewrite or token replay is performed.
+
+Focused tests cover late preconstructed writes, frozen/backward time,
+499/500/501 entries including tombstones, two concurrent store handles, failed
+transaction rollback, clock schema and restart. Both drivers passed. Full check,
+both race suites, supplemental checks and all three archived clean/WAL upgrade
+matrices passed. Compatibility assertions exclude only the explicitly added
+clock schema object; original table definitions, row values and BLOBs remain
+exact. Historical filter tests intentionally seed raw legacy timestamps; new
+writes no longer promise caller-chosen out-of-order modification times.
+
+Known limit: old tied cohorts and records skipped by already-issued old tokens
+are not repaired. A client-compatible replay/cursor design is separate follow-up;
+no chain reset or automatic retimestamping is authorized. Commit `[A01]`.
