@@ -15,8 +15,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | --- | --- | --- | --- | --- | --- |
 | A12 | P2 | Restart reseeding and chained WAL tests mask failures | VERIFIED | `287806f`, pushed; check/smoke/supplemental/upgrades pass | All three actual archived baselines, both drivers independently |
 | A03 | P1 | Incoming identity controls stored-type/version policy | VERIFIED | `8ad6cd2`, pushed; focused/full/race/upgrades pass | No schema change |
-| A04 | P1 | Incomplete HTTP limits and absent deadlines | IN PROGRESS | Independent wire/decoded limits; server deadlines | Schema/config unchanged |
-| A08 | P2 | Optional wire fields violate upstream semantic preconditions | PENDING | | |
+| A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
+| A08 | P2 | Optional wire fields violate upstream semantic preconditions | IN PROGRESS | Semantic validation before dispatch | No storage/startup/config change |
 | A01 | P1 | Precommit timestamps can fall behind issued tokens | PENDING | | |
 | A02 | P1 | Tag ownership and resurrection accounting | PENDING | | |
 | A06 | P2 | Concurrent absolute quota snapshots lose deltas | PENDING | | |
@@ -79,3 +79,14 @@ with trailing fields, invalid gzip CRC, no writes on rejection, positive server
 deadlines and actual slow header/body sockets. Focused tests passed on both
 drivers; full checks/races and HTTP/HTTPS smoke passed. No stored-data or config
 changes; prior-version fixture matrix rerun for startup compatibility.
+
+### A08 - 2026-11-06 14:59 CET
+
+Five pre-fix regressions reproduced handler panics: absent GetUpdates payload,
+missing marker type, empty/unknown-only specifics, and History without its tag.
+Malformed envelopes return 400; unsafe commit entries reach upstream's existing
+INVALID_MESSAGE result without aborting valid siblings. Both focused backends
+and full check/race suites passed, including opaque encrypted remote edits.
+No storage, startup, dependencies or configuration changed; the A04 upgrade
+matrix remains applicable. Future unknown-only specifics are explicitly rejected,
+not acknowledged and lost. Commit `[A08]`, push recorded next.

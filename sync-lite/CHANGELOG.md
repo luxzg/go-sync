@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 14:59 CET (Europe/Zagreb)
+
+- A08: validate optional envelope fields before reused handlers and route unsafe
+  empty/unknown specifics or missing History tags to per-entry INVALID_MESSAGE.
+  Valid entries in the same batch and typed encrypted data retain normal behavior.
+
 ## 0.4 (in development) - 2026-11-06 14:57 CET (Europe/Zagreb)
 
 - A04: enforce independent 10 MiB wire/decoded request limits without accepting

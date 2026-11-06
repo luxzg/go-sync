@@ -176,6 +176,10 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 			http.Error(w, "Unmarshal error", http.StatusInternalServerError)
 			return
 		}
+		if err := prepareCommand(pb); err != nil {
+			http.Error(w, "Invalid command payload", http.StatusBadRequest)
+			return
+		}
 
 		pbRsp := &sync_pb.ClientToServerResponse{}
 		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, db, clientID); err != nil {
