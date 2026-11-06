@@ -308,10 +308,17 @@ sudo chmod +x /usr/local/bin/sync-lite
 ### 3) Create service user and directories
 ```bash
 sudo useradd --system --home /var/lib/sync-lite --shell /usr/sbin/nologin sync-lite || true
-sudo mkdir -p /etc/sync-lite /var/lib/sync-lite
-sudo chown -R sync-lite:sync-lite /var/lib/sync-lite
+sudo mkdir -p /etc/sync-lite
+sudo install -d -o sync-lite -g sync-lite -m 0700 /var/lib/sync-lite
 ```
 Note: Make sure your new user `sync-lite` can access and read certificate and key files!
+
+These directory commands are for a fresh installation. When upgrading, review
+existing ownership/modes instead of recursively changing them; intentional
+group-readable backup/certificate setups may need their existing access retained.
+New database files are created owner-only (0600), without chmodding existing
+files. The service umask below keeps newly created artifacts private. Database
+metadata, journals and backups are private even when payloads are encrypted.
 
 ### 4) Create env config (HTTP test or HTTPS production)
 Create env file:
@@ -378,6 +385,7 @@ Wants=network-online.target
 Type=simple
 User=sync-lite
 Group=sync-lite
+UMask=0077
 WorkingDirectory=/var/lib/sync-lite
 EnvironmentFile=/etc/sync-lite/sync-lite.env
 ExecStart=/usr/local/bin/sync-lite

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:22 CET (Europe/Zagreb)
+
+- A11: create fresh SQLite files with mode 0600; preserve permissions of existing
+  files. Use a private first-install state directory and `UMask=0077` in both
+  documented/sample service units. Existing installations retain operator-managed
+  ownership and deliberate group access unless the operator changes them.
+- Record shared maintainer SDK/UI-tool locations and deliberate compiler updates.
+
 ## 0.4 (in development) - 2026-11-06 15:19 CET (Europe/Zagreb)
 
 - A10: clear data using only identity/type metadata, not encrypted payloads,

@@ -30,6 +30,17 @@ type SQLiteStore struct {
 }
 
 func NewSQLiteStore(path string) (*SQLiteStore, error) {
+	if path != ":memory:" {
+		// Only initialize new files. Never chmod an existing operator-managed DB.
+		file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
+		if err == nil {
+			if err := file.Close(); err != nil {
+				return nil, err
+			}
+		} else if !errors.Is(err, os.ErrExist) {
+			return nil, err
+		}
+	}
 	dsn, err := sqliteDSN(path)
 	if err != nil {
 		return nil, err

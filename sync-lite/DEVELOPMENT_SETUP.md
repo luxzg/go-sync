@@ -19,6 +19,13 @@ Go 1.26.9 was used for the October 19 checks. The default shell previously selec
 an older patch, so check `go version` rather than assuming which installation is
 active. See [MAINTENANCE.md](MAINTENANCE.md) for the dated dependency/toolchain record.
 
+In the maintainer's shared workspace, agents use Go installations under `~/sdk/`
+and check compatible newer installed versions before code passes. The fixed
+helper currently selects `~/sdk/go1.26.10/bin/go`. Review and validate compiler
+changes before updating that pin; do not silently fall back to system Go.
+Shared optional UI tooling is at `~/dev/playwright-tools`; sync-lite has no web
+UI and does not require Playwright for server tests.
+
 For all validation helpers and the optional CGO build, install these development
 prerequisites on Debian/Ubuntu if missing:
 

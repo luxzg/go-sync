@@ -23,8 +23,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A09 | P2 | Failed drain closes storage under active requests | VERIFIED | `992ea1f`, pushed; focused/full/race/smoke/upgrades pass | Force failure preserves committed WAL; no atomic-batch promise |
 | A05 | P2 | Expired History records remain forever | VERIFIED | `19e533c`, pushed; focused/full/race/upgrades pass | Normal tombstones preserved; no startup bulk deletion |
 | A07 | P2 | Unvisited expired hints retain memory | VERIFIED | `56166df`, pushed; focused/full/race pass | Interim counters never evicted |
-| A10 | P2 | Clear-data unnecessarily loads all payloads | IN PROGRESS | Project only chain/ID/type in one clearing transaction | Returned identity metadata and disabled marker preserved |
-| A11 | P2 | File privacy inherits permissive defaults | PENDING | | |
+| A10 | P2 | Clear-data unnecessarily loads all payloads | VERIFIED | `0e8715a`, pushed; focused/full/race/benchmark/upgrades pass | Returned identity metadata and disabled marker preserved |
+| A11 | P2 | File privacy inherits permissive defaults | IN PROGRESS | 0600 fresh DB; private directory/umask examples | Existing modes deliberately preserved |
 | A13 | P2 | Upstream new-device scan repeats the first page | PENDING | | |
 | A14 | P3 | Authenticated non-POST requests can mutate state | PENDING | | |
 | A15 | P3 | In-memory database connection lifetime/isolation | PENDING | | |
@@ -201,3 +201,14 @@ not a server-wide latency, peak-RSS or disk-wear guarantee.
 
 Both focused driver tests, full/race checks and all prior-version upgrade
 matrices passed. No schema/config change. `[A10]`.
+
+### A11 - 2026-11-06 15:22 CET
+
+The fresh-file regression reproduced mode 0644. New database files are now
+exclusively created as 0600 before SQLite opens them. Existing files are never
+chmodded; a regression preserves deliberate 0640. Both drivers' tests verify
+fresh DB/WAL/SHM permissions. README and unit example agree on `UMask=0077` and
+first-install state directory 0700. Existing modes/group backup access require
+operator review, not automatic recursive changes. No real server or unrelated
+account access was tested. Full/race, HTTP/HTTPS smoke and all historical upgrade
+matrices passed; no schema/data rewrite. `[A11]`.

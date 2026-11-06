@@ -137,6 +137,14 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   Past passing tests and user reports do not prove complete protocol/security coverage.
 - Ask the user to install missing tools with exact commands and a short reason;
   do not silently install packages or update the shared skill.
+- In this contributor workspace, always select installed Go from `~/sdk/`, not
+  the shell/system default. Inspect available versions at the start of code work
+  and deliberately adopt a compatible newer version with validation and a
+  maintenance record; keep helper pins aligned. Shared optional headless UI tools
+  live at `~/dev/playwright-tools`, not a new per-project Playwright install.
+  This service has no UI: do not inspect profiles or that separate project merely
+  because tools are available. Future shared SDK/tool locations follow the same
+  user-managed convention.
 - The October 2026 maintenance baseline is recorded in MAINTENANCE. Go 1.26+
   is required; checks used Go 1.26.9, govulncheck, and ShellCheck. Check actual
   toolchain/dependency versions again at the next maintenance pass. Keep modernc's

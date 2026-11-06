@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=simple
 User=sync-lite
 Group=sync-lite
+UMask=0077
 WorkingDirectory=/var/lib/sync-lite
 EnvironmentFile=/etc/sync-lite/sync-lite.env
 ExecStart=/usr/local/bin/sync-lite
