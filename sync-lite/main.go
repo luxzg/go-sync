@@ -136,30 +136,6 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		if err := db.acquireCommand(r.Context()); err != nil {
-			http.Error(w, "Request cancelled", http.StatusRequestTimeout)
-			return
-		}
-		defer db.releaseCommand()
-
-		disabled, err := db.IsSyncChainDisabled(r.Context(), clientID)
-		if err != nil {
-			http.Error(w, "unable to complete request", http.StatusInternalServerError)
-			return
-		}
-		if disabled {
-			errCode := sync_pb.SyncEnums_DISABLED_BY_ADMIN
-			csRsp := sync_pb.ClientToServerResponse{ErrorCode: &errCode}
-			out, err := proto.Marshal(&csRsp)
-			if err != nil {
-				http.Error(w, "Marshal Error", http.StatusInternalServerError)
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write(out)
-			return
-		}
-
 		// Bound wire bytes independently from decoded bytes (including gzip).
 		reader := io.Reader(http.MaxBytesReader(w, r.Body, payloadLimit10MB))
 		if r.Header.Get("Content-Encoding") == "gzip" {
@@ -193,9 +169,8 @@ func commandHandler(c *cache.Cache, db *SQLiteStore) http.HandlerFunc {
 			return
 		}
 
-		pbRsp := &sync_pb.ClientToServerResponse{}
-		store := &commandStore{SQLiteStore: db, requestContext: r.Context(), admissionPending: pb.GetMessageContents() == sync_pb.ClientToServerMessage_GET_UPDATES && pb.GetGetUpdates().GetGetUpdatesOrigin() == sync_pb.SyncEnums_NEW_CLIENT}
-		if err := command.HandleClientToServerMessage(r.Context(), c, pb, pbRsp, store, clientID); err != nil {
+		pbRsp, err := dispatchCommand(r.Context(), c, db, pb, clientID)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

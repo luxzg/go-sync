@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.4 (in development) - 2026-11-06 15:28 CET (Europe/Zagreb)
+## 0.4 (in development) - 2026-11-06 15:42 CET (Europe/Zagreb)
+
+- A06 integration follow-up: limit serialization to command state. Upload/body
+  validation and response socket writes stay outside the gate; disabled state
+  is rechecked inside it. Slow-upload/slow-response regressions, both full/race
+  suites and built-service smoke checks passed.
+
+## 0.4 (in development) - 2026-11-06 15:39 CET (Europe/Zagreb)
 
 - A15: retain one private physical connection for each `:memory:` store, avoiding
   pool-created empty databases while preserving isolation between stores. Disk

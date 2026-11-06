@@ -27,7 +27,7 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A11 | P2 | File privacy inherits permissive defaults | VERIFIED | `54daa1b`, pushed; focused/full/race/smoke/upgrades pass | Existing modes deliberately preserved |
 | A13 | P2 | Upstream new-device scan repeats the first page | VERIFIED | `b5a8ae5`, pushed; focused/full/race pass | Threshold contract tests; no parent edits |
 | A14 | P3 | Authenticated non-POST requests can mutate state | VERIFIED | `5a10b6c`, pushed; focused/full/race/smoke pass | Unauthenticated probes retain 401 |
-| A15 | P3 | In-memory database connection lifetime/isolation | IN PROGRESS | Retain one private physical connection | Disk pooling unchanged |
+| A15 | P3 | In-memory database connection lifetime/isolation | VERIFIED | `18af87e`, pushed; focused/full/race/smoke/upgrades pass | Disk pooling unchanged |
 
 ## Validation And Scope
 
@@ -237,7 +237,7 @@ checks. Both aliases, GET/PUT/PATCH/DELETE/HEAD, and no-mutation assertions pass
 on both drivers. Full/race and real HTTP/HTTPS smoke checks passed. No storage,
 startup or config change; prior upgrade checks remain applicable. `[A14]`.
 
-### A15 - 2026-11-06 15:28 CET
+### A15 - 2026-11-06 15:39 CET
 
 Red tests opened a second empty database, producing missing sync_entities and
 sync_clocks tables. Memory stores now retain exactly one open/idle connection;
@@ -253,3 +253,12 @@ final sign-off: A06's gate includes slow network IO; A09 cancellation can interr
 the two-step disable/clear sequence; A05 tag ownership needs NULL-safe expiry.
 Their original tests passed, but they are not considered finally resolved until
 these additional regressions pass. No production deployment occurred.
+
+### A06 Follow-Up - 2026-11-06 15:42 CET
+
+Both slow-upload and slow-response regressions failed before correction. Bounded
+body reads and semantic validation now occur before the command gate, and
+response encoding/network writes occur after release. Disabled state is checked
+inside the gate immediately before dispatch. Accounting/publication remains
+serialized. Focused tests, full/race suites and real-process smoke passed.
+No storage/config change; previous upgrade evidence remains applicable.
