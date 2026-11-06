@@ -47,10 +47,12 @@ Codex, Go generators, and development linters are not runtime requirements.
 
 Clone **this fork**, which includes both the reused upstream sources and
 `sync-lite/`. A clone of `brave/go-sync` alone does not include sync-lite.
+The 0.4 candidate is not merged into `master`; these commands explicitly select
+its review branch so you do not accidentally build the older release.
 In a directory where you want the source checkout:
 
 ```bash
-git clone https://github.com/luxzg/go-sync.git
+git clone --branch audit-remediation-0.4 https://github.com/luxzg/go-sync.git
 cd go-sync/sync-lite
 git status --short
 go mod tidy
@@ -59,6 +61,8 @@ go mod tidy
 All remaining commands in this chapter run from `go-sync/sync-lite/`. If you
 already have the checkout, enter that directory instead of cloning again. Keep
 the parent sources: sync-lite intentionally reuses local upstream packages.
+For an existing clean checkout, select `audit-remediation-0.4` before building
+this candidate. Review local changes first; do not discard them to switch.
 `go mod tidy` may download dependencies and modify module records; review any
 changes rather than treating them as an automatic dependency upgrade.
 

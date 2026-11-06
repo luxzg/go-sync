@@ -5,6 +5,13 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-11-06 16:00 CET (Europe/Zagreb)
+
+- Record final commit/push and artifact-validation status. Make clone instructions
+  explicitly select the 0.4 candidate branch, which is not merged into master.
+  Keep real-device/architecture validation and legacy-token limitations explicit.
+  No runtime changes; candidate version remains 0.4.
+
 ## 0.4 Candidate - 2026-11-06 15:58 CET (Europe/Zagreb)
 
 - Complete the A01-A15 remediation series and integration corrections on the

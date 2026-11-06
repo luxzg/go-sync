@@ -36,7 +36,7 @@ See [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md) for per-finding evidence,
 integration follow-ups and measured clear-data allocations. Independent review
 was static and did not claim to run the coordinator's tests. All data and TLS
 material were synthetic and helper-owned; no installed server, browser profile,
-phone, private diagnostics or recovery archives were accessed.
+phone, user diagnostics or credentials were accessed.
 
 Remaining operator work: consistent backup, reviewed binary update, verify loaded
 version, then real two-device checks. MIPS/ARM remain untested. Old scalar-token

@@ -14,7 +14,7 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 
 | ID | Priority | Finding / root cause | Status | Implementation and verification | Upgrade / risks |
 | --- | --- | --- | --- | --- | --- |
-| A12 | P2 | Restart reseeding and chained WAL tests mask failures | VERIFIED | `287806f`, pushed; check/smoke/supplemental/upgrades pass | All three actual archived baselines, both drivers independently |
+| A12 | P2 | Restart reseeding and chained WAL tests mask failures | VERIFIED | `287806f`, `ce17b7d`, pushed; check/smoke/supplemental/upgrades pass | All three actual archived baselines, both drivers independently |
 | A03 | P1 | Incoming identity controls stored-type/version policy | VERIFIED | `8ad6cd2`, pushed; focused/full/race/upgrades pass | No schema change |
 | A04 | P1 | Incomplete HTTP limits and absent deadlines | VERIFIED | `ec4e17b`, pushed; focused/full/race/smoke/upgrades pass | Schema/config unchanged |
 | A08 | P2 | Optional wire fields violate upstream semantic preconditions | VERIFIED | `726e2e5`, pushed; focused/full/race pass | No storage/startup/config change |
@@ -330,3 +330,21 @@ only command state. A request-owned adapter preserves upstream API contracts
 while handling cancellation, resurrection deltas, atomic clear and device
 admission. SQLite remains authoritative; hints are disposable and quota counters
 remain approximate. No new service, framework or runtime dependency was added.
+
+## Final Verification
+
+All fifteen finding implementations and reviewed integration corrections are
+committed/pushed on the working branch. Final complete check (including module
+integrity), A12 smoke/upgrade/supplemental mode, and both govulncheck configurations
+passed on the integrated source. The default Linux x86-64 artifact builds as
+version 0.4 with Go 1.26.10 and CGO disabled; its generated checksum verifies.
+Artifacts stay ignored in `dist/`, not in Git. Git diff checks found all custom
+changes within sync-lite and no module/dependency changes.
+
+Ready for human review and controlled staging with backup-first operator checks,
+not an automatic merge/deployment or production-ready certification. Real Brave
+devices, MIPS/ARM and production recovery were not tested. Old tied cohorts and
+already-skipped tokens are not automatically replayed; quotas remain approximate,
+one process owns the DB, and normal explicit History expiry is not undone by
+binary rollback. Remaining work is in TODO. Only helper-owned synthetic data and
+TLS fixtures were used; no user databases, profiles or credentials were accessed.
