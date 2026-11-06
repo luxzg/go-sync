@@ -22,8 +22,8 @@ Commit subjects include the finding ID; `git log --oneline --grep='\[A12\]'`
 | A06 | P2 | Concurrent absolute quota snapshots lose deltas | VERIFIED | `58ef410`, pushed; focused/full/race/upgrades pass | Single service process; approximate quotas preserved |
 | A09 | P2 | Failed drain closes storage under active requests | VERIFIED | `992ea1f`, pushed; focused/full/race/smoke/upgrades pass | Force failure preserves committed WAL; no atomic-batch promise |
 | A05 | P2 | Expired History records remain forever | VERIFIED | `19e533c`, pushed; focused/full/race/upgrades pass | Normal tombstones preserved; no startup bulk deletion |
-| A07 | P2 | Unvisited expired hints retain memory | IN PROGRESS | Sweep on Set and cap disposable hints at 1024 | Interim counters never evicted |
-| A10 | P2 | Clear-data unnecessarily loads all payloads | PENDING | | |
+| A07 | P2 | Unvisited expired hints retain memory | VERIFIED | `56166df`, pushed; focused/full/race pass | Interim counters never evicted |
+| A10 | P2 | Clear-data unnecessarily loads all payloads | IN PROGRESS | Project only chain/ID/type in one clearing transaction | Returned identity metadata and disabled marker preserved |
 | A11 | P2 | File privacy inherits permissive defaults | PENDING | | |
 | A13 | P2 | Upstream new-device scan repeats the first page | PENDING | | |
 | A14 | P3 | Authenticated non-POST requests can mutate state | PENDING | | |
@@ -188,3 +188,16 @@ atomic drain. The measured assertion is retained-key count, not a throughput
 benchmark. No storage/config/startup changes; previous upgrade matrix remains
 applicable. At idle, expired hints can remain until traffic, but stay bounded.
 `[A07]`.
+
+### A10 - 2026-11-06 15:19 CET
+
+The red test confirmed ClearServerData materialized opaque payloads. It now
+reads only chain/ID/type metadata inside the same writer transaction as deletion,
+preserving per-row identity metadata, cache invalidation and disabled markers.
+Synthetic modernc benchmark, 100 rows x 64 KiB, three iterations per sample:
+before 13,264,741 B/op, 2,896 allocs/op, 9,391,947 ns/op; after 87,506 B/op,
+869 allocs/op, 4,307,933 ns/op. This is local Go allocation/timing evidence,
+not a server-wide latency, peak-RSS or disk-wear guarantee.
+
+Both focused driver tests, full/race checks and all prior-version upgrade
+matrices passed. No schema/config change. `[A10]`.

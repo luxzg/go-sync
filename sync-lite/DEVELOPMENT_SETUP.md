@@ -101,6 +101,9 @@ changing toolchains. Do not prefix the invocation with environment or shell setu
 Modes `A01` through `A15` run the corresponding focused regressions on both
 backends. Mode `format` formats project Go source and the supplemental synthetic
 test; unlike validation modes, it intentionally edits those source files.
+Mode `benchmark-clear` measures the default backend clearing 100 synthetic
+64 KiB payloads with three iterations; temporary state is helper-owned. It does
+not benchmark production data or establish representative disk/SSD behavior.
 
 From `sync-lite/`:
 

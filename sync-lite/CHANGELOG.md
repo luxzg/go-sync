@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:19 CET (Europe/Zagreb)
+
+- A10: clear data using only identity/type metadata, not encrypted payloads,
+  inside one writer transaction. Preserve disabled markers, cache invalidation
+  and other-chain data. A synthetic 100 x 64 KiB modernc sample reduced Go
+  allocations from 13,264,741 to 87,506 B/op; full/race and upgrade checks passed.
+
 ## 0.4 (in development) - 2026-11-06 15:17 CET (Europe/Zagreb)
 
 - A07: sweep expired cache hints on insertion and cap disposable hints at 1024,

@@ -476,12 +476,18 @@ func (s *SQLiteStore) UpdateClientItemCount(ctx context.Context, counts *datasto
 }
 
 func (s *SQLiteStore) ClearServerData(ctx context.Context, clientID string) ([]datastore.SyncEntity, error) {
-	rows, err := s.db.QueryContext(ctx, `
-		SELECT
-			client_id, id, parent_id, version, mtime, ctime, name, non_unique_name,
-			server_defined_unique_tag, deleted, originator_cache_guid, originator_client_item_id,
-			specifics, data_type, folder, client_defined_unique_tag, unique_position,
-			data_type_mtime, expiration_time
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	// Acquire writer ownership before collecting invalidation metadata, so it
+	// describes exactly the same snapshot that is cleared. Never load payloads.
+	if _, err := tx.ExecContext(ctx, `DELETE FROM unique_tags WHERE client_id=?`, clientID); err != nil {
+		return nil, err
+	}
+	rows, err := tx.QueryContext(ctx, `
+		SELECT client_id, id, data_type
 		FROM sync_entities
 		WHERE client_id = ?
 	`, clientID)
@@ -492,9 +498,14 @@ func (s *SQLiteStore) ClearServerData(ctx context.Context, clientID string) ([]d
 
 	entities := []datastore.SyncEntity{}
 	for rows.Next() {
-		entity, err := scanEntity(rows)
-		if err != nil {
+		var entity datastore.SyncEntity
+		var dataType sql.NullInt64
+		if err := rows.Scan(&entity.ClientID, &entity.ID, &dataType); err != nil {
 			return nil, err
+		}
+		if dataType.Valid {
+			dt := int(dataType.Int64)
+			entity.DataType = &dt
 		}
 		entities = append(entities, entity)
 	}
@@ -502,16 +513,7 @@ func (s *SQLiteStore) ClearServerData(ctx context.Context, clientID string) ([]d
 		return nil, err
 	}
 
-	tx, err := s.db.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	if _, err := tx.ExecContext(ctx,
-		`DELETE FROM unique_tags WHERE client_id = ?`,
-		clientID,
-	); err != nil {
+	if err := rows.Close(); err != nil {
 		return nil, err
 	}
 	if _, err := tx.ExecContext(ctx,

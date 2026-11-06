@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 if [[ $# -eq 0 ]]; then
-  echo 'Usage: ./scripts/validate-remediation.sh {check|smoke|upgrades|supplemental|build|security|format|A01..A15}'
+  echo 'Usage: ./scripts/validate-remediation.sh {check|smoke|upgrades|supplemental|build|security|format|benchmark-clear|A01..A15}'
   echo 'Uses installed Go 1.26.10; disposable synthetic state only, no deployment.'
   exit 0
 fi
@@ -20,6 +20,10 @@ if [[ ! -x "$GO" ]]; then
   exit 1
 fi
 case "$1" in
+  benchmark-clear)
+    export GOWORK=off
+    CGO_ENABLED=0 "$GO" test -run '^$' -bench '^BenchmarkAuditA10Clear$' -benchmem -benchtime=3x -count=1 .
+    ;;
   format) exec "$(dirname "$GO")/gofmt" -w ./*.go testdata/session_reconciliation_test.go ;;
   A01|A02|A03|A04|A05|A06|A07|A08|A09|A10|A11|A12|A13|A14|A15)
     export GOWORK=off
