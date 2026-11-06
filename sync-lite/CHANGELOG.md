@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4 (in development) - 2026-11-06 15:46 CET (Europe/Zagreb)
+
+- A05 integration follow-up: treat NULL legacy expiry as non-expiring when
+  protecting a live tag owner during TTL cleanup. Add a regression with an
+  expired tombstone sharing a live nullable-expiry directive's reservation.
+  Both focused/full/race suites and historical upgrade matrices passed.
+
 ## 0.4 (in development) - 2026-11-06 15:44 CET (Europe/Zagreb)
 
 - A09 integration follow-up: combine the upstream disable/clear storage calls

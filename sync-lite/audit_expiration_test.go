@@ -137,3 +137,38 @@ func TestAuditA05LegacyRetirementPreservesClock(t *testing.T) {
 		t.Fatal("expiry lost legacy watermark", entries, err)
 	}
 }
+
+func TestAuditA05NullableExpiryPreservesLiveOwner(t *testing.T) {
+	h, cleanup := newTestHandler(t)
+	defer cleanup()
+	ctx := sqliteTestContext(t)
+	old := sqliteTestEntity("a", "expired-tombstone", 100)
+	old.DataType = sqliteTestPtr(datastore.HistoryDeleteDirectiveTypeID)
+	old.ExpirationTime = int64Ptr(1)
+	old.Deleted = boolPtr(true)
+	live := old
+	live.ID = "live-owner"
+	live.ExpirationTime = nil
+	live.Deleted = boolPtr(false)
+	tx, err := h.db.db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tx.Rollback()
+	for _, e := range []datastore.SyncEntity{old, live} {
+		if err := insertSyncEntity(ctx, tx, &e); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := tx.Exec(`INSERT INTO unique_tags (client_id,id,mtime,ctime) VALUES ('a',?,1,1)`, clientTagItemPrefix+*live.ClientDefinedUniqueTag); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	if err := h.db.retireExpiredAt(ctx, "a", nil, nil, 100); err != nil {
+		t.Fatal(err)
+	}
+	sqliteTestRowCount(t, h.db.db, "unique_tags", "a", 1)
+	sqliteTestRowCount(t, h.db.db, "sync_entities", "a", 1)
+}

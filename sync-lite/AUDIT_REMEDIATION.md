@@ -274,3 +274,11 @@ methods retain their contracts. Cancellation before commit rolls back; after
 commit, metadata remains available even if the context is cancelled. Synthetic
 trigger failure proves all original rows/tags/counts and enabled state survive
 rollback. Both focused suites, full/race and upgrade matrices passed.
+
+### A05 Follow-Up - 2026-11-06 15:46 CET
+
+The red legacy-state test retired an expired same-tag tombstone and incorrectly
+released its live directive owner's reservation when expiry was NULL. COALESCE
+now makes the ownership predicate NULL-safe and preserves non-expiring semantics.
+Both focused backends, full/race, supplemental and archived upgrade matrices
+passed; HTTP/HTTPS smoke also passed on the integrated state. No schema change.

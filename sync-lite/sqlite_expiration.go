@@ -73,7 +73,7 @@ func (s *SQLiteStore) retireExpiredAt(ctx context.Context, chain string, id, tag
 		_, err = tx.ExecContext(ctx, `DELETE FROM unique_tags WHERE client_id=? AND id=?
             AND NOT EXISTS (SELECT 1 FROM sync_entities WHERE client_id=?
             AND client_defined_unique_tag=? AND data_type<>? AND COALESCE(deleted,0)=0
-            AND NOT (data_type=? AND expiration_time>0 AND expiration_time<?))`,
+			AND NOT (data_type=? AND COALESCE(expiration_time,0)>0 AND COALESCE(expiration_time,0)<?))`,
 			chain, clientTagItemPrefix+tag, chain, tag, datastore.HistoryTypeID, datastore.HistoryDeleteDirectiveTypeID, now)
 		if err != nil {
 			return err
