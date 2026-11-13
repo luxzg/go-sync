@@ -5,6 +5,15 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-11-13, completed a documentation-only knowledge-preservation review
+  against installed rulebook revision `2026-11-08.2`, existing project docs and
+  accessible project conversation/continuation records. Added the architecture,
+  document-authority and continuation guide; clarified helper/manual recipe
+  boundaries, the reproducibility pin, artifact availability and remaining work.
+  No source/configuration, version, runtime or validation result changed; no
+  build, test, deployment, commit or push was part of this pass. Public examples
+  and fixtures remain sanitized.
+
 - On 2026-11-06, integrated the completed 0.4 remediation/follow-up branch into
   this fork's `master` by an explicitly approved fast-forward, preserving the
   per-finding history. Updated current clone/build instructions and added
@@ -138,6 +147,9 @@ not claim fresh code verification or replace the changelog timeline.
   merges, dependency upgrades, deployment, production access or device actions.
   A future replay implementation is not required to close this assessment and
   is not advertised as working. Real-device and MIPS/ARM evidence remain in TODO.
+  Later that day, separate approval authorized master integration and local
+  release packaging, now completed above; the earlier scope was not a permanent
+  ban on those steps. Deployment and optional feature work were not authorized.
 - A dependency-minimization refactor was deferred by the user: keep upstream
   auth, command, cache, datastore, and protobuf package reuse for now.
 - Docker, external DynamoDB/Redis services, metrics, and health-check endpoints

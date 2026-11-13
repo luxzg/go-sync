@@ -5,6 +5,29 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## docs - 2026-11-13 12:35 CET (Europe/Zagreb)
+
+- Update the existing development continuation section with the last implementation
+  state and immediate plans: operator 0.4 upgrade/two-device validation, then MIPS
+  feedback. Keep accepted limits and optional backlog separate. Version stays 0.4;
+  no code, configuration, builds, tests, commits or pushes.
+
+## docs - 2026-11-13 11:30 CET (Europe/Zagreb)
+
+- Align contributor guidance with installed rulebook revision `2026-11-08.2`
+  while preserving the fork boundary, tested deployment layout, explicit
+  commit/push holds, data safety and intentional 0.4 toolchain pin.
+- Add a compact architecture, document-authority and continuation guide so
+  development does not depend on an old chat. Distinguish current instructions
+  from historical candidate/evidence records, manual shell recipes from agent
+  helper invocations, and committed source from ignored local release outputs.
+- Retain the accepted historical-token limitation, operator/MIPS validation
+  gaps and optional backlog; preserve audit profiling/coverage questions as
+  proposals, not newly approved fixes. Clarify the later local-packaging approval.
+- Documentation reading, history comparison, link/consistency and diff review
+  only. Version remains 0.4; no source/configuration inspection or modification,
+  builds, tests, installs, deployment, shared-skill changes, commits or pushes.
+
 ## docs - 2026-11-06 20:18 CET (Europe/Zagreb)
 
 - Record successful 0.4 artifact preparation and exact-package verification:

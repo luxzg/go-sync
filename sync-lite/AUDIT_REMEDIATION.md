@@ -7,6 +7,12 @@ claimed for 0.4. Each finding is
 an independent validated commit; the version identifies the whole release series,
 not each intermediate working-branch commit. All fixtures are synthetic.
 
+This is a dated implementation/evidence record, not the current backlog or a
+fresh runtime audit. Use [TODO.md](TODO.md) for open work and
+[development setup](DEVELOPMENT_SETUP.md#documentation-authority) for document
+authority. Early candidate-branch statements below describe their point in time;
+the later master integration supersedes them without erasing their history.
+
 ## Tracking
 
 Statuses become VERIFIED only after validation, documentation, commit and push.
@@ -333,6 +339,9 @@ admission. SQLite remains authoritative; hints are disposable and quota counters
 remain approximate. No new service, framework or runtime dependency was added.
 
 ## Final Verification
+
+This subsection records working-branch completion before the separately approved
+[master integration](#master-integration-and-release-preparation) below.
 
 All fifteen finding implementations and reviewed integration corrections are
 committed/pushed on the working branch. Final complete check (including module

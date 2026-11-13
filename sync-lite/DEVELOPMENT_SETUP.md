@@ -3,6 +3,119 @@
 Read [AGENTS.md](AGENTS.md) and [README.md](README.md) first. The README deployment
 chapter is authoritative for the tested server layout and Brave base URLs.
 
+## Documentation Authority
+
+| Document | Authority and scope |
+| --- | --- |
+| [AGENTS.md](AGENTS.md) | Current contributor instructions, safety boundaries and project-specific exceptions |
+| [README.md](README.md) | Current user-facing behavior and tested installation/update layout; not the upstream root README |
+| This guide | Development setup, architecture, helper selection and artifact preparation |
+| [TODO.md](TODO.md) | Open work and proposals, not blanket implementation approval |
+| [LEGACY_TOKENS.md](LEGACY_TOKENS.md) | Accepted 0.4 limitation and gates for any future cursor/replay design |
+| [MANUAL_TESTING.md](MANUAL_TESTING.md) | Operator procedure and success criteria, not proof it has been run |
+| [MAINTENANCE.md](MAINTENANCE.md), [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md) | Dated versions, findings, implementation and validation evidence |
+| [CHANGELOG.md](CHANGELOG.md), [FINISHED_TASKS.md](FINISHED_TASKS.md) | Timeline and completed/deferred decisions; older branch/status statements remain historical |
+| [0.4 release notes](RELEASE_NOTES_0.4.md), [0.3 reply draft](RELEASE_NOTES_0.3.md) | Version-scoped release summaries; the 0.3 draft is historical, not current instructions or evidence of a posted reply; its upgrade link follows the current guide |
+
+Later explicit decisions supersede older plans, not the historical record itself.
+The November master integration supersedes earlier candidate-branch instructions.
+The upstream root README describes its DynamoDB/Docker service, not sync-lite.
+There is no separate preserved `INITIAL_PROMPT.md`; initial goals and accepted
+tradeoffs are recorded in AGENTS and the release/status history. Do not recreate
+the service from an old prompt or treat an early proposed layout as implemented.
+
+## Architecture And Decisions
+
+This is a Go HTTP/HTTPS adapter around Brave's existing sync engine, with no
+frontend. Parent auth, command, cache, datastore and generated protobuf packages
+are reused at build time through the local parent-module replacement. Keep the
+whole fork for source builds; a compiled binary does not load parent Go files
+at runtime. A rewrite or dependency-minimization fork of that logic was deferred
+to avoid unnecessary protocol divergence for a few self-hosted devices.
+
+The normal request path is:
+
+1. Both endpoint aliases enter the lite HTTP boundary. Brave authentication
+   precedes command decoding; authenticated commands require POST.
+2. Wire/decompressed size limits, complete gzip decoding and semantic checks
+   protect the reused protobuf command preconditions.
+3. The shared cancellable command gate coordinates disabled-chain checks,
+   upstream dispatch, interim accounting and cache publication. Upload reads
+   happen before the gate; response socket writes happen after it.
+4. A request-owned datastore adapter preserves upstream contracts while binding
+   cancellation, resurrection accounting, atomic disable/clear and the bounded
+   NEW_CLIENT admission sample. The latter must follow upstream's 50/100 limits.
+5. SQLite persists chain-scoped entities and metadata; upstream produces the
+   protobuf commit/download results. Commit remains per-entry, not atomic-batch.
+
+| Persistent state | Responsibility |
+| --- | --- |
+| `sync_entities` | Chain-scoped `(client_id, id)` identity, sync metadata and opaque payloads |
+| `unique_tags` | Chain-scoped client/server tag reservations |
+| `client_item_counts` | Approximate normal/rolling History quota state; not a delivery ledger |
+| `sync_clocks` (added in 0.4) | Durable per-chain/type writer watermark, committed with entity changes |
+
+The main incremental lookup follows `(client_id, data_type, mtime)`. Scalar
+progress markers select timestamps strictly greater than the client's marker,
+with an upstream 500-entry response budget. New timestamps are allocated while
+SQLite owns the writer lock. A durable clock, rather than only the maximum
+remaining row, preserves the watermark when bounded History expiry removes
+the last record of a type. It prevents new omissions, not historical replay;
+see [the accepted strategy](LEGACY_TOKENS.md).
+
+SQLite is authoritative. The in-memory Redis-compatible interface is retained
+for upstream compatibility, not an external Redis connection. Disposable polling
+hints may be discarded; pending quota deltas may not. Do not remove the entire
+adapter as though all its contents were optional read caching. WAL, FULL
+durability and per-connection settings apply to both build-selected drivers;
+queries/schema are shared. One process owns each database.
+
+Brave clients manage chain secrets and encrypted content. Opaque payload storage
+does not make IDs, metadata, journals or backups safe to publish. Native TLS plus
+the existing EnvironmentFile/systemd workflow was chosen for simple deployment;
+no reverse proxy, Docker, metrics service, health endpoint or in-app ACME manager
+is required. See [accepted decisions](AGENTS.md#accepted-project-decisions) and
+the [implementation map](AUDIT_REMEDIATION.md#implementation-map) before changing
+an integration boundary.
+
+## Continuing Development
+
+### Development Continuation / Last Working Context - 2026-11-13
+
+**Last worked on:** On November 6, completed 0.4 sync ordering, identity/accounting,
+HTTP/shutdown and expiry fixes, plus regression/upgrade tests for both SQLite backends.
+This followed 0.3's optional mattn/MIPS build path; modernc remains preferred.
+**Where we stopped:** All 15 findings and approved local follow-ups were completed,
+merged/pushed to `master` (`da0c613`), with Linux x86-64 binaries/packages verified.
+The last operator-confirmed server is 0.3.1; no 0.4 browser or MIPS result was reported.
+**Intended next steps:** First, operator backup-first upgrade and two-device tests
+with the existing database/chain; then collect the reporter's MIPS build/runtime feedback.
+Historical tokens stay unrepaired by agreement; optional backlog work was not selected.
+See [manual checks](MANUAL_TESTING.md), [release evidence](AUDIT_REMEDIATION.md) and [TODO](TODO.md).
+
+Start a new pass by reading the current docs and checking Git state. Preserve
+unrelated changes, identify the requested mode/scope, and choose the bounded
+next task from TODO. Real deployment/device work needs its own authorization;
+legacy replay, optional access control, CI and public release upload are not
+approved merely because they appear in planning records. Ordinary completed
+passes follow AGENTS' standing commit/push rule unless the user holds them.
+
+For code work, first check installed SDKs in the shared location and inspect
+the relevant source/helpers. Go 1.26.10 is the recorded 0.4 helper pin, not a
+claim about today's newest installed or available compiler. Review any pin
+change deliberately; do not run builds/scans or update dependencies during docs-only
+work. The November checks did not refresh the October upstream/driver release
+review; its next action remains in [maintenance TODOs](TODO.md#p2-maintenance-and-operations).
+
+A clone contains committed source/docs, not ignored binaries, private working
+state or the old chat. November's successful packaging is historical evidence,
+not proof that `dist/` exists or still verifies on another machine. During an
+authorized release pass, build and verify the intended clean committed revision
+with the release helper below. A docs-only update requires no rebuild and must
+not be advertised as a rebuilt artifact. No GitHub Release upload, CI publishing
+pipeline or automated production backup/update helper is currently documented
+as implemented. Use the README's operator-controlled upgrade procedure.
+
 ## Prerequisites
 
 Use a Linux x86-64 build machine for the supported Debian/Ubuntu server target.
@@ -144,6 +257,14 @@ live SQLite/config/certificate files. Tests use synthetic fixtures. The upgrade
 helper requires fork history containing its fixed `0.2` baseline; a shallow
 clone may need its history fetched first. The smoke helper additionally needs
 Python 3 and OpenSSL, only on the development machine.
+
+**Agent execution versus manual recipes:** the environment-prefix examples below
+and in the experimental MIPS instructions describe supported manual overrides.
+They are not approved agent invocation patterns. Agents use the fixed
+`validate-remediation.sh` modes without shell/env prefixes. A new compiler,
+baseline or cross-target mode needs a reviewed bounded helper change during an
+authorized code pass; do not improvise an arbitrary-command wrapper. The same
+restriction applies to pipelines in operator diagnostic examples.
 
 The supplemental state helper uses Python 3 to generate a Go overlay. It injects
 `testdata/session_reconciliation_test.go` into the test build without changing

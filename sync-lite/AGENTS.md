@@ -1,7 +1,9 @@
 # sync-lite Agent Guidance
 
-Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
-2026-09-13. The shared skill and its references are read-only guidance.
+Aligned with installed `codex-coding-rules` revision `2026-11-08.2` on
+2026-11-13. Read the actual installed revision at the next session; this is a
+dated alignment record, not a permanent skill pin. The shared skill and its
+references are read-only guidance.
 
 ## Scope And Read First
 
@@ -13,6 +15,11 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   [MAINTENANCE.md](MAINTENANCE.md), and the latest
   [CHANGELOG.md](CHANGELOG.md) entries before substantial work. Read critical
   project docs in full; preserve the established documentation filenames.
+- For storage/protocol, upgrade or release work, also read
+  [LEGACY_TOKENS.md](LEGACY_TOKENS.md), [MANUAL_TESTING.md](MANUAL_TESTING.md),
+  [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md) and
+  [RELEASE_NOTES_0.4.md](RELEASE_NOTES_0.4.md). Follow the current authority map
+  rather than reviving an older candidate-stage instruction.
 - Follow the installed skill's full `references/AGENT_RULES.md` and applicable
   `references/VALIDATION_AND_OPERATIONS.md` sections, subject to higher-priority
   instructions and these project-specific exceptions.
@@ -23,6 +30,13 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
 - Check available tools and effective permissions in the current session.
   Earlier download/cache failures do not establish current tool limitations.
   Use supported scoped approval for denied authorized writes; do not bypass it.
+- Start with the lite documentation, not the upstream root README. See
+  [document authority](DEVELOPMENT_SETUP.md#documentation-authority) and
+  [continuing development](DEVELOPMENT_SETUP.md#continuing-development).
+  Repository guidance must stand alone without old chat or account memory.
+  Historical prompts, review recommendations and successful past operations are
+  evidence, not fresh authorization. Keep private operational history out of
+  public docs, examples and fixtures; preserve only general safety lessons.
 
 ## Accepted Project Decisions
 
@@ -87,6 +101,10 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   command/passthrough wrappers or bypass denied operations. Explain new side
   effects before extending an approved helper. `scripts/validate-remediation.sh`
   pins this series' installed compiler and exposes fixed synthetic checks only.
+  Shell examples with environment prefixes/pipelines in user instructions are
+  manual operator recipes, not exceptions for agents. Use a documented fixed
+  helper mode; if none fits, propose a bounded helper during an authorized code
+  pass instead of running the recipe or creating tooling in a docs-only pass.
 
 - Preserve unrelated edits and historical records. Use synthetic isolated
   fixtures for tests; never use live sync chains, browser profiles, phones,
@@ -151,7 +169,8 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   because tools are available. Future shared SDK/tool locations follow the same
   user-managed convention.
 - The October 2026 maintenance baseline is recorded in MAINTENANCE. Go 1.26+
-  is required; checks used Go 1.26.9, govulncheck, and ShellCheck. Check actual
+  is required; October checks used Go 1.26.9, and the November 0.4 checks/artifacts
+  used Go 1.26.10, govulncheck, and ShellCheck. Check actual
   toolchain/dependency versions again at the next maintenance pass. Keep modernc's
   libc dependency pinned to its upstream-required version, not an arbitrary
   independent upgrade. Compiler/library updates require rebuilt artifacts.
@@ -185,6 +204,17 @@ Aligned with installed `codex-coding-rules` revision `2026-09-12.2` on
   never tags, publishes GitHub releases, deploys or reads live data. Both archived
   binaries receive synthetic smoke checks; use static modernc by default and
   review optional mattn's native-runtime requirements before deployment.
+- The 1.26.10 helper pin preserves the recorded 0.4 validation baseline; it is
+  a project-specific reproducibility exception to the shared newest-compatible
+  SDK default. Review newer installed SDKs at the next code/maintenance pass,
+  then deliberately update pins and rerun compatibility checks if adopted.
+  Do not change the language minimum just to match a locally installed compiler.
+- A fresh clone does not contain ignored `dist/` artifacts or local evidence.
+  Source integration, committed documentation, local packaging, remote release
+  publication and operator deployment are separate states. A docs-only pass
+  does not rebuild binaries or prove their current presence/integrity. Future
+  authorized distribution must select and verify its intended committed source;
+  do not relabel an older artifact as built from a newer documentation commit.
 - The authorized local follow-ups add tests, a fixed `followups` validation mode
   and the [legacy-token strategy](LEGACY_TOKENS.md), not runtime changes. Keep
   version 0.4; historical replay/cursors require a separate explicit protocol/

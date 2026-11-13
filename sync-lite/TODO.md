@@ -5,10 +5,16 @@ is tracked in [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md).
 Version 0.4 is integrated into this fork's `master` and prepared for operator
 testing. Existing release and field evidence below refer to 0.3.1 unless stated.
 
-Updated 2026-11-06 for version `0.4`. This file contains remaining work; completed
+Updated 2026-11-13 for version `0.4`. This file contains remaining work; completed
 checks/helpers are archived in [FINISHED_TASKS.md](FINISHED_TASKS.md).
 Follow [AGENTS.md](AGENTS.md) before starting. After the 0.4 series, the next normal
 release is `0.5`; focused patches may use `0.4.1`.
+
+Priorities below are planning, not blanket implementation or deployment approval.
+The accepted unrepaired historical-token decision is complete, not an unfinished
+0.4 repair task. Any future cursor/replay work requires a separate proposal and
+the gates in [LEGACY_TOKENS.md](LEGACY_TOKENS.md). Local packaging is complete;
+real-device results and optional public distribution remain distinct.
 
 ## P1: Validation And Repeatability
 
@@ -30,11 +36,15 @@ release is `0.5`; focused patches may use `0.4.1`.
 ## P2: Maintenance And Operations
 
 - Refresh the [maintenance baseline](MAINTENANCE.md) monthly and after advisories;
-  next routine review is November 2026. Check Go, both SQLite drivers/embedded
+  the November 2026 release/upstream review remains due. The November 6 compiler
+  checks/scans did not refresh October's upstream/driver release review. Check
+  installed shared SDKs and review the intentional 0.4 helper pin before adopting
+  a newer compiler. Check Go, both SQLite drivers/embedded
   engines, inherited modules, govulncheck, ShellCheck, and build prerequisites.
   This is a review reminder, not an unattended upgrade schedule.
 - Watch for SQLite driver releases incorporating SQLite 3.54.1 or later. The
-  selected latest driver tags both bundle 3.53.4; SQLite's newer release includes
+  driver tags selected in October both bundle 3.53.4; the October review recorded
+  a newer SQLite release including
   a 32-bit heap-buffer fix whose applicability needs review before promoting a
   MIPS production build. Do not independently patch generated driver internals
   or bump modernc's libc beyond the required matching pin.
@@ -60,6 +70,10 @@ release is `0.5`; focused patches may use `0.4.1`.
 - Profile whether the new bounded expiry probe needs an expiry index at larger
   retained volumes. Do not claim disk-wear or throughput improvement without IO
   measurements; the clear-data benchmark measures only its documented sample.
+- If performance work is approved, also measure representative commit counts,
+  fsync/checkpoint activity and download BLOB sizes/memory. The 500-entry response
+  limit is not a byte budget. These are profiling questions from the audit, not
+  confirmed current resource failures or approval to change protocol limits.
 
 ## P3: Optional Access Control And Coverage
 
@@ -73,6 +87,10 @@ release is `0.5`; focused patches may use `0.4.1`.
   by default. Test unknown-chain rejection and allowed-chain device joins.
 - Preferences were only partly tested across desktop and Android. Same-platform
   coverage and exact client/version combinations remain unrecorded.
+- If protocol coverage is extended, review forward parent references and unknown
+  outer `SyncEntity` fields. Existing synthetic follow-ups cover parent-before-child
+  mapping and unknown specifics, not those cases; no browser defect or approved
+  behavior change is established by this coverage gap.
 
 ## Community Feedback Follow-Up
 

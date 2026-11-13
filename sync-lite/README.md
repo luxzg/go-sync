@@ -19,12 +19,14 @@ available for community testing.
 ## Documentation
 - [Agent guidance](AGENTS.md): scope, accepted decisions, safety, and workflow.
 - [Development setup](DEVELOPMENT_SETUP.md): clone, run, test, and build instructions.
+- [Architecture and decisions](DEVELOPMENT_SETUP.md#architecture-and-decisions): request flow, storage ownership, and compatibility choices.
 - [Two-device sync check](MANUAL_TESTING.md): verify browser results and inspect `brave://sync-internals/`.
 - [Open work](TODO.md): prioritized follow-up work.
 - [Completed and deferred work](FINISHED_TASKS.md): status and evidence archive.
 - [Changelog](CHANGELOG.md): release and documentation history.
 - [Maintenance record](MAINTENANCE.md): checked versions, upstream revision, and validation results.
 - [Legacy token limits](LEGACY_TOKENS.md): historical omissions, the 0.4 safety decision, and future recovery requirements.
+- [Audit remediation](AUDIT_REMEDIATION.md): dated finding-by-finding implementation and validation evidence.
 
 ## Upstream Reference
 - Original project: https://github.com/brave/go-sync

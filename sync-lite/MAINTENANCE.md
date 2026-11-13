@@ -1,5 +1,20 @@
 # Maintenance Record
 
+## 2026-11-13: Release Evidence Clarification
+
+The recorded 2026-11-06 completion identifies `da0c613` as the final 0.4 source
+revision, after preparation commit `3e6f761`; final packaging and verification
+were reported complete. The older instruction below to rebuild after the
+documentation commit belonged to that release sequence, not an outstanding
+uncompleted remediation step.
+
+This documentation review did not inspect or verify local artifacts, run builds
+or scanners, refresh dependencies/upstream, or access the installed service.
+Ignored outputs are not part of a fresh clone. Before a future authorized distribution, verify
+the intended source/artifact identity using the documented release workflow;
+do not infer current integrity or deployment from historical completion.
+The operator-tested version remains 0.3.1 until a newer field result is supplied.
+
 ## 2026-11-06: Final 0.4 Artifact Verification
 
 The prepared master integration (`3e6f761`) passed release build and independent
