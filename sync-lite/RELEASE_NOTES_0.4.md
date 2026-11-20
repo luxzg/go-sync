@@ -1,5 +1,8 @@
 # sync-lite 0.4
 
+These notes record the original 0.4 release. The current toolchain security
+patch is documented in the [changelog](CHANGELOG.md).
+
 The completed review/remediation is integrated into this fork's `master`.
 Linux x86-64 binaries and archives are prepared for controlled operator testing
 and backup-first deployment. This is not a claim of real-browser validation or

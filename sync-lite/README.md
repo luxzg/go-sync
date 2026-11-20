@@ -2,10 +2,10 @@
 
 Minimal Brave Sync server implementation for small self-hosted setups.
 
-**Version 0.4:** the completed audit fixes and local follow-ups are integrated
-into this fork's `master`. See [release notes](RELEASE_NOTES_0.4.md) and
-[validation and limitations](AUDIT_REMEDIATION.md). Real-browser validation
-remains an operator step; no server was deployed or changed by development checks.
+**Version 0.4.1** builds with Go 1.26.11 for upstream security fixes. See the
+[changelog](CHANGELOG.md) for the patch and the [0.4 release notes](RELEASE_NOTES_0.4.md)
+for the audit fixes it carries forward. Real-browser validation remains an
+operator step.
 
 This is a fork of https://github.com/brave/go-sync.
 All custom modifications are contained within `/sync-lite/`; official upstream
@@ -36,11 +36,11 @@ Upstream repository changes are reviewed separately from release tags. See the
 [upstream-sync policy](AGENTS.md#syncing-the-fork-with-upstream).
 
 ## Version
-- Current version: `0.4` (2026-11-06), prepared for operator validation
+- Current version: `0.4.1` (2026-11-20), prepared for operator validation
 - Last operator-tested release: `0.3.1` (2026-10-19)
 
-Documentation updates do not change the binary version. Patch releases may use
-`0.4.1`; the next normal release after `0.4` will be `0.5`. Minor versions count upward as
+Documentation updates do not change the binary version. The next normal release
+after the `0.4` series will be `0.5`. Minor versions count upward as
 integers, so `0.9` is followed by `0.10`.
 
 Print the binary version and selected backend without opening a database:
@@ -57,8 +57,8 @@ Both endpoint aliases, authentication, config and optional diagnostics remain.
 
 ## Choose A SQLite Build
 
-Build from `go-sync/sync-lite/` with **Go 1.26 or newer**; a maintained patch
-release is recommended. Go 1.26.10 was used for the 0.4 checks and artifacts.
+Build from `go-sync/sync-lite/`. The module's source minimum is Go 1.26.0.
+Use Go 1.26.11 or a newer supported security-patched release for deployment builds.
 
 | Build | Selection | Validation |
 | --- | --- | --- |
@@ -93,7 +93,7 @@ backends and versioned binary/source archives with:
 ./scripts/release-artifacts.sh verify
 ```
 
-The fixed helper uses installed Go 1.26.10 under `~/sdk/` and writes only ignored
+The fixed helper uses installed Go 1.26.11 under `~/sdk/` and writes only ignored
 `dist/` outputs and owned temporary fixtures. It runs HTTP/HTTPS restart/signal
 smoke checks against the exact archived binaries before publishing local outputs.
 It does not deploy or publish a GitHub release. See
@@ -103,10 +103,10 @@ and effects. The output set is:
 - `dist/sync-lite-linux-amd64`: preferred static modernc binary.
 - `dist/sync-lite-linux-amd64-cgo`: optional mattn binary, requiring compatible
   system libraries; inspect its `.runtime.txt` report before using it elsewhere.
-- `dist/sync-lite-0.4-linux-amd64.tar.gz` and
-  `dist/sync-lite-0.4-linux-amd64-cgo.tar.gz`: binaries plus docs, sanitized service/
+- `dist/sync-lite-0.4.1-linux-amd64.tar.gz` and
+  `dist/sync-lite-0.4.1-linux-amd64-cgo.tar.gz`: binaries plus docs, sanitized service/
   env examples, source references, license notices and build/runtime information.
-- `dist/go-sync-lite-0.4-source.tar.gz`: the committed fork source, including
+- `dist/go-sync-lite-0.4.1-source.tar.gz`: the committed fork source, including
   reused parent packages; no Git history or untracked/ignored runtime files.
 - `dist/SHA256SUMS` and `dist/release-manifest.json`: integrity, source commit
   and artifact identity. Raw binaries also have individual checksum/build reports.
@@ -525,43 +525,45 @@ Automation of live backup/update operations remains tracked in [TODO.md](TODO.md
 <a id="upgrade-from-02-or-03-to-031"></a>
 <a id="upgrade-to-04"></a>
 
-### Upgrade From 0.2, 0.3 Or 0.3.1 To 0.4
+### Upgrade From 0.2, 0.3, 0.3.1 Or 0.4 To 0.4.1
 
 **Keep your existing sync chain, SQLite database, env file, certificate paths,
 and systemd unit. The clock table is added automatically; no database export/import
 or client reset is needed.** Use the preferred modernc build for existing servers.
 Review the [storage/expiry changes and limitations](#04-storage-compatibility)
 first. Do not replace your configuration or certificate files with examples.
+The 0.4.1 security rebuild retains the 0.4 schema. To pick up the Go fixes on
+an installed server, replace the binary and restart the service.
 
-Automated checks use actual `0.2`, `0.3` and `0.3.1` source to create synthetic
+Automated checks use actual `0.2`, `0.3`, `0.3.1` and `0.4` source to create synthetic
 databases, independently upgrade clean/committed-WAL fixtures through each
 current driver, and reopen/read/write with the old version. They compare original
 schema and records (including exact BLOB/NULL values), exercise datastore
 write/readback, integrity and cross-driver reopen. Only the clock table is an
 allowed schema addition. Back up your own installation before applying the update.
 
-1. Build `0.4` on the development machine and transfer it to the server:
+1. Build `0.4.1` on the development machine with the pinned SDK and transfer it to the server:
 
 ```bash
-./scripts/build.sh
-scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.4
+./scripts/validate-remediation.sh build
+scp dist/sync-lite-linux-amd64 user@server:/tmp/sync-lite-0.4.1
 ```
 
 2. On the server, check the candidate before stopping the service:
 
 ```bash
-chmod +x /tmp/sync-lite-0.4
-/tmp/sync-lite-0.4 --version
+chmod +x /tmp/sync-lite-0.4.1
+/tmp/sync-lite-0.4.1 --version
 ```
 
-Expected: `sync-lite 0.4`, backend `modernc`, target `linux/amd64`.
+Expected: `sync-lite 0.4.1`, backend `modernc`, target `linux/amd64`, Go `go1.26.11`.
 
 3. Stop the service and make a private backup of the working installation:
 
 ```bash
 sudo systemctl stop sync-lite
 sudo install -d -m 0700 /var/backups/sync-lite
-backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.4.XXXXXXXX)"
+backup_dir="$(sudo mktemp -d /var/backups/sync-lite/pre-0.4.1.XXXXXXXX)"
 sudo cp -a /var/lib/sync-lite "$backup_dir/state"
 sudo cp -a /etc/sync-lite "$backup_dir/config"
 sudo cp -a /usr/local/bin/sync-lite "$backup_dir/sync-lite-previous"
@@ -575,21 +577,21 @@ the same time.
 4. Replace only the binary and start the existing unit:
 
 ```bash
-sudo install -m 0755 /tmp/sync-lite-0.4 /usr/local/bin/sync-lite
+sudo install -m 0755 /tmp/sync-lite-0.4.1 /usr/local/bin/sync-lite
 /usr/local/bin/sync-lite --version
 sudo systemctl start sync-lite
 sudo systemctl status sync-lite
 journalctl -u sync-lite -n 50 --no-pager
 ```
 
-5. Confirm the startup log reports `0.4` and verify that your existing Brave
+5. Confirm the startup log reports `0.4.1` and verify that your existing Brave
    clients resume synchronization using the [two-device checklist](MANUAL_TESTING.md).
    Their server URL stays the same.
 
 If an update fails, stop the service before further action. The test matrix
-verified reopening these synthetic databases with `0.2`, `0.3` and `0.3.1`, so
-binary-only rollback is available for that tested scope, but reintroduces old
-bugs and cannot undo normal TTL expiration. Keep the backup and ask for help if your
+verified reopening these synthetic databases with `0.2`, `0.3`, `0.3.1` and `0.4`.
+Binary-only rollback also restores the previous binary's embedded Go runtime
+and cannot undo normal TTL expiration. Keep the backup and ask for help if your
 database or configuration differs; do not restore or replace user data
 automatically. This procedure is for the documented systemd layout; adjust paths
 only if your installation deliberately uses another layout.

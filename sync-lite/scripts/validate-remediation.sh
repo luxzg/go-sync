@@ -5,22 +5,23 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/.."
 if [[ $# -eq 0 ]]; then
   echo 'Usage: ./scripts/validate-remediation.sh {check|smoke|upgrades|supplemental|followups|build|security|format|benchmark-clear|A01..A15}'
-  echo 'Uses installed Go 1.26.10; disposable synthetic state only, no deployment.'
+  echo 'Uses installed Go 1.26.11; disposable synthetic state only, no deployment.'
   exit 0
 fi
 if [[ $# -ne 1 ]]; then
   echo 'Expected one validation mode' >&2
   exit 2
 fi
-export GO="$HOME/sdk/go1.26.10/bin/go"
+export GO="$HOME/sdk/go1.26.11/bin/go"
+export GOTOOLCHAIN=local
 PATH="$(dirname "$GO"):$HOME/go/bin:$PATH"
 export PATH
 if [[ ! -x "$GO" ]]; then
-  echo 'Install Go 1.26.10 in ~/sdk/go1.26.10 or review this pinned helper.' >&2
+  echo 'Install Go 1.26.11 in ~/sdk/go1.26.11 or review this pinned helper.' >&2
   exit 1
 fi
 run_upgrades() {
-  for baseline in 1c0d957 287bdec 07d147a; do
+  for baseline in 1c0d957 287bdec 07d147a da0c613; do
     SYNC_LITE_UPGRADE_BASELINE="$baseline" ./scripts/test-upgrade.sh
   done
 }

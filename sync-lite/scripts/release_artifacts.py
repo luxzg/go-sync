@@ -16,7 +16,8 @@ import tempfile
 
 LITE = Path(__file__).resolve().parent.parent
 ROOT = LITE.parent
-GO = Path.home() / "sdk/go1.26.10/bin/go"
+GO_VERSION = "go1.26.11"
+GO = Path.home() / "sdk" / GO_VERSION / "bin/go"
 DOCS = (
     "README.md", "DEVELOPMENT_SETUP.md", "MANUAL_TESTING.md", "CHANGELOG.md",
     "RELEASE_NOTES_0.4.md", "LEGACY_TOKENS.md", "AUDIT_REMEDIATION.md",
@@ -167,6 +168,8 @@ def verify(directory, revision, release):
     for backend in ("modernc", "mattn"):
         details = manifest["binaries"][backend]
         info = regular(directory / (details["file"] + ".build-info.txt")).read_text()
+        if info.splitlines()[0] != f"{details['file']}: {GO_VERSION}":
+            raise ValueError("Binary was not built with the pinned Go version")
         if f"vcs.revision={revision}" not in info or "vcs.modified=false" not in info:
             raise ValueError("Binary was not built from the clean release commit")
         if "GOOS=linux" not in info or "GOARCH=amd64" not in info:
@@ -203,7 +206,7 @@ def verify(directory, revision, release):
 def build():
     revision, release = clean_revision(), version()
     if not GO.is_file():
-        raise ValueError("Install the pinned Go 1.26.10 SDK under ~/sdk/ first")
+        raise ValueError(f"Install the pinned {GO_VERSION} SDK under ~/sdk/ first")
     if (LITE / "dist").is_symlink():
         raise ValueError("Refusing a symlinked dist directory")
     directory = LITE / "dist"
@@ -289,7 +292,7 @@ def build():
 def main():
     if len(sys.argv) == 1:
         print("Usage: ./scripts/release-artifacts.sh {build|verify|test}")
-        print("Clean committed source; Go 1.26.10 from ~/sdk/; Linux amd64 only.")
+        print(f"Clean committed source; {GO_VERSION} from ~/sdk/; Linux amd64 only.")
         print("Writes ignored dist/ and owned temporary fixtures; never deploys or uploads.")
         return
     if len(sys.argv) != 2 or sys.argv[1] not in {"build", "verify", "test"}:

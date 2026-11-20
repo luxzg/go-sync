@@ -190,7 +190,7 @@ references are read-only guidance.
   user approval. See [AUDIT_REMEDIATION.md](AUDIT_REMEDIATION.md). Keep the
   historical per-finding commits; do not rewrite or squash their evidence.
 
-- Current version is `0.4`, dated 2026-11-06, on `master`, prepared for operator testing.
+- Current version is `0.4.1`, dated 2026-11-20, on `master`, prepared for operator testing.
   Last operator-tested release remains `0.3.1` (2026-10-19); never imply the
   version is already deployed. Documentation-only updates do not bump version.
 - The user explicitly accepts unrepaired historical tokens for 0.4. No replay,
@@ -198,15 +198,14 @@ references are read-only guidance.
   The approved fork-local merge is not a fresh upstream merge or a deployment.
 - `scripts/release-artifacts.sh` is the fixed build/verify/test entry point for
   Linux amd64 release archives, source, notices and integrity/build/runtime
-  reports. It requires clean committed source and installed Go 1.26.10 from
+  reports. It requires clean committed source and installed Go 1.26.11 from
   `~/sdk/`; inspect it before use. Final artifacts must match the final committed
   revision. Outputs stay ignored in `dist/`; do not force-add binaries. The helper
   never tags, publishes GitHub releases, deploys or reads live data. Both archived
   binaries receive synthetic smoke checks; use static modernc by default and
   review optional mattn's native-runtime requirements before deployment.
-- The 1.26.10 helper pin preserves the recorded 0.4 validation baseline; it is
-  a project-specific reproducibility exception to the shared newest-compatible
-  SDK default. Review newer installed SDKs at the next code/maintenance pass,
+- The 1.26.11 helper pin preserves the 0.4.1 security rebuild's toolchain. Review
+  newer installed SDKs at the next code/maintenance pass,
   then deliberately update pins and rerun compatibility checks if adopted.
   Do not change the language minimum just to match a locally installed compiler.
 - A fresh clone does not contain ignored `dist/` artifacts or local evidence.
@@ -221,7 +220,7 @@ references are read-only guidance.
   data-safety pass. Do not mistake characterization tests of known omissions for
   a claim that they are repaired, or expand this scope into optional backlog work.
 - Code changes require a version change. After the `0.4` series, the next normal
-  release is `0.5`; focused patches may use `0.4.1`. Components are integers:
+  release is `0.5`. Components are integers:
   `0.9` is followed by `0.10`, not automatically `1.0`.
 - Prepend CHANGELOG entries, newest first, including documentation-only changes.
   Use `## docs - YYYY-MM-DD HH:MM TZ (timezone)` or the version in place of

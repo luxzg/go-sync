@@ -12,7 +12,7 @@ This guide is an operator procedure, not a claim that these checks have run.
 ## 1. Prepare Both Clients
 
 1. After an upgrade, confirm the service startup log reports the intended version
-   (`0.4` for this candidate). The installed binary's `--version` output alone does
+   (`0.4.1` for the Go 1.26.11 rebuild). The installed binary's `--version` output alone does
    not prove the running service has restarted with it.
 2. In each browser's Sync settings, confirm both devices belong to the existing
    chain and enable the categories you intend to test on **both** devices.

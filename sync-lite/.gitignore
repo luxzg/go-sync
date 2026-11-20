@@ -5,6 +5,8 @@
 sync-lite
 /dist/
 /.agent-tests/
+.codex/
+.agents/
 
 # Local SQLite files
 *.db

@@ -1,5 +1,22 @@
 # Maintenance Record
 
+## 2026-11-20: Go 1.26.11 Security Rebuild
+
+Selected the installed Linux amd64 Go 1.26.11 SDK for 0.4.1 release builds and
+validation. The [Go release notes](https://go.dev/doc/devel/release#go1.26)
+list fixes in `net/http`, cgo, the Go command, the compiler and the linker.
+This pass leaves the Go 1.26.0 module minimum, dependency versions, upstream
+revision, and SQLite schema at their existing values. The broader November
+upstream/driver review remains in [TODO.md](TODO.md).
+
+Govulncheck 1.8.0 reported no vulnerabilities in either source configuration
+with Go 1.26.11 (database timestamp 2026-11-11 02:51:11 UTC). The full checks,
+both SQLite race suites, supplemental synthetic tests, and clean/WAL upgrade
+and reopen matrices from 0.2, 0.3, 0.3.1 and 0.4 passed. Operator validation and
+MIPS/ARM checks remain open. Follow the
+[backup-first upgrade instructions](README.md#upgrade-to-04) to replace the
+installed binary and restart the service.
+
 ## 2026-11-13: Release Evidence Clarification
 
 The recorded 2026-11-06 completion identifies `da0c613` as the final 0.4 source

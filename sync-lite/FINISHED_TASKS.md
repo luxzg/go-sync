@@ -5,6 +5,10 @@ not claim fresh code verification or replace the changelog timeline.
 
 ## Completed / Reported
 
+- On 2026-11-20, moved the pinned build and validation workflows to Go 1.26.11
+  for the 0.4.1 security rebuild. Added the 0.4 source baseline to the synthetic
+  upgrade matrix. See [MAINTENANCE.md](MAINTENANCE.md) for scope and evidence.
+
 - On 2026-11-13, completed a documentation-only knowledge-preservation review
   against installed rulebook revision `2026-11-08.2`, existing project docs and
   accessible project conversation/continuation records. Added the architecture,

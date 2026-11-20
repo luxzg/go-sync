@@ -5,6 +5,17 @@ Historical entries retain their known dates; missing times/timezones are not
 invented. February follow-up changes are grouped because individual timestamps
 were not recorded.
 
+## 0.4.1 - 2026-11-20 08:49 CET (Europe/Zagreb)
+
+- Build and validate with [Go 1.26.11](https://go.dev/doc/devel/release#go1.26)
+  for upstream security fixes, including [CVE-2026-97054](https://pkg.go.dev/vuln/GO-2026-6859)
+  in `net/http`. Release verification checks the pinned Go version.
+- Preserve the Go 1.26.0 source minimum, module dependencies, 0.4 schema and
+  sync behavior. Add the 0.4 baseline to synthetic upgrade coverage. A running
+  server picks up the patched Go runtime after binary replacement and restart.
+- Pass full checks, both SQLite race suites, synthetic clean/WAL upgrade checks
+  from 0.2 through 0.4, and both govulncheck configurations.
+
 ## docs - 2026-11-13 12:35 CET (Europe/Zagreb)
 
 - Update the existing development continuation section with the last implementation

@@ -80,7 +80,7 @@ an integration boundary.
 
 ## Continuing Development
 
-### Development Continuation / Last Working Context - 2026-11-13
+### Development Continuation / Last Working Context - 2026-11-20
 
 **Last worked on:** On November 6, completed 0.4 sync ordering, identity/accounting,
 HTTP/shutdown and expiry fixes, plus regression/upgrade tests for both SQLite backends.
@@ -88,8 +88,9 @@ This followed 0.3's optional mattn/MIPS build path; modernc remains preferred.
 **Where we stopped:** All 15 findings and approved local follow-ups were completed,
 merged/pushed to `master` (`da0c613`), with Linux x86-64 binaries/packages verified.
 The last operator-confirmed server is 0.3.1; no 0.4 browser or MIPS result was reported.
-**Intended next steps:** First, operator backup-first upgrade and two-device tests
-with the existing database/chain; then collect the reporter's MIPS build/runtime feedback.
+**Intended next steps:** First, operator backup-first upgrade to the current
+0.4.1 rebuild and two-device tests with the existing database/chain; then collect
+the reporter's MIPS build/runtime feedback.
 Historical tokens stay unrepaired by agreement; optional backlog work was not selected.
 See [manual checks](MANUAL_TESTING.md), [release evidence](AUDIT_REMEDIATION.md) and [TODO](TODO.md).
 
@@ -101,8 +102,8 @@ approved merely because they appear in planning records. Ordinary completed
 passes follow AGENTS' standing commit/push rule unless the user holds them.
 
 For code work, first check installed SDKs in the shared location and inspect
-the relevant source/helpers. Go 1.26.10 is the recorded 0.4 helper pin, not a
-claim about today's newest installed or available compiler. Review any pin
+the relevant source/helpers. Go 1.26.11 is the current helper pin for the
+0.4.1 security rebuild. Review any future pin
 change deliberately; do not run builds/scans or update dependencies during docs-only
 work. The November checks did not refresh the October upstream/driver release
 review; its next action remains in [maintenance TODOs](TODO.md#p2-maintenance-and-operations).
@@ -128,13 +129,13 @@ go version
 ```
 
 Source builds require Go **1.26 or newer**. Use a maintained patch release;
-Go 1.26.10 was used for the 0.4 checks (October's baseline used 1.26.9).
+Use Go 1.26.11 or a newer supported security-patched release for deployment builds.
 Check the selected compiler rather than assuming which installation is active.
 See [MAINTENANCE.md](MAINTENANCE.md) for the dated toolchain record.
 
 In the maintainer's shared workspace, agents use Go installations under `~/sdk/`
 and check compatible newer installed versions before code passes. The fixed
-helper currently selects `~/sdk/go1.26.10/bin/go`. Review and validate compiler
+helper currently selects `~/sdk/go1.26.11/bin/go`. Review and validate compiler
 changes before updating that pin; do not silently fall back to system Go.
 Shared optional UI tooling is at `~/dev/playwright-tools`; sync-lite has no web
 UI and does not require Playwright for server tests.
@@ -160,7 +161,7 @@ Codex, Go generators, and development linters are not runtime requirements.
 
 Clone **this fork**, which includes both the reused upstream sources and
 `sync-lite/`. A clone of `brave/go-sync` alone does not include sync-lite.
-Version 0.4 is integrated into this fork's `master`; use that branch for builds.
+Use this fork's `master` to build the current 0.4.1 security patch.
 In a directory where you want the source checkout:
 
 ```bash
@@ -215,8 +216,8 @@ possible with Go installed, but the production unit runs the binary, not `go run
 The 0.4 remediation series uses `./scripts/validate-remediation.sh` as a stable
 approval entry point. With no arguments it prints usage; fixed modes `check`,
 `smoke`, `upgrades`, `supplemental`, `build`, and `security` call the existing
-helpers using installed Go 1.26.10 from `~/sdk/go1.26.10`. `upgrades` covers
-actual 0.2, 0.3 and 0.3.1 source baselines. No mode accepts arbitrary commands,
+helpers using installed Go 1.26.11 from `~/sdk/go1.26.11`. `upgrades` covers
+actual 0.2, 0.3, 0.3.1 and 0.4 source baselines. No mode accepts arbitrary commands,
 database paths or revisions, installs tools, or deploys. Build/cache writes,
 owned temporary files and loopback processes are the existing helpers' effects;
 security also queries the vulnerability database. Review the compiler pin when
@@ -272,8 +273,8 @@ service sources or writing a test file into the checkout. Run it separately from
 `check.sh`; ordinary `go test ./...` does not discover files in `testdata/`.
 It has no production database input, repair mode, or deployment step.
 
-The fixed remediation helper's `upgrades` mode checks actual `0.2`, `0.3` and
-`0.3.1` independently, using fresh clean/WAL fixtures for each backend, plus a
+The fixed remediation helper's `upgrades` mode checks actual `0.2`, `0.3`,
+`0.3.1` and `0.4` independently, using fresh clean/WAL fixtures for each backend, plus a
 cross-driver sequence. Each stage verifies original data before writing through
 its actual datastore and reading the new payload back. Older test executables
 also verify read/write reopen. Only the added clock table is exempted from the
@@ -312,7 +313,7 @@ Run from a clean, committed `master` checkout:
 ```
 
 With no arguments the helper prints usage only. These are fixed modes, not an
-arbitrary command or database wrapper. It selects `~/sdk/go1.26.10/bin/go`, Linux
+arbitrary command or database wrapper. It selects `~/sdk/go1.26.11/bin/go`, Linux
 amd64 and the existing two backend settings; no system Go fallback or package
 installation. Prerequisites are the SDK, cached verified modules, Python 3,
 GCC, binutils (`readelf`) and the existing smoke requirements (OpenSSL). Missing
@@ -372,9 +373,9 @@ Sanitized `.env.example` templates remain tracked.
 - Require the [data-safety checks](README.md#upgrading-safely) before binary or
   SQLite updates. Use synthetic prior-version fixtures, establish migration and
   rollback compatibility, and back up consistent real state before deployment.
-- The current version is `0.4` on `master`, with operator/browser validation pending;
+- The current version is `0.4.1` on `master`, with operator/browser validation pending;
   the last field-tested release is `0.3.1`. After 0.4, normal releases advance to
-  `0.5`, with optional patches such as `0.4.1`. Docs-only changes keep the version.
+  `0.5`. Docs-only changes keep the version.
   Prepend dated changelog entries with time and timezone. Review intended changes
   with `git diff --check` and `git status --short`. Standing user authorization
   covers committing and pushing completed authorized passes unless explicitly
